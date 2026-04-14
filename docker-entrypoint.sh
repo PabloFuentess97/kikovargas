@@ -16,7 +16,6 @@ validate_env() {
   [ -z "$DATABASE_URL" ] && die "DATABASE_URL is not set"
   [ -z "$JWT_SECRET" ]   && die "JWT_SECRET is not set"
 
-  # JWT_SECRET must be at least 32 chars
   secret_len=$(printf '%s' "$JWT_SECRET" | wc -c)
   [ "$secret_len" -lt 32 ] && die "JWT_SECRET must be at least 32 characters (got ${secret_len})"
 
@@ -32,22 +31,15 @@ parse_db_url() {
   DB_PORT="${DB_PORT:-5432}"
 }
 
-# ─── Wait for PostgreSQL TCP connection ──────────────
+# ─── Wait for PostgreSQL ─────────────────────────────
 wait_for_db() {
   log "Waiting for PostgreSQL at ${DB_HOST}:${DB_PORT}..."
 
   attempt=0
   while [ "$attempt" -lt "$MAX_RETRIES" ]; do
-    # Use wget to test TCP — available on all alpine images
-    if wget -q --spider --timeout=2 "http://${DB_HOST}:${DB_PORT}" 2>/dev/null ||
-       (echo > /dev/tcp/"$DB_HOST"/"$DB_PORT") 2>/dev/null; then
+    # Use Node.js for a reliable TCP check (always available in this image)
+    if node -e "const s=require('net').connect(${DB_PORT},'${DB_HOST}',()=>{s.end();process.exit(0)});s.on('error',()=>process.exit(1));setTimeout(()=>process.exit(1),2000)" 2>/dev/null; then
       log "PostgreSQL is accepting connections."
-      return 0
-    fi
-
-    # Fallback: try a direct Prisma connection test
-    if npx prisma migrate status --schema=./prisma/schema.prisma >/dev/null 2>&1; then
-      log "PostgreSQL is accepting connections (verified via Prisma)."
       return 0
     fi
 
@@ -63,23 +55,12 @@ wait_for_db() {
 
 # ─── Run Prisma migrations ───────────────────────────
 run_migrations() {
-  log "Checking migration status..."
-
-  status_output=$(npx prisma migrate status --schema=./prisma/schema.prisma 2>&1) || true
-
-  if echo "$status_output" | grep -q "Database schema is up to date"; then
-    log "Database schema is up to date. No migrations needed."
-    return 0
-  fi
-
-  log "Applying pending migrations..."
+  log "Running Prisma migrations..."
 
   if npx prisma migrate deploy --schema=./prisma/schema.prisma 2>&1; then
     log "Migrations applied successfully."
   else
     exit_code=$?
-    log "Migration output:"
-    npx prisma migrate status --schema=./prisma/schema.prisma 2>&1 || true
     die "prisma migrate deploy failed (exit code ${exit_code})"
   fi
 }
@@ -90,5 +71,5 @@ parse_db_url
 wait_for_db
 run_migrations
 
-log "Starting application (PID $$)..."
+log "Starting application..."
 exec "$@"
