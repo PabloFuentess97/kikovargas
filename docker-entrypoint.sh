@@ -9,11 +9,22 @@ RETRY_INTERVAL="${DB_WAIT_INTERVAL:-2}"
 log()  { echo "[entrypoint] $(date -u +%H:%M:%S) $*"; }
 die()  { log "FATAL: $*"; exit 1; }
 
-# ─── Parse DATABASE_URL ──────────────────────────────
-# Extracts host and port from postgresql://user:pass@host:port/db
-parse_db_url() {
-  [ -z "$DATABASE_URL" ] && die "DATABASE_URL is not set"
+# ─── Validate environment ────────────────────────────
+validate_env() {
+  log "Validating environment variables..."
 
+  [ -z "$DATABASE_URL" ] && die "DATABASE_URL is not set"
+  [ -z "$JWT_SECRET" ]   && die "JWT_SECRET is not set"
+
+  # JWT_SECRET must be at least 32 chars
+  secret_len=$(printf '%s' "$JWT_SECRET" | wc -c)
+  [ "$secret_len" -lt 32 ] && die "JWT_SECRET must be at least 32 characters (got ${secret_len})"
+
+  log "Environment OK."
+}
+
+# ─── Parse DATABASE_URL ──────────────────────────────
+parse_db_url() {
   DB_HOST=$(echo "$DATABASE_URL" | sed -n 's|.*@\([^:/]*\).*|\1|p')
   DB_PORT=$(echo "$DATABASE_URL" | sed -n 's|.*@[^:]*:\([0-9]*\).*|\1|p')
 
@@ -27,15 +38,24 @@ wait_for_db() {
 
   attempt=0
   while [ "$attempt" -lt "$MAX_RETRIES" ]; do
-    # Use /dev/tcp-style check via nc (busybox netcat on alpine)
-    if nc -z "$DB_HOST" "$DB_PORT" >/dev/null 2>&1; then
+    # Use wget to test TCP — available on all alpine images
+    if wget -q --spider --timeout=2 "http://${DB_HOST}:${DB_PORT}" 2>/dev/null ||
+       (echo > /dev/tcp/"$DB_HOST"/"$DB_PORT") 2>/dev/null; then
       log "PostgreSQL is accepting connections."
       return 0
     fi
 
+    # Fallback: try a direct Prisma connection test
+    if npx prisma migrate status --schema=./prisma/schema.prisma >/dev/null 2>&1; then
+      log "PostgreSQL is accepting connections (verified via Prisma)."
+      return 0
+    fi
+
     attempt=$((attempt + 1))
-    log "Attempt ${attempt}/${MAX_RETRIES} — PostgreSQL not ready, retrying in ${RETRY_INTERVAL}s..."
-    sleep "$RETRY_INTERVAL"
+    if [ "$attempt" -lt "$MAX_RETRIES" ]; then
+      log "Attempt ${attempt}/${MAX_RETRIES} — not ready, retrying in ${RETRY_INTERVAL}s..."
+      sleep "$RETRY_INTERVAL"
+    fi
   done
 
   die "PostgreSQL at ${DB_HOST}:${DB_PORT} did not become ready after $((MAX_RETRIES * RETRY_INTERVAL))s"
@@ -43,20 +63,32 @@ wait_for_db() {
 
 # ─── Run Prisma migrations ───────────────────────────
 run_migrations() {
-  log "Running Prisma migrations..."
+  log "Checking migration status..."
+
+  status_output=$(npx prisma migrate status --schema=./prisma/schema.prisma 2>&1) || true
+
+  if echo "$status_output" | grep -q "Database schema is up to date"; then
+    log "Database schema is up to date. No migrations needed."
+    return 0
+  fi
+
+  log "Applying pending migrations..."
 
   if npx prisma migrate deploy --schema=./prisma/schema.prisma 2>&1; then
     log "Migrations applied successfully."
   else
     exit_code=$?
-    die "Prisma migrate deploy failed with exit code ${exit_code}"
+    log "Migration output:"
+    npx prisma migrate status --schema=./prisma/schema.prisma 2>&1 || true
+    die "prisma migrate deploy failed (exit code ${exit_code})"
   fi
 }
 
 # ─── Main ────────────────────────────────────────────
+validate_env
 parse_db_url
 wait_for_db
 run_migrations
 
-log "Starting application..."
+log "Starting application (PID $$)..."
 exec "$@"

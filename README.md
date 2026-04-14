@@ -130,6 +130,58 @@ docker compose exec app npx prisma db seed
 | `RESEND_API_KEY` | No | Resend API key for contact notifications |
 | `CONTACT_EMAIL_TO` | No | Recipient for contact form (default: `contacto@kikovargass.com`) |
 | `UPLOADTHING_TOKEN` | No | UploadThing token for image uploads |
+| `APP_PORT` | No | External port for Docker (default: `3000`) |
+
+## Updates Workflow
+
+### Local development
+
+```bash
+# 1. Make your changes
+
+# 2. Test locally
+npm run build
+
+# 3. Commit
+git add .
+git commit -m "Describe what you changed"
+
+# 4. Push to GitHub
+git push
+```
+
+### Updating the VPS after pushing to GitHub
+
+```bash
+# 1. SSH into your server
+ssh deploy@your-server-ip
+
+# 2. Go to the project directory
+cd ~/kikovargas
+
+# 3. Pull latest changes
+git pull origin main
+
+# 4. Rebuild and restart (migrations run automatically)
+docker compose up -d --build
+
+# 5. Verify it's running
+docker compose ps
+docker compose logs --tail 20 app
+```
+
+### Rolling back a bad deploy
+
+```bash
+# On the VPS — go back to the previous commit
+git log --oneline -5          # find the good commit hash
+git checkout <commit-hash>    # switch to it
+docker compose up -d --build  # rebuild from that version
+
+# When ready to go back to latest
+git checkout main
+docker compose up -d --build
+```
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for the full deployment guide including VPS setup, Nginx, SSL, backups, and troubleshooting.
 

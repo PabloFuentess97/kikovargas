@@ -129,6 +129,9 @@ Edit `.env` with production values. At minimum:
 ```env
 POSTGRES_PASSWORD="a-strong-random-password"
 JWT_SECRET="run-openssl-rand-base64-48-to-generate"
+
+# Change if port 3000 is already used by another project
+APP_PORT="3000"
 ```
 
 Generate secure values:
@@ -286,7 +289,7 @@ server {
     server_name kikovargass.com www.kikovargass.com;
 
     location / {
-        proxy_pass http://127.0.0.1:3000;
+        proxy_pass http://127.0.0.1:3000;  # Match APP_PORT in .env
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -490,9 +493,8 @@ docker compose up -d
 # Find what's using the port
 lsof -i :3000
 
-# Or change the port in docker-compose.yml:
-# ports:
-#   - "8080:3000"
+# Change APP_PORT in .env to use a different port:
+# APP_PORT=8080
 ```
 
 ### Container keeps restarting
@@ -538,10 +540,10 @@ find /home/deploy/backups -name "*.dump" -mtime +7 -delete
 
 ```bash
 # View health status
-docker inspect --format='{{.State.Health.Status}}' kikovargass-app-1
+docker inspect --format='{{.State.Health.Status}}' kikovargas-app
 
 # View last health check result
-docker inspect --format='{{json .State.Health.Log}}' kikovargass-app-1 | python3 -m json.tool
+docker inspect --format='{{json .State.Health.Log}}' kikovargas-app | python3 -m json.tool
 ```
 
 ---
@@ -557,5 +559,6 @@ docker inspect --format='{{json .State.Health.Log}}' kikovargass-app-1 | python3
 | `CONTACT_EMAIL_TO` | No | `contacto@kikovargass.com` | Email for contact form notifications |
 | `UPLOADTHING_TOKEN` | No | — | UploadThing token for image uploads |
 | `NODE_ENV` | No | `development` | `development` or `production` |
+| `APP_PORT` | No | `3000` | External port for the app (Docker) |
 | `DB_WAIT_RETRIES` | No | `30` | Max retries waiting for DB (Docker) |
 | `DB_WAIT_INTERVAL` | No | `2` | Seconds between DB retries (Docker) |
