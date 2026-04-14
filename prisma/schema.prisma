@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ──────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ContactStatus {
+  PENDING
+  READ
+  REPLIED
+  ARCHIVED
+}
+
+// ─── User ───────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(USER)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  posts Post[] @relation("PostAuthor")
+
+  @@map("users")
+}
+
+// ─── Post ───────────────────────────────────────────
+
+model Post {
+  id          String     @id @default(cuid())
+  title       String
+  slug        String     @unique
+  excerpt     String?
+  content     String
+  status      PostStatus @default(DRAFT)
+  publishedAt DateTime?  @map("published_at")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  authorId String @map("author_id")
+  author   User   @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+
+  coverId String? @unique @map("cover_id")
+  cover   Image?  @relation("PostCover", fields: [coverId], references: [id], onDelete: SetNull)
+
+  images Image[] @relation("PostGallery")
+
+  @@index([status, publishedAt])
+  @@index([authorId])
+  @@map("posts")
+}
+
+// ─── Image ──────────────────────────────────────────
+
+model Image {
+  id        String   @id @default(cuid())
+  url       String
+  key       String   @unique // storage key (S3, Cloudinary, etc.)
+  alt       String   @default("")
+  width     Int?
+  height    Int?
+  size      Int? // bytes
+  mime      String   @default("image/jpeg")
+  gallery   Boolean  @default(false) // true = appears in landing gallery
+  order     Int      @default(0) // sort order for gallery
+  createdAt DateTime @default(now()) @map("created_at")
+
+  coverOf Post? @relation("PostCover")
+
+  postId String? @map("post_id")
+  post   Post?   @relation("PostGallery", fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([gallery, order])
+  @@map("images")
+}
+
+// ─── PageView ──────────────────────────────────────
+
+model PageView {
+  id        String   @id @default(cuid())
+  path      String
+  referrer  String   @default("")
+  userAgent String   @default("") @map("user_agent")
+  ip        String   @default("")
+  country   String   @default("")
+  city      String   @default("")
+  device    String   @default("") // desktop, mobile, tablet
+  browser   String   @default("")
+  os        String   @default("")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([path])
+  @@map("page_views")
+}
+
+// ─── Contact ────────────────────────────────────────
+
+model Contact {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  status    ContactStatus @default(PENDING)
+  readAt    DateTime?     @map("read_at")
+  repliedAt DateTime?     @map("replied_at")
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("contacts")
+}
