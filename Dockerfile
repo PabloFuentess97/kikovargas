@@ -50,8 +50,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Public assets
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# Copy Prisma schema + migrations for runtime migrate deploy
+# Copy Prisma schema + migrations + config for runtime migrate deploy
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder --chown=nextjs:nodejs /app/src/generated ./src/generated

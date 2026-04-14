@@ -57,7 +57,7 @@ wait_for_db() {
 run_migrations() {
   log "Running Prisma migrations..."
 
-  if npx prisma migrate deploy --schema=./prisma/schema.prisma 2>&1; then
+  if node ./node_modules/prisma/build/index.js migrate deploy --schema=./prisma/schema.prisma 2>&1; then
     log "Migrations applied successfully."
   else
     exit_code=$?
