@@ -86,7 +86,7 @@ export function PostForm({ post }: { post?: PostData }) {
       router.push("/dashboard/posts");
       router.refresh();
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Error de conexión");
+      setErrorMsg(err instanceof Error ? err.message : "Error de conexion");
       setStatus("error");
     }
   }
@@ -95,29 +95,31 @@ export function PostForm({ post }: { post?: PostData }) {
     <form onSubmit={handleSubmit} noValidate className="space-y-6">
       {/* Title */}
       <div>
-        <label htmlFor="title" className="block text-sm font-medium mb-1.5">Título</label>
+        <label htmlFor="title" className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">
+          Titulo
+        </label>
         <input
           id="title"
           name="title"
           defaultValue={post?.title}
           onChange={handleTitleChange}
-          className={`w-full rounded-lg border px-4 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary/20 ${fieldErrors.title ? "border-red-400" : "border-border"}`}
-          placeholder="Mi nuevo artículo"
+          className={`w-full px-4 py-3 text-sm ${fieldErrors.title ? "!border-danger !ring-danger/20" : ""}`}
+          placeholder="Mi nuevo articulo"
         />
-        {fieldErrors.title && <p className="mt-1 text-xs text-red-500">{fieldErrors.title}</p>}
+        {fieldErrors.title && <p className="mt-1.5 text-xs text-danger">{fieldErrors.title}</p>}
       </div>
 
       {/* Slug */}
       <div>
-        <label htmlFor="slug" className="block text-sm font-medium mb-1.5">
+        <label htmlFor="slug" className="flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">
           Slug
           {!isEdit && (
             <button
               type="button"
               onClick={() => setAutoSlug(!autoSlug)}
-              className="ml-2 text-xs text-muted hover:text-primary"
+              className="rounded bg-a-accent-dim px-1.5 py-0.5 text-[0.6rem] font-medium text-a-accent normal-case tracking-normal hover:bg-a-accent/15 transition-colors"
             >
-              ({autoSlug ? "auto" : "manual"})
+              {autoSlug ? "auto" : "manual"}
             </button>
           )}
         </label>
@@ -125,49 +127,54 @@ export function PostForm({ post }: { post?: PostData }) {
           id="slug"
           name="slug"
           defaultValue={post?.slug}
-          className={`w-full rounded-lg border px-4 py-2.5 text-sm font-mono outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary/20 ${fieldErrors.slug ? "border-red-400" : "border-border"}`}
+          className={`w-full px-4 py-3 text-sm font-mono ${fieldErrors.slug ? "!border-danger !ring-danger/20" : ""}`}
           placeholder="mi-nuevo-articulo"
         />
-        {fieldErrors.slug && <p className="mt-1 text-xs text-red-500">{fieldErrors.slug}</p>}
+        {fieldErrors.slug && <p className="mt-1.5 text-xs text-danger">{fieldErrors.slug}</p>}
       </div>
 
       {/* Excerpt */}
       <div>
-        <label htmlFor="excerpt" className="block text-sm font-medium mb-1.5">
-          Extracto <span className="text-muted font-normal">Opcional</span>
+        <label htmlFor="excerpt" className="flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">
+          Extracto
+          <span className="text-[0.6rem] font-normal normal-case tracking-normal text-muted/60">Opcional</span>
         </label>
         <textarea
           id="excerpt"
           name="excerpt"
           defaultValue={post?.excerpt ?? ""}
           rows={2}
-          className="w-full rounded-lg border border-border px-4 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none"
-          placeholder="Breve descripción del post..."
+          className="w-full px-4 py-3 text-sm resize-none"
+          placeholder="Breve descripcion del post..."
         />
       </div>
 
       {/* Content */}
       <div>
-        <label htmlFor="content" className="block text-sm font-medium mb-1.5">Contenido</label>
+        <label htmlFor="content" className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">
+          Contenido
+        </label>
         <textarea
           id="content"
           name="content"
           defaultValue={post?.content ?? ""}
           rows={16}
-          className={`w-full rounded-lg border px-4 py-2.5 text-sm font-mono leading-relaxed outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary/20 resize-y ${fieldErrors.content ? "border-red-400" : "border-border"}`}
+          className={`w-full px-4 py-3 text-sm font-mono leading-relaxed resize-y ${fieldErrors.content ? "!border-danger !ring-danger/20" : ""}`}
           placeholder="Escribe el contenido del post..."
         />
-        {fieldErrors.content && <p className="mt-1 text-xs text-red-500">{fieldErrors.content}</p>}
+        {fieldErrors.content && <p className="mt-1.5 text-xs text-danger">{fieldErrors.content}</p>}
       </div>
 
       {/* Status */}
       <div>
-        <label htmlFor="status" className="block text-sm font-medium mb-1.5">Estado</label>
+        <label htmlFor="status" className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">
+          Estado
+        </label>
         <select
           id="status"
           name="status"
           defaultValue={post?.status ?? "DRAFT"}
-          className="rounded-lg border border-border bg-white px-4 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary/20"
+          className="px-4 py-3 text-sm cursor-pointer"
         >
           <option value="DRAFT">Borrador</option>
           <option value="PUBLISHED">Publicado</option>
@@ -177,24 +184,24 @@ export function PostForm({ post }: { post?: PostData }) {
 
       {/* Error banner */}
       {status === "error" && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger">
           {errorMsg}
         </div>
       )}
 
       {/* Actions */}
-      <div className="flex items-center gap-3 pt-2">
+      <div className="flex items-center gap-3 pt-4 border-t border-border">
         <button
           type="submit"
           disabled={status === "saving"}
-          className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
+          className="rounded-lg bg-a-accent px-6 py-2.5 text-sm font-medium text-black transition-all hover:bg-a-accent-hover active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none"
         >
           {status === "saving" ? "Guardando..." : isEdit ? "Guardar cambios" : "Crear post"}
         </button>
         <button
           type="button"
           onClick={() => router.push("/dashboard/posts")}
-          className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-card"
+          className="rounded-lg border border-border px-6 py-2.5 text-sm font-medium text-muted transition-all hover:text-foreground hover:border-foreground/20"
         >
           Cancelar
         </button>

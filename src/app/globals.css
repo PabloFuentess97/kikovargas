@@ -39,53 +39,48 @@
   --font-display: var(--font-oswald);
   --font-body: var(--font-inter);
 
-  /* Admin theme */
-  --color-background: var(--admin-bg, #f8fafc);
-  --color-foreground: var(--admin-fg, #0f172a);
-  --color-card: var(--admin-card, #ffffff);
-  --color-card-hover: var(--admin-card-hover, #f1f5f9);
-  --color-border: var(--admin-border, #e2e8f0);
-  --color-muted: var(--admin-muted, #64748b);
-  --color-a-primary: var(--admin-primary, #2563eb);
-  --color-a-primary-hover: var(--admin-primary-hover, #1d4ed8);
-  --color-danger: var(--admin-danger, #dc2626);
-  --color-success: var(--admin-success, #16a34a);
-  --color-warning: var(--admin-warning, #d97706);
+  /* Admin dark premium theme */
+  --color-background: var(--admin-bg);
+  --color-foreground: var(--admin-fg);
+  --color-card: var(--admin-card);
+  --color-card-hover: var(--admin-card-hover);
+  --color-border: var(--admin-border);
+  --color-muted: var(--admin-muted);
+  --color-a-primary: var(--admin-primary);
+  --color-a-primary-hover: var(--admin-primary-hover);
+  --color-danger: var(--admin-danger);
+  --color-danger-hover: var(--admin-danger-hover);
+  --color-success: var(--admin-success);
+  --color-warning: var(--admin-warning);
+  --color-a-surface: var(--admin-surface);
+  --color-a-surface-hover: var(--admin-surface-hover);
+  --color-a-accent: var(--admin-accent);
+  --color-a-accent-hover: var(--admin-accent-hover);
+  --color-a-accent-dim: var(--admin-accent-dim);
+  --color-a-ring: var(--admin-ring);
 }
 
-/* ─── Admin theme (scoped) ───────────────────────────── */
+/* ─── Admin Dark Premium Design System ─────────────── */
 
 [data-theme="admin"] {
-  --admin-bg: #f8fafc;
-  --admin-fg: #0f172a;
-  --admin-card: #ffffff;
-  --admin-card-hover: #f1f5f9;
-  --admin-border: #e2e8f0;
-  --admin-muted: #64748b;
-  --admin-primary: #2563eb;
-  --admin-primary-hover: #1d4ed8;
-  --admin-danger: #dc2626;
-  --admin-success: #16a34a;
-  --admin-warning: #d97706;
-}
-
-@media (prefers-color-scheme: dark) {
-  [data-theme="admin"] {
-    --admin-bg: #0b1120;
-    --admin-fg: #e2e8f0;
-    --admin-card: #1e293b;
-    --admin-card-hover: #334155;
-    --admin-border: #1e293b;
-    --admin-muted: #94a3b8;
-    --admin-primary: #3b82f6;
-    --admin-primary-hover: #2563eb;
-    --admin-danger: #ef4444;
-    --admin-success: #22c55e;
-    --admin-warning: #f59e0b;
-  }
-}
-
-[data-theme="admin"] {
+  --admin-bg: #08080a;
+  --admin-fg: #f0f0f2;
+  --admin-card: #111114;
+  --admin-card-hover: #19191d;
+  --admin-border: rgba(255, 255, 255, 0.06);
+  --admin-muted: #6b6b76;
+  --admin-primary: #c9a84c;
+  --admin-primary-hover: #dfc06a;
+  --admin-danger: #ef4444;
+  --admin-danger-hover: #dc2626;
+  --admin-success: #10b981;
+  --admin-warning: #f59e0b;
+  --admin-surface: #0d0d10;
+  --admin-surface-hover: #151518;
+  --admin-accent: #c9a84c;
+  --admin-accent-hover: #dfc06a;
+  --admin-accent-dim: rgba(201, 168, 76, 0.08);
+  --admin-ring: rgba(201, 168, 76, 0.25);
   background: var(--admin-bg);
   color: var(--admin-fg);
 }
@@ -212,22 +207,122 @@ img {
 .skeleton-admin {
   background: linear-gradient(
     90deg,
-    var(--admin-border, #e2e8f0) 25%,
-    var(--admin-card-hover, #f1f5f9) 50%,
-    var(--admin-border, #e2e8f0) 75%
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.07) 50%,
+    rgba(255, 255, 255, 0.03) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 2s ease-in-out infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  .skeleton-admin {
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.04) 25%,
-      rgba(255, 255, 255, 0.08) 50%,
-      rgba(255, 255, 255, 0.04) 75%
-    );
-    background-size: 200% 100%;
-  }
+/* ─── Admin premium utilities ──────────────────────── */
+
+@keyframes admin-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes admin-pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 168, 76, 0); }
+  50% { box-shadow: 0 0 20px 2px rgba(201, 168, 76, 0.08); }
+}
+
+.admin-fade-in {
+  animation: admin-fade-in 0.4s ease-out;
+}
+
+.admin-card {
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.admin-card:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.admin-card-interactive:hover {
+  border-color: rgba(201, 168, 76, 0.2);
+  box-shadow: 0 0 0 1px rgba(201, 168, 76, 0.05), 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Admin input styling */
+[data-theme="admin"] input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+[data-theme="admin"] textarea,
+[data-theme="admin"] select {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  color: var(--admin-fg);
+  border-radius: 8px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+[data-theme="admin"] input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+[data-theme="admin"] textarea:focus,
+[data-theme="admin"] select:focus {
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-ring);
+  outline: none;
+}
+
+[data-theme="admin"] input::placeholder,
+[data-theme="admin"] textarea::placeholder {
+  color: var(--admin-muted);
+  opacity: 0.6;
+}
+
+/* Admin scrollbar */
+[data-theme="admin"] ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+[data-theme="admin"] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-theme="admin"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+
+[data-theme="admin"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Sidebar nav active state */
+.admin-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--admin-muted);
+  transition: all 0.2s;
+}
+
+.admin-nav-item:hover {
+  color: var(--admin-fg);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.admin-nav-item.active {
+  color: var(--admin-accent);
+  background: var(--admin-accent-dim);
+}
+
+.admin-nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: var(--admin-accent);
+  border-radius: 0 3px 3px 0;
 }

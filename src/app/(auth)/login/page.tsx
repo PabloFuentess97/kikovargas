@@ -28,31 +28,41 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Error al iniciar sesión");
+        setError(data.error || "Error al iniciar sesion");
         return;
       }
 
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setError("Error de conexión");
+      setError("Error de conexion");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm">
-        <div className="rounded-xl border border-border bg-card p-8 shadow-sm">
-          <h1 className="mb-1 text-2xl font-bold tracking-tight text-foreground">
-            Iniciar sesión
-          </h1>
-          <p className="mb-6 text-sm text-muted">Panel de administración</p>
+    <div data-theme="admin" className="flex min-h-screen items-center justify-center bg-background px-4">
+      {/* Subtle background gradient */}
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,rgba(201,168,76,0.04),transparent_60%)]" />
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="relative w-full max-w-sm">
+        {/* Brand */}
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.15)]">
+            <span className="text-lg font-bold" style={{ color: "#c9a84c" }}>KV</span>
+          </div>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            Iniciar sesion
+          </h1>
+          <p className="mt-1 text-sm text-muted">Panel de administracion</p>
+        </div>
+
+        {/* Form card */}
+        <div className="rounded-xl border border-border bg-card p-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="mb-1.5 block text-sm font-medium">
+              <label htmlFor="email" className="mb-2 block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">
                 Email
               </label>
               <input
@@ -61,14 +71,15 @@ export default function LoginPage() {
                 type="email"
                 required
                 autoComplete="email"
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
-                placeholder="admin@kikovargass.com"
+                className="w-full px-4 py-3 text-sm"
+                style={{ background: "#0d0d10", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", color: "#f0f0f2" }}
+                placeholder="admin@kikovargas.fit"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="mb-1.5 block text-sm font-medium">
-                Contraseña
+              <label htmlFor="password" className="mb-2 block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">
+                Contrasena
               </label>
               <input
                 id="password"
@@ -76,25 +87,32 @@ export default function LoginPage() {
                 type="password"
                 required
                 autoComplete="current-password"
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full px-4 py-3 text-sm"
+                style={{ background: "#0d0d10", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", color: "#f0f0f2" }}
               />
             </div>
 
             {error && (
-              <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">
+              <div className="rounded-lg border border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.05)] px-4 py-3 text-sm" style={{ color: "#ef4444" }}>
                 {error}
-              </p>
+              </div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
+              className="w-full rounded-lg py-3 text-sm font-medium text-black transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+              style={{ background: "#c9a84c" }}
             >
               {loading ? "Entrando..." : "Entrar"}
             </button>
           </form>
         </div>
+
+        {/* Footer */}
+        <p className="mt-6 text-center text-[0.65rem] text-muted">
+          KikoVargas &middot; IFBB Pro
+        </p>
       </div>
     </div>
   );

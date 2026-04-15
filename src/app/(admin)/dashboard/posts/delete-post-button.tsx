@@ -8,7 +8,7 @@ export function DeletePostButton({ postId, postTitle }: { postId: string; postTi
   const [pending, setPending] = useState(false);
 
   async function handleDelete() {
-    if (!confirm(`¿Eliminar "${postTitle}"? Esta acción no se puede deshacer.`)) return;
+    if (!confirm(`Eliminar "${postTitle}"? Esta accion no se puede deshacer.`)) return;
 
     setPending(true);
     const res = await fetch(`/api/posts/${postId}`, { method: "DELETE" });
@@ -25,7 +25,7 @@ export function DeletePostButton({ postId, postTitle }: { postId: string; postTi
     <button
       onClick={handleDelete}
       disabled={pending}
-      className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
+      className="rounded-lg border border-danger/20 px-3 py-1.5 text-xs font-medium text-danger transition-all hover:bg-danger/10 hover:border-danger/40 disabled:opacity-50"
     >
       {pending ? "..." : "Eliminar"}
     </button>

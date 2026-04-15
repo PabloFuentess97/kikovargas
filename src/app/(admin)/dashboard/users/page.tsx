@@ -25,42 +25,46 @@ export default async function UsersPage() {
   });
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold tracking-tight">Usuarios</h1>
-      <p className="mt-1 text-sm text-muted">
-        Gestión de usuarios del sistema
-      </p>
+    <div className="admin-fade-in">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Usuarios</h1>
+        <p className="mt-1 text-sm text-muted">
+          {users.length} usuarios registrados
+        </p>
+      </div>
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-border">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-border bg-card">
-            <tr>
-              <th className="px-4 py-3 font-medium">Nombre</th>
-              <th className="px-4 py-3 font-medium">Email</th>
-              <th className="px-4 py-3 font-medium">Rol</th>
-              <th className="px-4 py-3 font-medium">Estado</th>
-              <th className="px-4 py-3 font-medium">Creado</th>
+      <div className="admin-card overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="px-5 py-3.5 text-left text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Nombre</th>
+              <th className="px-5 py-3.5 text-left text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Email</th>
+              <th className="px-5 py-3.5 text-left text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Rol</th>
+              <th className="px-5 py-3.5 text-left text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Estado</th>
+              <th className="px-5 py-3.5 text-left text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Creado</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {users.map((user: UserRow) => (
-              <tr key={user.id} className="hover:bg-card/50">
-                <td className="px-4 py-3 font-medium">{user.name}</td>
-                <td className="px-4 py-3 text-muted">{user.email}</td>
-                <td className="px-4 py-3">
-                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+              <tr key={user.id} className="transition-colors hover:bg-card-hover">
+                <td className="px-5 py-4 font-medium">{user.name}</td>
+                <td className="px-5 py-4 text-muted">{user.email}</td>
+                <td className="px-5 py-4">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-a-accent-dim px-2.5 py-1 text-[0.65rem] font-medium text-a-accent">
                     {user.role}
                   </span>
                 </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`inline-block h-2 w-2 rounded-full ${
-                      user.active ? "bg-green-500" : "bg-red-500"
-                    }`}
-                  />
-                  <span className="ml-2 text-xs">{user.active ? "Activo" : "Inactivo"}</span>
+                <td className="px-5 py-4">
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      className={`inline-block h-2 w-2 rounded-full ${
+                        user.active ? "bg-success" : "bg-danger"
+                      }`}
+                    />
+                    <span className="text-xs text-muted">{user.active ? "Activo" : "Inactivo"}</span>
+                  </span>
                 </td>
-                <td className="px-4 py-3 text-muted">
+                <td className="px-5 py-4 text-muted tabular-nums">
                   {user.createdAt.toLocaleDateString("es-ES")}
                 </td>
               </tr>

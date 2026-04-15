@@ -74,68 +74,82 @@ export default async function AnalyticsPage() {
   }
   const daily = Array.from(dailyMap, ([date, count]) => ({ date, count }));
 
+  const stats = [
+    { label: "Hoy", value: todayViews, trend: null },
+    { label: "7 dias", value: weekViews, trend: null },
+    { label: "30 dias", value: monthViews, trend: null },
+    { label: "Total", value: totalViews, trend: null },
+  ];
+
   return (
-    <div>
-      <h1 className="text-2xl font-bold tracking-tight">Analytics</h1>
-      <p className="mt-1 text-sm text-muted">Últimos 30 días de actividad</p>
+    <div className="admin-fade-in">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
+        <p className="mt-1 text-sm text-muted">Ultimos 30 dias de actividad</p>
+      </div>
 
       {/* Stat cards */}
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Hoy" value={todayViews} />
-        <StatCard label="Últimos 7 días" value={weekViews} />
-        <StatCard label="Últimos 30 días" value={monthViews} />
-        <StatCard label="Total" value={totalViews} />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {stats.map((s) => (
+          <div key={s.label} className="admin-card p-5">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">{s.label}</p>
+            <p className="mt-2 text-3xl font-bold tracking-tight">{s.value.toLocaleString("es-MX")}</p>
+          </div>
+        ))}
       </div>
 
       {/* Daily chart */}
-      <div className="mt-8">
+      <div className="mt-6">
         <AnalyticsCharts daily={daily} />
       </div>
 
       {/* Tables grid */}
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
         {/* Top pages */}
-        <div className="rounded-xl border border-border bg-card">
-          <div className="border-b border-border px-5 py-3.5">
-            <h2 className="text-sm font-semibold">Páginas más visitadas</h2>
+        <div className="admin-card overflow-hidden">
+          <div className="border-b border-border px-5 py-4">
+            <h2 className="text-sm font-semibold">Paginas mas visitadas</h2>
           </div>
           <div className="divide-y divide-border">
             {topPages.length === 0 && (
-              <p className="px-5 py-8 text-center text-sm text-muted">Sin datos todavía</p>
+              <p className="px-5 py-8 text-center text-sm text-muted">Sin datos todavia</p>
             )}
-            {topPages.map((p) => (
-              <div key={p.path} className="flex items-center justify-between px-5 py-2.5">
-                <span className="truncate text-sm font-mono">{p.path}</span>
-                <span className="shrink-0 ml-4 text-sm font-semibold">{p._count.id}</span>
+            {topPages.map((p, i) => (
+              <div key={p.path} className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-card-hover">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-a-accent-dim text-[0.6rem] font-bold text-a-accent">{i + 1}</span>
+                  <span className="truncate text-sm font-mono">{p.path}</span>
+                </div>
+                <span className="shrink-0 ml-4 text-sm font-semibold tabular-nums">{p._count.id}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Top countries */}
-        <div className="rounded-xl border border-border bg-card">
-          <div className="border-b border-border px-5 py-3.5">
-            <h2 className="text-sm font-semibold">Países</h2>
+        <div className="admin-card overflow-hidden">
+          <div className="border-b border-border px-5 py-4">
+            <h2 className="text-sm font-semibold">Paises</h2>
           </div>
           <div className="divide-y divide-border">
             {topCountries.length === 0 && (
-              <p className="px-5 py-8 text-center text-sm text-muted">Sin datos de geolocalización</p>
+              <p className="px-5 py-8 text-center text-sm text-muted">Sin datos de geolocalizacion</p>
             )}
             {topCountries.map((c) => (
-              <div key={c.country} className="flex items-center justify-between px-5 py-2.5">
+              <div key={c.country} className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-card-hover">
                 <span className="text-sm">{c.country}</span>
-                <span className="text-sm font-semibold">{c._count.id}</span>
+                <span className="text-sm font-semibold tabular-nums">{c._count.id}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Devices */}
-        <div className="rounded-xl border border-border bg-card">
-          <div className="border-b border-border px-5 py-3.5">
+        <div className="admin-card overflow-hidden">
+          <div className="border-b border-border px-5 py-4">
             <h2 className="text-sm font-semibold">Dispositivos</h2>
           </div>
-          <div className="p-5 space-y-3">
+          <div className="p-5 space-y-4">
             {deviceBreakdown.length === 0 && (
               <p className="text-center text-sm text-muted">Sin datos</p>
             )}
@@ -143,13 +157,13 @@ export default async function AnalyticsPage() {
               const pct = monthViews > 0 ? Math.round((d._count.id / monthViews) * 100) : 0;
               return (
                 <div key={d.device}>
-                  <div className="flex items-center justify-between text-sm mb-1">
-                    <span className="capitalize">{d.device || "desconocido"}</span>
-                    <span className="text-muted">{d._count.id} ({pct}%)</span>
+                  <div className="flex items-center justify-between text-sm mb-1.5">
+                    <span className="capitalize font-medium">{d.device || "desconocido"}</span>
+                    <span className="text-muted tabular-nums">{d._count.id} ({pct}%)</span>
                   </div>
-                  <div className="h-2 rounded-full bg-border overflow-hidden">
+                  <div className="h-1.5 rounded-full bg-border overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-a-primary transition-all"
+                      className="h-full rounded-full bg-a-accent transition-all duration-500"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -160,11 +174,11 @@ export default async function AnalyticsPage() {
         </div>
 
         {/* Browsers */}
-        <div className="rounded-xl border border-border bg-card">
-          <div className="border-b border-border px-5 py-3.5">
+        <div className="admin-card overflow-hidden">
+          <div className="border-b border-border px-5 py-4">
             <h2 className="text-sm font-semibold">Navegadores</h2>
           </div>
-          <div className="p-5 space-y-3">
+          <div className="p-5 space-y-4">
             {browserBreakdown.length === 0 && (
               <p className="text-center text-sm text-muted">Sin datos</p>
             )}
@@ -172,13 +186,13 @@ export default async function AnalyticsPage() {
               const pct = monthViews > 0 ? Math.round((b._count.id / monthViews) * 100) : 0;
               return (
                 <div key={b.browser}>
-                  <div className="flex items-center justify-between text-sm mb-1">
-                    <span>{b.browser || "desconocido"}</span>
-                    <span className="text-muted">{b._count.id} ({pct}%)</span>
+                  <div className="flex items-center justify-between text-sm mb-1.5">
+                    <span className="font-medium">{b.browser || "desconocido"}</span>
+                    <span className="text-muted tabular-nums">{b._count.id} ({pct}%)</span>
                   </div>
-                  <div className="h-2 rounded-full bg-border overflow-hidden">
+                  <div className="h-1.5 rounded-full bg-border overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-a-primary transition-all"
+                      className="h-full rounded-full bg-a-accent transition-all duration-500"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -188,15 +202,6 @@ export default async function AnalyticsPage() {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted">{label}</p>
-      <p className="mt-2 text-3xl font-bold">{value.toLocaleString("es-MX")}</p>
     </div>
   );
 }

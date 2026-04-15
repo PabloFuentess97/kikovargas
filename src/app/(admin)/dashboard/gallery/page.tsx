@@ -11,14 +11,14 @@ export default async function GalleryPage() {
   });
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold tracking-tight">Galería</h1>
-      <p className="mt-1 text-sm text-muted">
-        Sube y administra las imágenes del landing page.
-      </p>
-      <div className="mt-8">
-        <GalleryManager initialImages={images} />
+    <div className="admin-fade-in">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Galeria</h1>
+        <p className="mt-1 text-sm text-muted">
+          Sube y administra las imagenes del landing page.
+        </p>
       </div>
+      <GalleryManager initialImages={images} />
     </div>
   );
 }
