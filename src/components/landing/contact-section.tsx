@@ -24,7 +24,7 @@ function Field({
         id={id}
         name={name}
         type={type}
-        className={`w-full bg-transparent border px-4 py-3.5 text-[0.85rem] text-primary outline-none transition-all duration-400 focus:border-accent/40 focus:shadow-[0_0_0_1px_rgba(201,168,76,0.08)] placeholder:text-tertiary/40 ${
+        className={`w-full bg-transparent border px-4 py-3.5 text-[0.85rem] text-primary outline-none transition-all duration-400 focus:border-accent/40 focus:shadow-[0_0_0_1px_var(--accent-dim)] placeholder:text-tertiary/40 ${
           error ? "border-red-400/50" : "border-border-subtle"
         }`}
         placeholder={placeholder}
@@ -226,7 +226,7 @@ export function ContactSection({ config, social }: { config: ContactContent; soc
                     id="c-message"
                     name="message"
                     rows={5}
-                    className={`w-full bg-transparent border px-4 py-3.5 text-[0.85rem] text-primary outline-none transition-all duration-400 focus:border-accent/40 focus:shadow-[0_0_0_1px_rgba(201,168,76,0.08)] resize-none placeholder:text-tertiary/40 ${
+                    className={`w-full bg-transparent border px-4 py-3.5 text-[0.85rem] text-primary outline-none transition-all duration-400 focus:border-accent/40 focus:shadow-[0_0_0_1px_var(--accent-dim)] resize-none placeholder:text-tertiary/40 ${
                       fieldErrors.message ? "border-red-400/50" : "border-border-subtle"
                     }`}
                     placeholder="Cuéntame sobre tu proyecto o propuesta..."

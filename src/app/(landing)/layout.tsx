@@ -23,7 +23,7 @@ export default async function LandingLayout({ children }: { children: React.Reac
       <ThemeProvider theme={config.theme} />
       <Navbar config={config.navbar} social={config.social} sections={config.sections} />
       <main>{children}</main>
-      <Footer social={config.social} navbar={config.navbar} />
+      <Footer social={config.social} navbar={config.navbar} sections={config.sections} />
     </div>
   );
 }

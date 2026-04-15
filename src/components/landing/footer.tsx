@@ -2,14 +2,14 @@
 
 import { motion } from "framer-motion";
 import { fadeUp, fadeIn, lineExpand, stagger, staggerSlow } from "@/lib/animations";
-import type { SocialLinks, NavbarContent } from "@/lib/config/landing-defaults";
+import type { SocialLinks, NavbarContent, SectionsConfig } from "@/lib/config/landing-defaults";
 
-const NAV = [
-  { label: "Sobre mí", href: "#about" },
-  { label: "Galería", href: "#gallery" },
-  { label: "Logros", href: "#achievements" },
-  { label: "Blog", href: "#blog" },
-  { label: "Contacto", href: "#contact" },
+const ALL_NAV: { label: string; href: string; section: keyof SectionsConfig }[] = [
+  { label: "Sobre mí", href: "#about", section: "about" },
+  { label: "Galería", href: "#gallery", section: "gallery" },
+  { label: "Logros", href: "#achievements", section: "achievements" },
+  { label: "Blog", href: "#blog", section: "blog" },
+  { label: "Contacto", href: "#contact", section: "contact" },
 ];
 
 const LEGAL = [
@@ -18,54 +18,59 @@ const LEGAL = [
   { label: "Términos", href: "/terms" },
 ];
 
-export function Footer({ social, navbar }: { social: SocialLinks; navbar: NavbarContent }) {
+export function Footer({ social, navbar, sections }: { social: SocialLinks; navbar: NavbarContent; sections: SectionsConfig }) {
   const SOCIAL = [
     { label: "Instagram", href: social.instagram },
     { label: "YouTube", href: social.youtube },
     { label: "TikTok", href: social.tiktok },
   ];
+  const NAV = ALL_NAV.filter((link) => sections?.[link.section] !== false);
+  const showContact = sections?.contact !== false;
+
   return (
     <footer className="bg-void relative overflow-hidden">
-      {/* ── CTA strip ── */}
-      <div className="border-t border-border-subtle">
-        <div className="container-landing py-16 md:py-24 text-center">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={stagger}
-          >
-            <motion.p
-              variants={fadeUp}
-              className="text-[0.55rem] font-semibold uppercase tracking-[0.35em] text-accent/60 mb-4"
+      {/* ── CTA strip — only show if contact is enabled ── */}
+      {showContact && (
+        <div className="border-t border-border-subtle">
+          <div className="container-landing py-16 md:py-24 text-center">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={stagger}
             >
-              Listo para el siguiente nivel?
-            </motion.p>
-            <motion.h3
-              variants={fadeUp}
-              className="font-display text-3xl sm:text-4xl md:text-5xl font-bold uppercase leading-[0.9] tracking-tight mb-8"
-            >
-              Trabajemos <span className="text-accent">juntos</span>
-            </motion.h3>
-            <motion.a
-              variants={fadeUp}
-              href="#contact"
-              className="group relative inline-flex items-center gap-3"
-            >
-              <span className="relative border border-accent/30 text-accent font-display font-semibold uppercase tracking-[0.25em] text-[0.65rem] px-8 py-3.5 transition-all duration-500 group-hover:border-accent group-hover:bg-accent group-hover:text-void">
-                Iniciar conversación
-              </span>
-              <motion.span
-                animate={{ x: [0, 4, 0] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                className="text-accent text-base"
+              <motion.p
+                variants={fadeUp}
+                className="text-[0.55rem] font-semibold uppercase tracking-[0.35em] text-accent/60 mb-4"
               >
-                &rarr;
-              </motion.span>
-            </motion.a>
-          </motion.div>
+                Listo para el siguiente nivel?
+              </motion.p>
+              <motion.h3
+                variants={fadeUp}
+                className="font-display text-3xl sm:text-4xl md:text-5xl font-bold uppercase leading-[0.9] tracking-tight mb-8"
+              >
+                Trabajemos <span className="text-accent">juntos</span>
+              </motion.h3>
+              <motion.a
+                variants={fadeUp}
+                href="#contact"
+                className="group relative inline-flex items-center gap-3"
+              >
+                <span className="relative border border-accent/30 text-accent font-display font-semibold uppercase tracking-[0.25em] text-[0.65rem] px-8 py-3.5 transition-all duration-500 group-hover:border-accent group-hover:bg-accent group-hover:text-void">
+                  Iniciar conversación
+                </span>
+                <motion.span
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                  className="text-accent text-base"
+                >
+                  &rarr;
+                </motion.span>
+              </motion.a>
+            </motion.div>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="hr-accent" />
 
