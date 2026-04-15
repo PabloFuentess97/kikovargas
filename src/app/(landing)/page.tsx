@@ -1,3 +1,4 @@
+import { getLandingConfig } from "@/lib/config/get-config";
 import { HeroSection } from "@/components/landing/hero-section";
 import { AboutSection } from "@/components/landing/about-section";
 import { StatsBar } from "@/components/landing/stats-bar";
@@ -7,17 +8,24 @@ import { BlogSection } from "@/components/landing/blog-section";
 import { ContactSection } from "@/components/landing/contact-section";
 import { Divider } from "@/components/landing/divider";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const config = await getLandingConfig();
+  const { sections } = config;
+
   return (
     <>
-      <HeroSection />
-      <AboutSection />
-      <StatsBar />
-      <GallerySection />
-      <AchievementsSection />
-      <Divider />
-      <BlogSection />
-      <ContactSection />
+      {sections.hero && <HeroSection config={config.hero} />}
+      {sections.about && <AboutSection config={config.about} />}
+      {sections.stats && <StatsBar config={config.stats} />}
+      {sections.gallery && <GallerySection />}
+      {sections.achievements && <AchievementsSection />}
+      {sections.blog && (
+        <>
+          <Divider />
+          <BlogSection />
+        </>
+      )}
+      {sections.contact && <ContactSection config={config.contact} social={config.social} />}
     </>
   );
 }

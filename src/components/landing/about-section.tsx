@@ -2,8 +2,9 @@
 
 import { motion } from "framer-motion";
 import { fadeUp, slideLeft, slideRight, stagger } from "@/lib/animations";
+import type { AboutContent } from "@/lib/config/landing-defaults";
 
-export function AboutSection() {
+export function AboutSection({ config }: { config: AboutContent }) {
   return (
     <section id="about" className="section-py bg-surface relative overflow-hidden">
       {/* Ghost text */}
@@ -32,7 +33,7 @@ export function AboutSection() {
             <div className="aspect-[3/4] bg-elevated overflow-hidden relative group">
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-[1.4s] ease-out group-hover:scale-[1.04]"
-                style={{ backgroundImage: "url('/images/about-portrait.jpg')" }}
+                style={{ backgroundImage: `url('${config.portraitImage}')` }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-void/30 to-transparent" />
               {/* Corner accents */}
@@ -44,7 +45,7 @@ export function AboutSection() {
             {/* Label */}
             <div className="absolute -bottom-4 left-5 bg-void px-3 py-1.5 hidden md:block">
               <span className="text-[0.55rem] font-mono uppercase tracking-[0.3em] text-accent/50">
-                Est. 2009
+                {config.yearLabel}
               </span>
             </div>
           </motion.div>
@@ -52,37 +53,22 @@ export function AboutSection() {
           {/* Text */}
           <motion.div variants={slideRight} className="lg:col-span-6 lg:col-start-7 lg:pt-8">
             <h2 className="section-heading mb-7 md:mb-9">
-              Más que un
+              {config.heading}
               <br />
-              <span className="text-accent">deporte,</span>
+              <span className="text-accent">{config.headingAccent}</span>
               <br />
-              un estilo de vida
+              {config.headingSuffix}
             </h2>
 
             <div className="space-y-4 text-secondary/75 leading-[1.85] text-[0.875rem] max-w-lg">
-              <p>
-                Llevo más de 15 años dedicado al bodybuilding competitivo. Lo que
-                comenzó como una disciplina personal se convirtió en mi forma de vida,
-                mi carrera y mi manera de inspirar a otros.
-              </p>
-              <p>
-                Cada competencia es una prueba de compromiso. Cada entrenamiento es
-                una decisión de ser mejor. No busco atajos &mdash; busco resultados que
-                hablen por sí solos en el escenario.
-              </p>
-              <p>
-                Hoy, además de competir a nivel profesional, me dedico a preparar
-                atletas que quieran llevar su físico al siguiente nivel.
-              </p>
+              {config.paragraphs.map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
             </div>
 
             {/* Metrics */}
             <div className="mt-10 md:mt-14 pt-7 border-t border-border-subtle grid grid-cols-3 gap-6 md:gap-10">
-              {[
-                { num: "15+", text: "Años compitiendo" },
-                { num: "200+", text: "Atletas preparados" },
-                { num: "3x", text: "Campeón nacional" },
-              ].map((m) => (
+              {config.metrics.map((m) => (
                 <div key={m.text}>
                   <span className="font-display text-xl sm:text-2xl md:text-3xl font-bold text-accent leading-none">
                     {m.num}

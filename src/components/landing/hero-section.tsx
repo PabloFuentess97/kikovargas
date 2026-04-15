@@ -3,8 +3,9 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ease } from "@/lib/animations";
+import type { HeroContent } from "@/lib/config/landing-defaults";
 
-export function HeroSection() {
+export function HeroSection({ config }: { config: HeroContent }) {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "25%"]);
@@ -24,7 +25,7 @@ export function HeroSection() {
           className="absolute inset-0 bg-cover bg-[center_25%]"
           style={{
             backgroundImage:
-              "url('/images/hero-bg.jpg'), linear-gradient(135deg, #080808 0%, #151515 40%, #080808 100%)",
+              `url('${config.backgroundImage}'), linear-gradient(135deg, #080808 0%, #151515 40%, #080808 100%)`,
           }}
         />
       </motion.div>
@@ -51,7 +52,7 @@ export function HeroSection() {
 
         {/* Title */}
         <div className="mb-5 md:mb-7">
-          {["KIKO", "VARGAS"].map((word, i) => (
+          {[config.title, config.titleAccent].map((word, i) => (
             <div key={word} className="overflow-hidden">
               <motion.h1
                 initial={{ y: "110%" }}
@@ -64,7 +65,7 @@ export function HeroSection() {
                 }}
               >
                 {i === 1 ? (
-                  <><span className="text-accent">V</span>argas</>
+                  <><span className="text-accent">{config.titleAccent.charAt(0)}</span>{config.titleAccent.slice(1)}</>
                 ) : (
                   word
                 )}
@@ -82,7 +83,7 @@ export function HeroSection() {
         >
           <div className="h-[1px] w-6 bg-accent/50" />
           <p className="text-[0.6rem] sm:text-[0.65rem] md:text-[0.7rem] uppercase tracking-[0.35em] text-secondary/70 font-medium">
-            IFBB Pro &mdash; Bodybuilder &mdash; Coach
+            {config.tagline}
           </p>
         </motion.div>
 
@@ -92,9 +93,9 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.25, duration: 0.7, ease }}
         >
-          <a href="#contact" className="group relative inline-flex items-center gap-3">
+          <a href={config.ctaHref} className="group relative inline-flex items-center gap-3">
             <span className="relative border border-accent/30 text-accent font-display font-semibold uppercase tracking-[0.25em] text-[0.65rem] px-8 py-3.5 transition-all duration-500 group-hover:border-accent group-hover:bg-accent group-hover:text-void">
-              Colaboraciones
+              {config.ctaText}
             </span>
             <motion.span
               animate={{ x: [0, 4, 0] }}

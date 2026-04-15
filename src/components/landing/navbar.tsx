@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, useMotionValueEvent, useScroll } from "framer-motion";
 import { ease } from "@/lib/animations";
+import type { NavbarContent, SocialLinks } from "@/lib/config/landing-defaults";
 
 const NAV_LINKS = [
   { label: "Sobre mí", href: "#about", num: "01" },
@@ -12,7 +13,7 @@ const NAV_LINKS = [
   { label: "Contacto", href: "#contact", num: "05" },
 ];
 
-export function Navbar() {
+export function Navbar({ config, social }: { config: NavbarContent; social: SocialLinks }) {
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -53,10 +54,10 @@ export function Navbar() {
           {/* Logo */}
           <a href="#" className="relative group" onClick={closeMobile}>
             <span className="font-display text-lg md:text-xl font-bold tracking-[0.18em] uppercase text-primary transition-colors duration-300 group-hover:text-accent">
-              Kiko
+              {config.brandFirst}
             </span>
             <span className="font-display text-lg md:text-xl font-bold tracking-[0.18em] uppercase text-accent">
-              Vargas
+              {config.brandSecond}
             </span>
             <span className="absolute -bottom-0.5 left-0 h-[1px] w-0 bg-accent transition-all duration-500 group-hover:w-full" />
           </a>
@@ -83,7 +84,7 @@ export function Navbar() {
             href="#contact"
             className="hidden lg:inline-block text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-void bg-accent px-5 py-2 hover:bg-accent-hover transition-colors duration-300"
           >
-            Hablemos
+            {config.ctaText}
           </a>
 
           {/* Mobile hamburger */}
@@ -153,7 +154,7 @@ export function Navbar() {
                 onClick={closeMobile}
                 className="inline-block text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-void bg-accent px-6 py-3 hover:bg-accent-hover transition-colors"
               >
-                Hablemos
+                {config.ctaText}
               </a>
             </motion.div>
           </motion.div>

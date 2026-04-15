@@ -2,12 +2,7 @@
 
 import { motion } from "framer-motion";
 import { fadeUp, fadeIn, lineExpand, stagger, staggerSlow } from "@/lib/animations";
-
-const SOCIAL = [
-  { label: "Instagram", href: "https://instagram.com/kikovargass" },
-  { label: "YouTube", href: "https://youtube.com/@kikovargass" },
-  { label: "TikTok", href: "https://tiktok.com/@kikovargass" },
-];
+import type { SocialLinks, NavbarContent } from "@/lib/config/landing-defaults";
 
 const NAV = [
   { label: "Sobre mí", href: "#about" },
@@ -23,7 +18,12 @@ const LEGAL = [
   { label: "Términos", href: "/terms" },
 ];
 
-export function Footer() {
+export function Footer({ social, navbar }: { social: SocialLinks; navbar: NavbarContent }) {
+  const SOCIAL = [
+    { label: "Instagram", href: social.instagram },
+    { label: "YouTube", href: social.youtube },
+    { label: "TikTok", href: social.tiktok },
+  ];
   return (
     <footer className="bg-void relative overflow-hidden">
       {/* ── CTA strip ── */}
@@ -83,10 +83,10 @@ export function Footer() {
           <motion.div variants={fadeUp}>
             <a href="#" className="inline-block mb-4">
               <span className="font-display text-2xl font-bold tracking-[0.15em] uppercase text-primary">
-                Kiko
+                {navbar.brandFirst}
               </span>
               <span className="font-display text-2xl font-bold tracking-[0.15em] uppercase text-accent">
-                Vargas
+                {navbar.brandSecond}
               </span>
             </a>
             <p className="text-[0.8rem] text-tertiary leading-relaxed max-w-[280px]">
@@ -154,7 +154,7 @@ export function Footer() {
 
             {/* Copyright */}
             <p className="text-[0.55rem] text-tertiary/30 uppercase tracking-[0.2em]">
-              &copy; {new Date().getFullYear()} Kiko Vargas
+              &copy; {new Date().getFullYear()} {navbar.brandFirst} {navbar.brandSecond}
             </p>
           </motion.div>
         </div>

@@ -4,13 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, useInView } from "framer-motion";
 import { ease } from "@/lib/animations";
 import { Divider } from "./divider";
-
-const STATS = [
-  { value: 15, suffix: "+", label: "Años de experiencia" },
-  { value: 3, suffix: "x", label: "Campeón nacional" },
-  { value: 200, suffix: "+", label: "Atletas preparados" },
-  { value: 12, suffix: "+", label: "Competencias IFBB" },
-];
+import type { StatsContent } from "@/lib/config/landing-defaults";
 
 function Counter({ value, suffix, label, inView }: {
   value: number; suffix: string; label: string; inView: boolean;
@@ -47,7 +41,7 @@ function Counter({ value, suffix, label, inView }: {
   );
 }
 
-export function StatsBar() {
+export function StatsBar({ config }: { config: StatsContent }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
 
@@ -57,7 +51,7 @@ export function StatsBar() {
 
       <div className="container-landing py-8 md:py-14">
         <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-border-subtle">
-          {STATS.map((stat, i) => (
+          {config.items.map((stat, i) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 25 }}

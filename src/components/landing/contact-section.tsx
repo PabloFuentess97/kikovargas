@@ -4,12 +4,7 @@ import { useState, useCallback, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import { createContactSchema } from "@/lib/validations/contact";
 import { fadeUp, slideLeft, slideRight, stagger, ease } from "@/lib/animations";
-
-const SOCIALS = [
-  { label: "Instagram", href: "https://instagram.com/kikovargass", handle: "@kikovargass" },
-  { label: "YouTube", href: "https://youtube.com/@kikovargass", handle: "Kiko Vargas" },
-  { label: "TikTok", href: "https://tiktok.com/@kikovargass", handle: "@kikovargass" },
-];
+import type { ContactContent, SocialLinks } from "@/lib/config/landing-defaults";
 
 type FieldErrors = Partial<Record<"name" | "email" | "phone" | "subject" | "message", string>>;
 
@@ -41,7 +36,12 @@ function Field({
   );
 }
 
-export function ContactSection() {
+export function ContactSection({ config, social }: { config: ContactContent; social: SocialLinks }) {
+  const SOCIALS = [
+    { label: "Instagram", href: social.instagram, handle: social.instagramHandle },
+    { label: "YouTube", href: social.youtube, handle: social.youtubeHandle },
+    { label: "TikTok", href: social.tiktok, handle: social.tiktokHandle },
+  ];
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -115,9 +115,9 @@ export function ContactSection() {
         <motion.div variants={fadeUp} className="mb-12 md:mb-16 lg:mb-20">
           <span className="section-label mb-5 block">Contacto</span>
           <h2 className="section-heading">
-            Hablemos de
+            {config.heading}
             <br />
-            <span className="text-accent">tu proyecto</span>
+            <span className="text-accent">{config.headingAccent}</span>
           </h2>
         </motion.div>
 
@@ -129,8 +129,7 @@ export function ContactSection() {
                 Colaboraciones
               </h3>
               <p className="text-secondary/60 leading-[1.85] text-[0.85rem]">
-                Sponsorships, colaboraciones con marcas, sesiones fotográficas
-                y coaching personalizado para competidores.
+                {config.description}
               </p>
             </div>
 
@@ -139,10 +138,10 @@ export function ContactSection() {
                 Email directo
               </h3>
               <a
-                href="mailto:contacto@kikovargass.com"
+                href={`mailto:${config.email}`}
                 className="text-primary/80 text-[0.85rem] hover:text-accent transition-colors duration-300"
               >
-                contacto@kikovargass.com
+                {config.email}
               </a>
             </div>
 
@@ -254,7 +253,7 @@ export function ContactSection() {
                     className="group relative inline-flex items-center gap-3 disabled:opacity-40"
                   >
                     <span className="relative border border-accent bg-accent text-void font-display font-semibold uppercase tracking-[0.2em] text-[0.65rem] px-10 py-4 transition-all duration-500 group-hover:bg-transparent group-hover:text-accent">
-                      {status === "loading" ? "Enviando..." : "Enviar mensaje"}
+                      {status === "loading" ? "Enviando..." : config.ctaText}
                     </span>
                     <span className="text-accent text-base transition-transform duration-300 group-hover:translate-x-0.5">
                       &rarr;
