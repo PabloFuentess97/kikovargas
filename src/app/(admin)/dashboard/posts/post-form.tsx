@@ -31,7 +31,7 @@ function slugify(text: string) {
     .replace(/^-|-$/g, "");
 }
 
-export function PostForm({ post }: { post?: PostData }) {
+export function PostForm({ post, ideaTopic }: { post?: PostData; ideaTopic?: string }) {
   const router = useRouter();
   const isEdit = Boolean(post?.id);
 
@@ -41,9 +41,9 @@ export function PostForm({ post }: { post?: PostData }) {
   const [autoSlug, setAutoSlug] = useState(!isEdit);
   const contentRef = useRef(post?.content ?? "");
 
-  // AI generation state
-  const [aiOpen, setAiOpen] = useState(false);
-  const [aiTopic, setAiTopic] = useState("");
+  // AI generation state — auto-open if ideaTopic is provided
+  const [aiOpen, setAiOpen] = useState(Boolean(ideaTopic));
+  const [aiTopic, setAiTopic] = useState(ideaTopic ?? "");
   const [aiContext, setAiContext] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
