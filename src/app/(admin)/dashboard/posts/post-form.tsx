@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useRef, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createPostSchema, updatePostSchema } from "@/lib/validations/post";
 import {
   FormField, FormLabel, FormInput, FormTextarea, FormSelect,
   FormError, FormActions, Button,
 } from "@/components/admin/ui";
+import { TiptapEditor } from "@/components/admin/tiptap-editor";
 
 interface PostData {
   id?: string;
@@ -36,6 +37,7 @@ export function PostForm({ post }: { post?: PostData }) {
   const [errorMsg, setErrorMsg] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [autoSlug, setAutoSlug] = useState(!isEdit);
+  const contentRef = useRef(post?.content ?? "");
 
   function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (autoSlug) {
@@ -54,7 +56,7 @@ export function PostForm({ post }: { post?: PostData }) {
       title: fd.get("title") as string,
       slug: fd.get("slug") as string,
       excerpt: (fd.get("excerpt") as string) || undefined,
-      content: fd.get("content") as string,
+      content: contentRef.current,
       status: fd.get("status") as string,
     };
 
@@ -149,14 +151,10 @@ export function PostForm({ post }: { post?: PostData }) {
       </FormField>
 
       <FormField>
-        <FormLabel htmlFor="content">Contenido</FormLabel>
-        <FormTextarea
-          id="content"
-          name="content"
-          defaultValue={post?.content ?? ""}
-          rows={16}
-          className="font-mono leading-relaxed resize-y"
-          placeholder="Escribe el contenido del post..."
+        <FormLabel>Contenido</FormLabel>
+        <TiptapEditor
+          content={post?.content ?? ""}
+          onChange={(html) => { contentRef.current = html; }}
           error={fieldErrors.content}
         />
       </FormField>
