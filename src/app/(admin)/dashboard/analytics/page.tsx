@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { AnalyticsCharts } from "./analytics-charts";
+import { PageHeader, StatCard, Card, CardHeader, ProgressBar } from "@/components/admin/ui";
 
 export default async function AnalyticsPage() {
   await requireAdmin();
@@ -11,14 +12,8 @@ export default async function AnalyticsPage() {
   const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   const [
-    totalViews,
-    todayViews,
-    weekViews,
-    monthViews,
-    topPages,
-    topCountries,
-    deviceBreakdown,
-    browserBreakdown,
+    totalViews, todayViews, weekViews, monthViews,
+    topPages, topCountries, deviceBreakdown, browserBreakdown,
     recentViews,
   ] = await Promise.all([
     prisma.pageView.count(),
@@ -74,28 +69,16 @@ export default async function AnalyticsPage() {
   }
   const daily = Array.from(dailyMap, ([date, count]) => ({ date, count }));
 
-  const stats = [
-    { label: "Hoy", value: todayViews, trend: null },
-    { label: "7 dias", value: weekViews, trend: null },
-    { label: "30 dias", value: monthViews, trend: null },
-    { label: "Total", value: totalViews, trend: null },
-  ];
-
   return (
     <div className="admin-fade-in">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
-        <p className="mt-1 text-sm text-muted">Ultimos 30 dias de actividad</p>
-      </div>
+      <PageHeader title="Analytics" subtitle="Ultimos 30 dias de actividad" />
 
       {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((s) => (
-          <div key={s.label} className="admin-card p-5">
-            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">{s.label}</p>
-            <p className="mt-2 text-3xl font-bold tracking-tight">{s.value.toLocaleString("es-MX")}</p>
-          </div>
-        ))}
+        <StatCard label="Hoy" value={todayViews} />
+        <StatCard label="7 dias" value={weekViews} />
+        <StatCard label="30 dias" value={monthViews} />
+        <StatCard label="Total" value={totalViews} />
       </div>
 
       {/* Daily chart */}
@@ -106,10 +89,8 @@ export default async function AnalyticsPage() {
       {/* Tables grid */}
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         {/* Top pages */}
-        <div className="admin-card overflow-hidden">
-          <div className="border-b border-border px-5 py-4">
-            <h2 className="text-sm font-semibold">Paginas mas visitadas</h2>
-          </div>
+        <Card className="overflow-hidden">
+          <CardHeader title="Paginas mas visitadas" />
           <div className="divide-y divide-border">
             {topPages.length === 0 && (
               <p className="px-5 py-8 text-center text-sm text-muted">Sin datos todavia</p>
@@ -124,13 +105,11 @@ export default async function AnalyticsPage() {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
 
         {/* Top countries */}
-        <div className="admin-card overflow-hidden">
-          <div className="border-b border-border px-5 py-4">
-            <h2 className="text-sm font-semibold">Paises</h2>
-          </div>
+        <Card className="overflow-hidden">
+          <CardHeader title="Paises" />
           <div className="divide-y divide-border">
             {topCountries.length === 0 && (
               <p className="px-5 py-8 text-center text-sm text-muted">Sin datos de geolocalizacion</p>
@@ -142,13 +121,11 @@ export default async function AnalyticsPage() {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
 
         {/* Devices */}
-        <div className="admin-card overflow-hidden">
-          <div className="border-b border-border px-5 py-4">
-            <h2 className="text-sm font-semibold">Dispositivos</h2>
-          </div>
+        <Card className="overflow-hidden">
+          <CardHeader title="Dispositivos" />
           <div className="p-5 space-y-4">
             {deviceBreakdown.length === 0 && (
               <p className="text-center text-sm text-muted">Sin datos</p>
@@ -156,28 +133,20 @@ export default async function AnalyticsPage() {
             {deviceBreakdown.map((d) => {
               const pct = monthViews > 0 ? Math.round((d._count.id / monthViews) * 100) : 0;
               return (
-                <div key={d.device}>
-                  <div className="flex items-center justify-between text-sm mb-1.5">
-                    <span className="capitalize font-medium">{d.device || "desconocido"}</span>
-                    <span className="text-muted tabular-nums">{d._count.id} ({pct}%)</span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-border overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-a-accent transition-all duration-500"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
+                <ProgressBar
+                  key={d.device}
+                  value={pct}
+                  label={d.device || "desconocido"}
+                  detail={`${d._count.id} (${pct}%)`}
+                />
               );
             })}
           </div>
-        </div>
+        </Card>
 
         {/* Browsers */}
-        <div className="admin-card overflow-hidden">
-          <div className="border-b border-border px-5 py-4">
-            <h2 className="text-sm font-semibold">Navegadores</h2>
-          </div>
+        <Card className="overflow-hidden">
+          <CardHeader title="Navegadores" />
           <div className="p-5 space-y-4">
             {browserBreakdown.length === 0 && (
               <p className="text-center text-sm text-muted">Sin datos</p>
@@ -185,22 +154,16 @@ export default async function AnalyticsPage() {
             {browserBreakdown.map((b) => {
               const pct = monthViews > 0 ? Math.round((b._count.id / monthViews) * 100) : 0;
               return (
-                <div key={b.browser}>
-                  <div className="flex items-center justify-between text-sm mb-1.5">
-                    <span className="font-medium">{b.browser || "desconocido"}</span>
-                    <span className="text-muted tabular-nums">{b._count.id} ({pct}%)</span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-border overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-a-accent transition-all duration-500"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
+                <ProgressBar
+                  key={b.browser}
+                  value={pct}
+                  label={b.browser || "desconocido"}
+                  detail={`${b._count.id} (${pct}%)`}
+                />
               );
             })}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

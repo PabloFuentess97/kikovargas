@@ -3,6 +3,10 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createPostSchema, updatePostSchema } from "@/lib/validations/post";
+import {
+  FormField, FormLabel, FormInput, FormTextarea, FormSelect,
+  FormError, FormActions, Button,
+} from "@/components/admin/ui";
 
 interface PostData {
   id?: string;
@@ -93,119 +97,89 @@ export function PostForm({ post }: { post?: PostData }) {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-6">
-      {/* Title */}
-      <div>
-        <label htmlFor="title" className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">
-          Titulo
-        </label>
-        <input
+      <FormField>
+        <FormLabel htmlFor="title">Titulo</FormLabel>
+        <FormInput
           id="title"
           name="title"
           defaultValue={post?.title}
           onChange={handleTitleChange}
-          className={`w-full px-4 py-3 text-sm ${fieldErrors.title ? "!border-danger !ring-danger/20" : ""}`}
           placeholder="Mi nuevo articulo"
+          error={fieldErrors.title}
         />
-        {fieldErrors.title && <p className="mt-1.5 text-xs text-danger">{fieldErrors.title}</p>}
-      </div>
+      </FormField>
 
-      {/* Slug */}
-      <div>
-        <label htmlFor="slug" className="flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">
+      <FormField>
+        <FormLabel
+          htmlFor="slug"
+          aside={
+            !isEdit ? (
+              <button
+                type="button"
+                onClick={() => setAutoSlug(!autoSlug)}
+                className="rounded bg-a-accent-dim px-1.5 py-0.5 text-[0.6rem] font-medium text-a-accent normal-case tracking-normal hover:bg-a-accent/15 transition-colors"
+              >
+                {autoSlug ? "auto" : "manual"}
+              </button>
+            ) : undefined
+          }
+        >
           Slug
-          {!isEdit && (
-            <button
-              type="button"
-              onClick={() => setAutoSlug(!autoSlug)}
-              className="rounded bg-a-accent-dim px-1.5 py-0.5 text-[0.6rem] font-medium text-a-accent normal-case tracking-normal hover:bg-a-accent/15 transition-colors"
-            >
-              {autoSlug ? "auto" : "manual"}
-            </button>
-          )}
-        </label>
-        <input
+        </FormLabel>
+        <FormInput
           id="slug"
           name="slug"
           defaultValue={post?.slug}
-          className={`w-full px-4 py-3 text-sm font-mono ${fieldErrors.slug ? "!border-danger !ring-danger/20" : ""}`}
+          className="font-mono"
           placeholder="mi-nuevo-articulo"
+          error={fieldErrors.slug}
         />
-        {fieldErrors.slug && <p className="mt-1.5 text-xs text-danger">{fieldErrors.slug}</p>}
-      </div>
+      </FormField>
 
-      {/* Excerpt */}
-      <div>
-        <label htmlFor="excerpt" className="flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">
-          Extracto
-          <span className="text-[0.6rem] font-normal normal-case tracking-normal text-muted/60">Opcional</span>
-        </label>
-        <textarea
+      <FormField>
+        <FormLabel htmlFor="excerpt" optional>Extracto</FormLabel>
+        <FormTextarea
           id="excerpt"
           name="excerpt"
           defaultValue={post?.excerpt ?? ""}
           rows={2}
-          className="w-full px-4 py-3 text-sm resize-none"
+          className="resize-none"
           placeholder="Breve descripcion del post..."
         />
-      </div>
+      </FormField>
 
-      {/* Content */}
-      <div>
-        <label htmlFor="content" className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">
-          Contenido
-        </label>
-        <textarea
+      <FormField>
+        <FormLabel htmlFor="content">Contenido</FormLabel>
+        <FormTextarea
           id="content"
           name="content"
           defaultValue={post?.content ?? ""}
           rows={16}
-          className={`w-full px-4 py-3 text-sm font-mono leading-relaxed resize-y ${fieldErrors.content ? "!border-danger !ring-danger/20" : ""}`}
+          className="font-mono leading-relaxed resize-y"
           placeholder="Escribe el contenido del post..."
+          error={fieldErrors.content}
         />
-        {fieldErrors.content && <p className="mt-1.5 text-xs text-danger">{fieldErrors.content}</p>}
-      </div>
+      </FormField>
 
-      {/* Status */}
-      <div>
-        <label htmlFor="status" className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">
-          Estado
-        </label>
-        <select
-          id="status"
-          name="status"
-          defaultValue={post?.status ?? "DRAFT"}
-          className="px-4 py-3 text-sm cursor-pointer"
-        >
+      <FormField>
+        <FormLabel htmlFor="status">Estado</FormLabel>
+        <FormSelect id="status" name="status" defaultValue={post?.status ?? "DRAFT"}>
           <option value="DRAFT">Borrador</option>
           <option value="PUBLISHED">Publicado</option>
           <option value="ARCHIVED">Archivado</option>
-        </select>
-      </div>
+        </FormSelect>
+      </FormField>
 
-      {/* Error banner */}
-      {status === "error" && (
-        <div className="rounded-lg border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger">
-          {errorMsg}
-        </div>
-      )}
+      {status === "error" && <FormError message={errorMsg} />}
 
-      {/* Actions */}
-      <div className="flex items-center gap-3 pt-4 border-t border-border">
-        <button
-          type="submit"
-          disabled={status === "saving"}
-          className="rounded-lg bg-a-accent px-6 py-2.5 text-sm font-medium text-black transition-all hover:bg-a-accent-hover active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none"
-        >
-          {status === "saving" ? "Guardando..." : isEdit ? "Guardar cambios" : "Crear post"}
-        </button>
-        <button
-          type="button"
-          onClick={() => router.push("/dashboard/posts")}
-          className="rounded-lg border border-border px-6 py-2.5 text-sm font-medium text-muted transition-all hover:text-foreground hover:border-foreground/20"
-        >
+      <FormActions>
+        <Button type="submit" loading={status === "saving"} size="lg">
+          {isEdit ? "Guardar cambios" : "Crear post"}
+        </Button>
+        <Button type="button" variant="secondary" size="lg" onClick={() => router.push("/dashboard/posts")}>
           Cancelar
-        </button>
-      </div>
+        </Button>
+      </FormActions>
     </form>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/admin/ui";
 
 interface ContactActionsProps {
   contactId: string;
@@ -46,7 +47,6 @@ export function ContactActions({ contactId, currentStatus, email }: ContactActio
 
   return (
     <div className="space-y-2">
-      {/* Reply via email */}
       <a
         href={`mailto:${email}?subject=Re: Tu mensaje en kikovargas.fit`}
         onClick={() => {
@@ -60,34 +60,37 @@ export function ContactActions({ contactId, currentStatus, email }: ContactActio
         Responder por email
       </a>
 
-      {/* Status actions */}
-      {currentStatus !== "ARCHIVED" && (
-        <button
+      {currentStatus !== "ARCHIVED" ? (
+        <Button
+          variant="secondary"
+          className="w-full"
           onClick={() => updateStatus("ARCHIVED")}
           disabled={loading !== null}
-          className="flex w-full items-center justify-center rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-muted transition-all hover:text-foreground hover:border-foreground/20 disabled:opacity-50"
+          loading={loading === "ARCHIVED"}
         >
-          {loading === "ARCHIVED" ? "Archivando..." : "Archivar"}
-        </button>
-      )}
-
-      {currentStatus === "ARCHIVED" && (
-        <button
+          Archivar
+        </Button>
+      ) : (
+        <Button
+          variant="secondary"
+          className="w-full"
           onClick={() => updateStatus("READ")}
           disabled={loading !== null}
-          className="flex w-full items-center justify-center rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-muted transition-all hover:text-foreground hover:border-foreground/20 disabled:opacity-50"
+          loading={loading === "READ"}
         >
-          {loading === "READ" ? "Restaurando..." : "Restaurar"}
-        </button>
+          Restaurar
+        </Button>
       )}
 
-      <button
+      <Button
+        variant="danger"
+        className="w-full"
         onClick={handleDelete}
         disabled={loading !== null}
-        className="flex w-full items-center justify-center rounded-lg border border-danger/20 px-4 py-2.5 text-sm font-medium text-danger transition-all hover:bg-danger/10 hover:border-danger/40 disabled:opacity-50"
+        loading={loading === "DELETE"}
       >
-        {loading === "DELETE" ? "Eliminando..." : "Eliminar"}
-      </button>
+        Eliminar
+      </Button>
     </div>
   );
 }
