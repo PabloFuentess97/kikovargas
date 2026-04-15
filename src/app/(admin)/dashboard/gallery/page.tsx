@@ -7,7 +7,6 @@ export default async function GalleryPage() {
   await requireAdmin();
 
   const images = await prisma.image.findMany({
-    where: { gallery: true },
     orderBy: [{ order: "asc" }, { createdAt: "desc" }],
   });
 
@@ -15,7 +14,7 @@ export default async function GalleryPage() {
     <div className="admin-fade-in">
       <PageHeader
         title="Galeria"
-        subtitle="Sube y administra las imagenes del landing page."
+        subtitle="Sube y administra las imagenes. Las marcadas con estrella aparecen en el landing."
       />
       <GalleryManager initialImages={images} />
     </div>
