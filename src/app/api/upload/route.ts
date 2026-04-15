@@ -116,8 +116,8 @@ export async function POST(req: NextRequest) {
       const filepath = path.join(uploadDir, filename);
       await writeFile(filepath, bytes);
 
-      // URL is relative to public/
-      const url = `/uploads/${filename}`;
+      // URL served via API route (standalone mode doesn't serve new public/ files)
+      const url = `/api/uploads/${filename}`;
 
       results.push({
         url,

@@ -52,9 +52,12 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     // Delete from database
     await prisma.image.delete({ where: { id } });
 
-    // Try to delete file from disk (local uploads start with /uploads/)
-    if (existing.url.startsWith("/uploads/")) {
-      const filePath = path.join(process.cwd(), "public", existing.url);
+    // Try to delete file from disk (local uploads: /uploads/x.jpg or /api/uploads/x.jpg)
+    const localPath = existing.url.startsWith("/api/uploads/")
+      ? existing.url.replace("/api/uploads/", "/uploads/")
+      : existing.url;
+    if (localPath.startsWith("/uploads/")) {
+      const filePath = path.join(process.cwd(), "public", localPath);
       try {
         await unlink(filePath);
       } catch {
