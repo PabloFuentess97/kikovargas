@@ -159,7 +159,15 @@ export function Footer({ social, navbar, sections }: { social: SocialLinks; navb
 
             {/* Copyright */}
             <p className="text-[0.55rem] text-tertiary/30 uppercase tracking-[0.2em]">
-              &copy; {new Date().getFullYear()} {navbar.brandFirst} {navbar.brandSecond}
+              &copy; {new Date().getFullYear()} {navbar.brandFirst} {navbar.brandSecond} — Desarrollado por{" "}
+              <a
+                href="https://uxea.net"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-tertiary/50 hover:text-accent transition-colors duration-300"
+              >
+                Uxea Soluciones
+              </a>
             </p>
           </motion.div>
         </div>
