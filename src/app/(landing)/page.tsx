@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getLandingConfig } from "@/lib/config/get-config";
 import { HeroSection } from "@/components/landing/hero-section";
 import { AboutSection } from "@/components/landing/about-section";
