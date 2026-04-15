@@ -10,22 +10,22 @@ import { Divider } from "@/components/landing/divider";
 
 export default async function HomePage() {
   const config = await getLandingConfig();
-  const { sections } = config;
+  const s = config.sections ?? {};
 
   return (
     <>
-      {sections.hero && <HeroSection config={config.hero} />}
-      {sections.about && <AboutSection config={config.about} />}
-      {sections.stats && <StatsBar config={config.stats} />}
-      {sections.gallery && <GallerySection />}
-      {sections.achievements && <AchievementsSection />}
-      {sections.blog && (
+      {s.hero !== false && <HeroSection config={config.hero} />}
+      {s.about !== false && <AboutSection config={config.about} />}
+      {s.stats !== false && <StatsBar config={config.stats} />}
+      {s.gallery !== false && <GallerySection />}
+      {s.achievements !== false && <AchievementsSection />}
+      {s.blog !== false && (
         <>
           <Divider />
           <BlogSection />
         </>
       )}
-      {sections.contact && <ContactSection config={config.contact} social={config.social} />}
+      {s.contact !== false && <ContactSection config={config.contact} social={config.social} />}
     </>
   );
 }

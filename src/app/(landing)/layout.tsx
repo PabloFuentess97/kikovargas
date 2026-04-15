@@ -21,7 +21,7 @@ export default async function LandingLayout({ children }: { children: React.Reac
   return (
     <div className="grain">
       <ThemeProvider theme={config.theme} />
-      <Navbar config={config.navbar} social={config.social} />
+      <Navbar config={config.navbar} social={config.social} sections={config.sections} />
       <main>{children}</main>
       <Footer social={config.social} navbar={config.navbar} />
     </div>

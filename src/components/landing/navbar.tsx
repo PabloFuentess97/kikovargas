@@ -3,22 +3,27 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, useMotionValueEvent, useScroll } from "framer-motion";
 import { ease } from "@/lib/animations";
-import type { NavbarContent, SocialLinks } from "@/lib/config/landing-defaults";
+import type { NavbarContent, SocialLinks, SectionsConfig } from "@/lib/config/landing-defaults";
 
-const NAV_LINKS = [
-  { label: "Sobre mí", href: "#about", num: "01" },
-  { label: "Galería", href: "#gallery", num: "02" },
-  { label: "Logros", href: "#achievements", num: "03" },
-  { label: "Blog", href: "#blog", num: "04" },
-  { label: "Contacto", href: "#contact", num: "05" },
+const ALL_NAV_LINKS: { label: string; href: string; section: keyof SectionsConfig }[] = [
+  { label: "Sobre mí", href: "#about", section: "about" },
+  { label: "Galería", href: "#gallery", section: "gallery" },
+  { label: "Logros", href: "#achievements", section: "achievements" },
+  { label: "Blog", href: "#blog", section: "blog" },
+  { label: "Contacto", href: "#contact", section: "contact" },
 ];
 
-export function Navbar({ config, social }: { config: NavbarContent; social: SocialLinks }) {
+export function Navbar({ config, social, sections }: { config: NavbarContent; social: SocialLinks; sections: SectionsConfig }) {
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { scrollY } = useScroll();
   const [lastY, setLastY] = useState(0);
+
+  // Filter nav links based on enabled sections
+  const NAV_LINKS = ALL_NAV_LINKS
+    .filter((link) => sections?.[link.section] !== false)
+    .map((link, i) => ({ ...link, num: String(i + 1).padStart(2, "0") }));
 
   useMotionValueEvent(scrollY, "change", (v) => {
     setScrolled(v > 60);
@@ -79,13 +84,15 @@ export function Navbar({ config, social }: { config: NavbarContent; social: Soci
             ))}
           </nav>
 
-          {/* CTA */}
-          <a
-            href="#contact"
-            className="hidden lg:inline-block text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-void bg-accent px-5 py-2 hover:bg-accent-hover transition-colors duration-300"
-          >
-            {config.ctaText}
-          </a>
+          {/* CTA — only show if contact section is enabled */}
+          {sections?.contact !== false && (
+            <a
+              href="#contact"
+              className="hidden lg:inline-block text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-void bg-accent px-5 py-2 hover:bg-accent-hover transition-colors duration-300"
+            >
+              {config.ctaText}
+            </a>
+          )}
 
           {/* Mobile hamburger */}
           <button
@@ -143,20 +150,22 @@ export function Navbar({ config, social }: { config: NavbarContent; social: Soci
               ))}
             </nav>
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="container-landing mt-10"
-            >
-              <a
-                href="#contact"
-                onClick={closeMobile}
-                className="inline-block text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-void bg-accent px-6 py-3 hover:bg-accent-hover transition-colors"
+            {sections?.contact !== false && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="container-landing mt-10"
               >
-                {config.ctaText}
-              </a>
-            </motion.div>
+                <a
+                  href="#contact"
+                  onClick={closeMobile}
+                  className="inline-block text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-void bg-accent px-6 py-3 hover:bg-accent-hover transition-colors"
+                >
+                  {config.ctaText}
+                </a>
+              </motion.div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
