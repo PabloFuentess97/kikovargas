@@ -34,7 +34,8 @@ services:
       NODE_ENV: production
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       CONTACT_EMAIL_TO: ${CONTACT_EMAIL_TO:-contacto@kikovargass.com}
-      UPLOADTHING_TOKEN: ${UPLOADTHING_TOKEN:-}
+    volumes:
+      - ./uploads:/app/public/uploads
     networks:
       - internal
 

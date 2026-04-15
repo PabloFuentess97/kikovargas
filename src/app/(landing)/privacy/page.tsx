@@ -86,7 +86,7 @@ export default function PrivacyPage() {
           <li><strong className="text-primary/80">Resend Inc.</strong> — Servicio de envío de correo electrónico transaccional para notificaciones del formulario de contacto.</li>
           <li><strong className="text-primary/80">Vercel Inc.</strong> — Alojamiento del sitio web. Los datos de geolocalización (país/ciudad) se derivan de las cabeceras proporcionadas por su infraestructura.</li>
           <li><strong className="text-primary/80">Proveedor de base de datos PostgreSQL</strong> — Almacenamiento seguro de los datos del formulario de contacto y analítica.</li>
-          <li><strong className="text-primary/80">UploadThing</strong> — Servicio de almacenamiento de imágenes para la galería del sitio (no procesa datos personales de los visitantes).</li>
+          <li><strong className="text-primary/80">Almacenamiento local</strong> — Las imágenes de la galería se almacenan en el servidor propio del sitio (no se utilizan servicios externos de almacenamiento).</li>
         </ul>
         <p>
           No vendemos, alquilamos ni compartimos tus datos personales con terceros con fines comerciales.
@@ -95,7 +95,7 @@ export default function PrivacyPage() {
 
       <LegalSection title="6. Transferencias internacionales">
         <p>
-          Algunos de nuestros proveedores de servicios (Resend, Vercel, UploadThing) tienen sede en
+          Algunos de nuestros proveedores de servicios (Resend, Vercel) tienen sede en
           Estados Unidos. Las transferencias de datos fuera del Espacio Económico Europeo se realizan
           bajo las garantías adecuadas, incluyendo las Cláusulas Contractuales Tipo aprobadas por la
           Comisión Europea y el Marco de Privacidad de Datos UE-EE.UU.

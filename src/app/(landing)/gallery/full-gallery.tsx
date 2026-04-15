@@ -56,7 +56,7 @@ export function FullGallery({ images }: { images: GalleryImage[] }) {
         whileInView="visible"
         viewport={{ once: true, margin: "-40px" }}
         variants={stagger}
-        className="columns-2 md:columns-3 lg:columns-4 gap-2 md:gap-2.5 space-y-2 md:space-y-2.5"
+        className="columns-2 md:columns-3 lg:columns-4 gap-2.5 md:gap-3 space-y-2.5 md:space-y-3"
       >
         {images.map((img, i) => (
           <motion.button
@@ -69,7 +69,7 @@ export function FullGallery({ images }: { images: GalleryImage[] }) {
               src={img.url}
               alt={img.alt || "Galería"}
               loading="lazy"
-              className="w-full h-auto object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-[1.04]"
+              className="w-full h-auto object-cover transition-transform duration-[1.4s] ease-out group-hover:scale-[1.05]"
               onError={(e) => {
                 const el = e.target as HTMLImageElement;
                 el.style.display = "none";
@@ -81,13 +81,24 @@ export function FullGallery({ images }: { images: GalleryImage[] }) {
                 }
               }}
             />
-            <div className="absolute inset-0 bg-void/20 transition-all duration-500 group-hover:bg-void/5" />
+            <div className="absolute inset-0 bg-void/15 transition-all duration-600 group-hover:bg-void/0" />
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-void/40 via-transparent to-transparent opacity-50 group-hover:opacity-10 transition-opacity duration-700" />
             {/* Inset border */}
             <div className="absolute inset-1 border border-white/0 transition-all duration-700 group-hover:border-white/10 group-hover:inset-2.5" />
+            {/* Corner accents */}
+            <div className="absolute top-2.5 left-2.5 w-4 h-4 border-t border-l border-accent/0 group-hover:border-accent/40 transition-all duration-700" />
+            <div className="absolute bottom-2.5 right-2.5 w-4 h-4 border-b border-r border-accent/0 group-hover:border-accent/40 transition-all duration-700" />
+            {/* Number overlay */}
+            <div className="absolute top-2.5 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+              <span className="font-mono text-[0.45rem] text-accent/40 tracking-wider">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+            </div>
             {/* Label */}
-            <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out bg-gradient-to-t from-void/80 to-transparent pt-8">
+            <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out bg-gradient-to-t from-void/90 to-transparent pt-8">
               <div className="h-[1px] w-5 bg-accent mb-1.5" />
-              <span className="text-[0.55rem] font-medium uppercase tracking-[0.2em] text-primary/80">
+              <span className="text-[0.5rem] font-medium uppercase tracking-[0.2em] text-primary/90">
                 {img.alt || "Galería"}
               </span>
             </div>

@@ -39,6 +39,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# ─── Uploads (user-generated content) ───────────────
+public/uploads/*
+!public/uploads/.gitkeep
+uploads/
+
 # ─── Misc ────────────────────────────────────────────
 *.pem
 .vercel

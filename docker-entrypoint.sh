@@ -65,11 +65,22 @@ run_migrations() {
   fi
 }
 
+# ─── Ensure uploads directory ────────────────────────
+ensure_uploads_dir() {
+  UPLOADS_DIR="/app/public/uploads"
+  if [ ! -d "$UPLOADS_DIR" ]; then
+    log "Creating uploads directory..."
+    mkdir -p "$UPLOADS_DIR"
+  fi
+  log "Uploads directory OK: $UPLOADS_DIR"
+}
+
 # ─── Main ────────────────────────────────────────────
 validate_env
 parse_db_url
 wait_for_db
 run_migrations
+ensure_uploads_dir
 
 log "Starting application..."
 exec "$@"

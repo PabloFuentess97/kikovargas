@@ -5,7 +5,6 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32),
   RESEND_API_KEY: z.string().min(1).optional(),
   CONTACT_EMAIL_TO: z.string().email().default("contacto@kikovargass.com"),
-  UPLOADTHING_TOKEN: z.string().min(1).optional(),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 });
 

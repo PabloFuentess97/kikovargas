@@ -1,5 +1,5 @@
 # ─── Stage 1: Dependencies ──────────────────────────
-FROM node:20-alpine AS deps
+FROM node:18-alpine AS deps
 
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -10,7 +10,7 @@ COPY prisma ./prisma/
 RUN npm ci --ignore-scripts
 
 # ─── Stage 2: Build ─────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
@@ -32,7 +32,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # ─── Stage 3: Production ────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:18-alpine AS runner
 
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -47,8 +47,11 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Public assets
+# Public assets (excluding uploads — mounted as volume)
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+# Create uploads directory (will be overlaid by volume mount)
+RUN mkdir -p /app/public/uploads && chown nextjs:nodejs /app/public/uploads
 
 # Copy Prisma schema + migrations + config for runtime migrate deploy
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma

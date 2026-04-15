@@ -1,90 +1,183 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { motion } from "framer-motion";
-import { fadeUp } from "@/lib/animations";
+import { fadeUp, stagger } from "@/lib/animations";
+
+/**
+ * Render inline markdown: **bold** and *italic*
+ */
+function renderInline(text: string) {
+  const parts: (string | ReactNode)[] = [];
+  // Match **bold** or *italic*
+  const regex = /(\*\*(.+?)\*\*|\*(.+?)\*)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    if (match[2]) {
+      parts.push(
+        <strong key={match.index} className="text-primary font-semibold">
+          {match[2]}
+        </strong>
+      );
+    } else if (match[3]) {
+      parts.push(
+        <em key={match.index} className="text-secondary/80 italic">
+          {match[3]}
+        </em>
+      );
+    }
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+  return parts.length > 0 ? parts : text;
+}
 
 export function PostContent({ content }: { content: string }) {
+  // Group consecutive list items together
+  const lines = content.split("\n");
+  const elements: ReactNode[] = [];
+  let listBuffer: string[] = [];
+  let keyIdx = 0;
+
+  function flushList() {
+    if (listBuffer.length === 0) return;
+    elements.push(
+      <ul key={`list-${keyIdx++}`} className="my-6 ml-1 space-y-3">
+        {listBuffer.map((item, j) => (
+          <li key={j} className="flex gap-3.5 items-start">
+            <span className="text-accent mt-[0.6rem] text-[0.45rem] shrink-0">&#9670;</span>
+            <span className="text-secondary/70 text-[0.95rem] md:text-base leading-[1.85]">
+              {renderInline(item)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    );
+    listBuffer = [];
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+    if (!trimmed) {
+      flushList();
+      continue;
+    }
+
+    // List items — buffer them for grouping
+    if (trimmed.startsWith("- ") || trimmed.startsWith("• ")) {
+      listBuffer.push(trimmed.replace(/^[-•]\s*/, ""));
+      continue;
+    }
+
+    // Flush any pending list before other elements
+    flushList();
+
+    // H1 heading
+    if (trimmed.startsWith("# ") && !trimmed.startsWith("## ")) {
+      elements.push(
+        <h2
+          key={`h1-${keyIdx++}`}
+          className="font-display text-2xl md:text-3xl font-bold uppercase text-primary mt-16 mb-6 tracking-[-0.01em] leading-[1.1]"
+        >
+          <span className="inline-block w-8 h-[2px] bg-accent/50 mr-4 align-middle" />
+          {trimmed.replace(/^#\s*/, "")}
+        </h2>
+      );
+      continue;
+    }
+
+    // H2 heading
+    if (trimmed.startsWith("## ")) {
+      elements.push(
+        <h2
+          key={`h2-${keyIdx++}`}
+          className="font-display text-xl md:text-2xl font-bold uppercase text-primary mt-14 mb-5 tracking-[-0.01em] leading-[1.15]"
+        >
+          <span className="inline-block w-6 h-[2px] bg-accent/40 mr-3 align-middle" />
+          {trimmed.replace(/^##\s*/, "")}
+        </h2>
+      );
+      continue;
+    }
+
+    // Bold line (sub-heading)
+    if (trimmed.startsWith("**") && trimmed.endsWith("**")) {
+      elements.push(
+        <h3
+          key={`h3-${keyIdx++}`}
+          className="font-display text-lg md:text-xl font-semibold uppercase text-primary/90 mt-10 mb-4 tracking-tight"
+        >
+          {trimmed.replace(/^\*\*|\*\*$/g, "")}
+        </h3>
+      );
+      continue;
+    }
+
+    // Blockquote
+    if (trimmed.startsWith("> ")) {
+      elements.push(
+        <blockquote
+          key={`bq-${keyIdx++}`}
+          className="relative my-10 pl-7 py-1 border-l-[2px] border-accent/30"
+        >
+          <span
+            aria-hidden
+            className="absolute -left-2 -top-3 font-display text-5xl text-accent/10 leading-none select-none"
+          >
+            &ldquo;
+          </span>
+          <p className="italic text-secondary/55 text-base md:text-lg leading-[1.85] font-light">
+            {renderInline(trimmed.replace(/^>\s*/, ""))}
+          </p>
+        </blockquote>
+      );
+      continue;
+    }
+
+    // Regular paragraph
+    elements.push(
+      <p
+        key={`p-${keyIdx++}`}
+        className="text-secondary/70 text-[0.95rem] md:text-base leading-[1.9] mb-6"
+      >
+        {renderInline(trimmed)}
+      </p>
+    );
+  }
+  flushList();
+
   return (
     <motion.article
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true }}
-      variants={fadeUp}
-      className="prose-landing mx-auto max-w-3xl"
+      variants={stagger}
+      className="mx-auto max-w-3xl"
     >
-      {content.split("\n").map((paragraph, i) => {
-        const trimmed = paragraph.trim();
-        if (!trimmed) return null;
+      {/* Drop cap indicator */}
+      <div className="flex items-center gap-3 mb-10">
+        <div className="w-8 h-[1px] bg-accent/40" />
+        <span className="text-[0.5rem] uppercase tracking-[0.3em] text-tertiary/60">Artículo</span>
+        <div className="flex-1 h-[1px] bg-border-subtle" />
+      </div>
 
-        // Heading patterns: lines starting with ## or #
-        if (trimmed.startsWith("## ")) {
-          return (
-            <h2
-              key={i}
-              className="font-display text-xl md:text-2xl font-bold uppercase text-primary mt-12 mb-5 tracking-tight"
-            >
-              {trimmed.replace(/^##\s*/, "")}
-            </h2>
-          );
-        }
+      <motion.div variants={fadeUp} className="space-y-0">
+        {elements}
+      </motion.div>
 
-        if (trimmed.startsWith("# ")) {
-          return (
-            <h2
-              key={i}
-              className="font-display text-2xl md:text-3xl font-bold uppercase text-primary mt-14 mb-6 tracking-tight"
-            >
-              {trimmed.replace(/^#\s*/, "")}
-            </h2>
-          );
-        }
-
-        // Bold line (used as sub-heading)
-        if (trimmed.startsWith("**") && trimmed.endsWith("**")) {
-          return (
-            <h3
-              key={i}
-              className="font-display text-lg font-semibold uppercase text-primary/90 mt-8 mb-3"
-            >
-              {trimmed.replace(/^\*\*|\*\*$/g, "")}
-            </h3>
-          );
-        }
-
-        // List items
-        if (trimmed.startsWith("- ") || trimmed.startsWith("• ")) {
-          return (
-            <div key={i} className="flex gap-3 my-2 ml-1">
-              <span className="text-accent mt-1.5 text-[0.5rem]">&#9670;</span>
-              <p className="text-secondary/70 text-[0.95rem] leading-[1.9]">
-                {trimmed.replace(/^[-•]\s*/, "")}
-              </p>
-            </div>
-          );
-        }
-
-        // Blockquote
-        if (trimmed.startsWith("> ")) {
-          return (
-            <blockquote
-              key={i}
-              className="border-l-2 border-accent/30 pl-5 my-8 italic text-secondary/50 text-[0.95rem] leading-[1.9]"
-            >
-              {trimmed.replace(/^>\s*/, "")}
-            </blockquote>
-          );
-        }
-
-        // Regular paragraph
-        return (
-          <p
-            key={i}
-            className="text-secondary/70 text-[0.95rem] leading-[1.9] mb-5"
-          >
-            {trimmed}
-          </p>
-        );
-      })}
+      {/* End mark */}
+      <div className="flex items-center justify-center gap-3 mt-16">
+        <div className="w-12 h-[1px] bg-accent/20" />
+        <span className="text-accent/30 text-xs">&#9670;</span>
+        <div className="w-12 h-[1px] bg-accent/20" />
+      </div>
     </motion.article>
   );
 }

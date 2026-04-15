@@ -1,4 +1,6 @@
 import { NextRequest } from "next/server";
+import { unlink } from "fs/promises";
+import path from "path";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdmin } from "@/lib/auth/session";
 import { success, error } from "@/lib/api-response";
@@ -38,7 +40,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 }
 
-// DELETE /api/images/:id
+// DELETE /api/images/:id — delete from DB and remove file from disk
 export async function DELETE(_req: NextRequest, { params }: Params) {
   try {
     await requireAdmin();
@@ -47,7 +49,19 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     const existing = await prisma.image.findUnique({ where: { id } });
     if (!existing) return error("Imagen no encontrada", 404);
 
+    // Delete from database
     await prisma.image.delete({ where: { id } });
+
+    // Try to delete file from disk (local uploads start with /uploads/)
+    if (existing.url.startsWith("/uploads/")) {
+      const filePath = path.join(process.cwd(), "public", existing.url);
+      try {
+        await unlink(filePath);
+      } catch {
+        // File may already be deleted or not local — ignore
+        console.warn(`[images] Could not delete file: ${filePath}`);
+      }
+    }
 
     return success({ deleted: true });
   } catch {

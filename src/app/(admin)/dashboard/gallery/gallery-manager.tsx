@@ -2,10 +2,6 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { generateReactHelpers } from "@uploadthing/react";
-import type { UploadRouter } from "@/lib/uploadthing/core";
-
-const { useUploadThing } = generateReactHelpers<UploadRouter>();
 
 interface GalleryImage {
   id: string;
@@ -24,17 +20,12 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
   const router = useRouter();
   const [images, setImages] = useState(initialImages);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editAlt, setEditAlt] = useState("");
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-
-  const { startUpload } = useUploadThing("galleryImage", {
-    onUploadError: (err) => {
-      setError(`Error al subir: ${err.message}`);
-      setUploading(false);
-    },
-  });
+  const [previews, setPreviews] = useState<string[]>([]);
 
   const filtered = images.filter((img) => {
     if (filter === "featured") return img.gallery;
@@ -44,40 +35,60 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
 
   const featuredCount = images.filter((img) => img.gallery).length;
 
-  const handleFileChange = useCallback(
+  /** Upload selected files to local API, then save metadata */
+  const handleUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(e.target.files ?? []);
       if (files.length === 0) return;
 
+      // Show previews
+      const previewUrls = files.map((f) => URL.createObjectURL(f));
+      setPreviews(previewUrls);
+
       setUploading(true);
       setError("");
+      setUploadProgress(`Subiendo ${files.length} ${files.length === 1 ? "archivo" : "archivos"}...`);
 
       try {
-        const uploadResult = await startUpload(files);
-        if (!uploadResult || uploadResult.length === 0) {
-          throw new Error("No se recibió respuesta del servidor de uploads");
+        // 1. Upload files to /api/upload
+        const formData = new FormData();
+        files.forEach((f) => formData.append("files", f));
+
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const uploadData = await uploadRes.json();
+
+        if (!uploadRes.ok) {
+          throw new Error(uploadData.error || "Error al subir archivos");
         }
 
-        const errors: string[] = [];
+        const { uploaded, errors: uploadErrors } = uploadData.data;
 
-        for (const file of uploadResult) {
-          // Get the URL — use ufsUrl (primary) or fall back to serverData.url
-          const imageUrl = file.ufsUrl || file.serverData?.url;
+        if (uploadErrors && uploadErrors.length > 0) {
+          setError(uploadErrors.join(" "));
+        }
 
-          if (!imageUrl) {
-            errors.push(`Sin URL para ${file.name}`);
-            continue;
-          }
+        if (!uploaded || uploaded.length === 0) {
+          throw new Error("No se subio ningun archivo");
+        }
 
+        // 2. Save each uploaded file as an image record
+        setUploadProgress(`Guardando ${uploaded.length} ${uploaded.length === 1 ? "imagen" : "imagenes"}...`);
+        const saveErrors: string[] = [];
+
+        for (const file of uploaded) {
           const res = await fetch("/api/images", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              url: imageUrl,
+              url: file.url,
               key: file.key,
               alt: file.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "),
               size: file.size,
-              mime: file.type || "image/jpeg",
+              mime: file.mime,
               gallery: true,
               order: images.length,
             }),
@@ -85,15 +96,15 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
 
           if (!res.ok) {
             const data = await res.json().catch(() => null);
-            errors.push(data?.error || `Error guardando ${file.name}`);
+            saveErrors.push(data?.error || `Error guardando ${file.name}`);
           }
         }
 
-        if (errors.length > 0) {
-          setError(errors.join(". "));
+        if (saveErrors.length > 0) {
+          setError((prev) => [prev, ...saveErrors].filter(Boolean).join(". "));
         }
 
-        // Refresh image list from server
+        // 3. Refresh image list from server
         router.refresh();
         const galleryRes = await fetch("/api/images");
         const galleryData = await galleryRes.json();
@@ -102,10 +113,14 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
         setError(err instanceof Error ? err.message : "Error al subir las imagenes");
       } finally {
         setUploading(false);
+        setUploadProgress("");
+        setPreviews([]);
+        // Clean up preview URLs
+        previewUrls.forEach((u) => URL.revokeObjectURL(u));
         e.target.value = "";
       }
     },
-    [startUpload, images.length, router],
+    [images.length, router],
   );
 
   async function toggleGallery(id: string, current: boolean) {
@@ -174,19 +189,30 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
         </div>
         <div className="text-center">
           <span className="text-sm font-medium text-a-accent">
-            {uploading ? "Subiendo..." : "Haz clic para subir imagenes"}
+            {uploading ? uploadProgress || "Subiendo..." : "Haz clic para subir imagenes"}
           </span>
-          <p className="mt-1 text-xs text-muted">PNG, JPG, WebP hasta 8MB &middot; Maximo 10 a la vez</p>
+          <p className="mt-1 text-xs text-muted">PNG, JPG, WebP hasta 5MB &middot; Maximo 10 a la vez</p>
         </div>
         <input
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           multiple
           disabled={uploading}
-          onChange={handleFileChange}
+          onChange={handleUpload}
           className="hidden"
         />
       </label>
+
+      {/* Previews */}
+      {previews.length > 0 && (
+        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+          {previews.map((src, i) => (
+            <div key={i} className="aspect-square rounded-lg overflow-hidden bg-a-surface border border-border">
+              <img src={src} alt="Preview" className="w-full h-full object-cover opacity-60" />
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Error */}
       {error && (

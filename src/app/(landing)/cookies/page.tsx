@@ -78,9 +78,8 @@ export default function CookiePolicyPage() {
           y están fuera de nuestro control directo.
         </p>
         <p>
-          El servicio de carga de imágenes <strong className="text-primary/80">UploadThing</strong> puede
-          establecer cookies técnicas durante el proceso de subida de archivos en el panel de
-          administración. Estas cookies no afectan a los visitantes públicos del sitio.
+          El sistema de carga de imágenes utiliza almacenamiento local en el servidor y no
+          establece cookies adicionales de terceros.
         </p>
         <p>
           No utilizamos cookies de publicidad, cookies de redes sociales, ni herramientas de
