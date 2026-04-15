@@ -22,6 +22,7 @@ export async function getLandingConfig(): Promise<LandingConfig> {
       contact:  { ...DEFAULT_CONFIG.contact, ...(dbConfig.contact as object ?? {}) },
       social:   { ...DEFAULT_CONFIG.social, ...(dbConfig.social as object ?? {}) },
       navbar:   { ...DEFAULT_CONFIG.navbar, ...(dbConfig.navbar as object ?? {}) },
+      ai:       { ...DEFAULT_CONFIG.ai, ...(dbConfig.ai as object ?? {}) },
     };
 
     return config;

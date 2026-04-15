@@ -6,7 +6,7 @@ import type { LandingConfig, ConfigKey } from "@/lib/config/landing-defaults";
 import { DEFAULT_CONFIG } from "@/lib/config/landing-defaults";
 import { Card, CardHeader, CardContent, Button, FormLabel } from "@/components/admin/ui";
 
-type Tab = "theme" | "sections" | "hero" | "about" | "stats" | "contact" | "social" | "navbar";
+type Tab = "theme" | "sections" | "hero" | "about" | "stats" | "contact" | "social" | "navbar" | "ai";
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "theme", label: "Colores" },
@@ -17,6 +17,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "contact", label: "Contacto" },
   { key: "social", label: "Redes" },
   { key: "navbar", label: "Navbar" },
+  { key: "ai", label: "IA" },
 ];
 
 export function SettingsEditor({ initialConfig }: { initialConfig: LandingConfig }) {
@@ -220,6 +221,16 @@ export function SettingsEditor({ initialConfig }: { initialConfig: LandingConfig
             onReset={() => resetSection("navbar")}
             saving={saving === "navbar"}
             saved={saved === "navbar"}
+          />
+        )}
+        {tab === "ai" && (
+          <AITab
+            ai={config.ai}
+            onChange={(field, value) => update("ai", field, value)}
+            onSave={() => saveSection("ai", config.ai)}
+            onReset={() => resetSection("ai")}
+            saving={saving === "ai"}
+            saved={saved === "ai"}
           />
         )}
       </div>
@@ -554,6 +565,131 @@ function AboutTab({ about, onChange, onSave, onReset, saving, saved }: {
               </div>
             ))}
           </div>
+          <SaveBar onSave={onSave} onReset={onReset} saving={saving} saved={saved} />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+/* ─── AI Settings Tab ────────────────────────────── */
+
+function AITab({ ai, onChange, onSave, onReset, saving, saved }: {
+  ai: LandingConfig["ai"];
+  onChange: (field: string, value: unknown) => void;
+  onSave: () => void;
+  onReset: () => void;
+  saving: boolean;
+  saved: boolean;
+}) {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader title="Configuracion de IA" />
+        <CardContent>
+          <p className="text-sm text-muted mb-6">
+            Configura el proveedor de IA para generar articulos de blog automaticamente.
+          </p>
+
+          {/* Provider selector */}
+          <div className="mb-6">
+            <FormLabel>Proveedor</FormLabel>
+            <div className="flex gap-2">
+              {(["openai", "local"] as const).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => onChange("provider", p)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    ai.provider === p
+                      ? "bg-a-accent text-black"
+                      : "bg-a-surface border border-border text-muted hover:text-foreground"
+                  }`}
+                >
+                  {p === "openai" ? "OpenAI" : "Local (Ollama)"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* OpenAI settings */}
+          {ai.provider === "openai" && (
+            <div className="space-y-4 mb-6">
+              <div>
+                <FormLabel>API Key</FormLabel>
+                <input
+                  type="password"
+                  value={ai.openaiApiKey}
+                  onChange={(e) => onChange("openaiApiKey", e.target.value)}
+                  className="w-full px-4 py-3 text-sm font-mono"
+                  placeholder="sk-..."
+                />
+                <p className="mt-1 text-[0.6rem] text-muted/60">
+                  Obtenerla en platform.openai.com/api-keys
+                </p>
+              </div>
+              <div>
+                <FormLabel>Modelo</FormLabel>
+                <select
+                  value={ai.openaiModel}
+                  onChange={(e) => onChange("openaiModel", e.target.value)}
+                  className="w-full px-4 py-3 text-sm"
+                >
+                  <option value="gpt-4o-mini">GPT-4o Mini (rapido, economico)</option>
+                  <option value="gpt-4o">GPT-4o (mejor calidad)</option>
+                  <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
+                  <option value="gpt-4.1">GPT-4.1</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Local settings */}
+          {ai.provider === "local" && (
+            <div className="space-y-4 mb-6">
+              <div>
+                <FormLabel>Endpoint</FormLabel>
+                <input
+                  type="url"
+                  value={ai.localEndpoint}
+                  onChange={(e) => onChange("localEndpoint", e.target.value)}
+                  className="w-full px-4 py-3 text-sm font-mono"
+                  placeholder="http://localhost:11434"
+                />
+                <p className="mt-1 text-[0.6rem] text-muted/60">
+                  URL del servidor Ollama o compatible
+                </p>
+              </div>
+              <div>
+                <FormLabel>Modelo</FormLabel>
+                <input
+                  type="text"
+                  value={ai.localModel}
+                  onChange={(e) => onChange("localModel", e.target.value)}
+                  className="w-full px-4 py-3 text-sm font-mono"
+                  placeholder="llama3"
+                />
+              </div>
+            </div>
+          )}
+
+          <SaveBar onSave={onSave} onReset={onReset} saving={saving} saved={saved} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader title="Prompt del Sistema" />
+        <CardContent>
+          <p className="text-sm text-muted mb-4">
+            Define el contexto y personalidad de la IA al generar articulos. Se puede sobreescribir por articulo.
+          </p>
+          <textarea
+            value={ai.systemPrompt}
+            onChange={(e) => onChange("systemPrompt", e.target.value)}
+            rows={5}
+            className="w-full px-4 py-3 text-sm resize-y"
+            placeholder="Ej: Eres un coach profesional de bodybuilding..."
+          />
           <SaveBar onSave={onSave} onReset={onReset} saving={saving} saved={saved} />
         </CardContent>
       </Card>

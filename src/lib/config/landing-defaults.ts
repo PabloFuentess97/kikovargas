@@ -163,6 +163,26 @@ export const DEFAULT_NAVBAR: NavbarContent = {
   ctaText: "Hablemos",
 };
 
+/* ─── AI Generation Settings ─────────────────────── */
+
+export interface AIConfig {
+  provider: "openai" | "local";
+  openaiApiKey: string;
+  openaiModel: string;
+  localEndpoint: string;
+  localModel: string;
+  systemPrompt: string;
+}
+
+export const DEFAULT_AI: AIConfig = {
+  provider: "openai",
+  openaiApiKey: "",
+  openaiModel: "gpt-4o-mini",
+  localEndpoint: "http://localhost:11434",
+  localModel: "llama3",
+  systemPrompt: "Eres un coach profesional de bodybuilding y fitness. Escribe articulos informativos, motivadores y con autoridad. Usa un tono profesional pero cercano. El contenido debe ser util para atletas y entusiastas del fitness.",
+};
+
 /* ─── Full Landing Config ─────────────────────────── */
 
 export interface LandingConfig {
@@ -174,6 +194,7 @@ export interface LandingConfig {
   contact: ContactContent;
   social: SocialLinks;
   navbar: NavbarContent;
+  ai: AIConfig;
 }
 
 export const DEFAULT_CONFIG: LandingConfig = {
@@ -185,6 +206,7 @@ export const DEFAULT_CONFIG: LandingConfig = {
   contact: DEFAULT_CONTACT,
   social: DEFAULT_SOCIAL,
   navbar: DEFAULT_NAVBAR,
+  ai: DEFAULT_AI,
 };
 
 /* ─── Config Keys (DB storage keys) ───────────────── */
@@ -198,6 +220,7 @@ export const CONFIG_KEYS = [
   "contact",
   "social",
   "navbar",
+  "ai",
 ] as const;
 
 export type ConfigKey = (typeof CONFIG_KEYS)[number];
