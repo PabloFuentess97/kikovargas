@@ -39,7 +39,10 @@ export async function PATCH(req: NextRequest) {
     // Bust Next.js cache so landing page reflects changes immediately
     revalidatePath("/", "layout");
 
-    return success({ key, updated: true });
+    // Return fresh config so the client can sync state
+    const freshConfig = await getLandingConfig();
+
+    return success({ key, updated: true, config: freshConfig });
   } catch (err) {
     if (err instanceof Error && err.message === "Unauthorized") {
       return error("Unauthorized", 401);

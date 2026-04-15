@@ -39,9 +39,16 @@ export function SettingsEditor({ initialConfig }: { initialConfig: LandingConfig
         body: JSON.stringify({ key, value }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.error || "Error al guardar");
+      }
+
+      // Sync local state with the fresh config returned by the server
+      // This prevents stale state after router.refresh() reconciles
+      if (data.data?.config) {
+        setConfig(data.data.config as LandingConfig);
       }
 
       setSaved(key);

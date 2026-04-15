@@ -1,22 +1,9 @@
 import { prisma } from "@/lib/db/prisma";
 import { DEFAULT_CONFIG, type LandingConfig, type ConfigKey } from "./landing-defaults";
 
-/* ─── In-memory cache (per-request in serverless, longer in Node) ── */
-
-let _cache: LandingConfig | null = null;
-let _cacheTime = 0;
-const CACHE_TTL = 60_000; // 1 minute
-
 /* ─── Get full landing config (merged with defaults) ─────────── */
 
 export async function getLandingConfig(): Promise<LandingConfig> {
-  const now = Date.now();
-
-  // Return cache if fresh
-  if (_cache && now - _cacheTime < CACHE_TTL) {
-    return _cache;
-  }
-
   try {
     const rows = await prisma.siteConfig.findMany();
 
@@ -36,9 +23,6 @@ export async function getLandingConfig(): Promise<LandingConfig> {
       social:   { ...DEFAULT_CONFIG.social, ...(dbConfig.social as object ?? {}) },
       navbar:   { ...DEFAULT_CONFIG.navbar, ...(dbConfig.navbar as object ?? {}) },
     };
-
-    _cache = config;
-    _cacheTime = now;
 
     return config;
   } catch {
@@ -67,15 +51,4 @@ export async function updateConfigSection(
     update: { value: value as object },
     create: { key, value: value as object },
   });
-
-  // Invalidate cache
-  _cache = null;
-  _cacheTime = 0;
-}
-
-/* ─── Invalidate cache (useful after admin updates) ───────────── */
-
-export function invalidateConfigCache(): void {
-  _cache = null;
-  _cacheTime = 0;
 }
