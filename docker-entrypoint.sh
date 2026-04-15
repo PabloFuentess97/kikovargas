@@ -72,7 +72,15 @@ ensure_uploads_dir() {
     log "Creating uploads directory..."
     mkdir -p "$UPLOADS_DIR"
   fi
-  log "Uploads directory OK: $UPLOADS_DIR"
+
+  # Test write permissions
+  if touch "$UPLOADS_DIR/.write-test" 2>/dev/null; then
+    rm -f "$UPLOADS_DIR/.write-test"
+    log "Uploads directory OK (writable): $UPLOADS_DIR"
+  else
+    log "WARNING: Uploads directory is NOT writable: $UPLOADS_DIR"
+    log "Fix with: chown -R 1001:1001 ./uploads (on the host)"
+  fi
 }
 
 # ─── Main ────────────────────────────────────────────

@@ -4,7 +4,9 @@ import { existsSync } from "fs";
 import path from "path";
 import crypto from "crypto";
 import { requireAdmin } from "@/lib/auth/session";
-import { success, error } from "@/lib/api-response";
+
+// Force Node.js runtime (needed for fs/path/crypto)
+export const runtime = "nodejs";
 
 /** Allowed MIME types */
 const ALLOWED_TYPES = new Set([
@@ -33,30 +35,59 @@ function uniqueName(originalName: string): string {
   return `${timestamp}-${hash}${ext}`;
 }
 
+function jsonResponse(data: unknown, status = 200) {
+  return NextResponse.json(data, { status });
+}
+
 // POST /api/upload — Upload one or more image files
 export async function POST(req: NextRequest) {
   try {
     await requireAdmin();
   } catch {
-    return error("No autorizado", 403);
+    return jsonResponse({ success: false, error: "No autorizado" }, 403);
   }
 
   try {
+    const contentType = req.headers.get("content-type") || "";
+    if (!contentType.includes("multipart/form-data")) {
+      return jsonResponse(
+        { success: false, error: "Content-Type debe ser multipart/form-data" },
+        400,
+      );
+    }
+
     const formData = await req.formData();
     const files = formData.getAll("files") as File[];
 
     if (!files || files.length === 0) {
-      return error("No se enviaron archivos", 400);
+      return jsonResponse({ success: false, error: "No se enviaron archivos" }, 400);
     }
 
     if (files.length > MAX_FILES) {
-      return error(`Maximo ${MAX_FILES} archivos por solicitud`, 400);
+      return jsonResponse(
+        { success: false, error: `Maximo ${MAX_FILES} archivos por solicitud` },
+        400,
+      );
     }
 
     // Ensure upload directory exists
     const uploadDir = getUploadDir();
     if (!existsSync(uploadDir)) {
       await mkdir(uploadDir, { recursive: true });
+    }
+
+    // Test write permissions
+    try {
+      const testFile = path.join(uploadDir, ".write-test");
+      await writeFile(testFile, "");
+      const { unlink } = await import("fs/promises");
+      await unlink(testFile).catch(() => {});
+    } catch {
+      console.error("[upload] No write permission to:", uploadDir);
+      return jsonResponse(
+        { success: false, error: "El servidor no tiene permisos de escritura en el directorio de uploads" },
+        500,
+      );
     }
 
     const results: { url: string; key: string; name: string; size: number; mime: string }[] = [];
@@ -71,7 +102,9 @@ export async function POST(req: NextRequest) {
 
       // Validate size
       if (file.size > MAX_SIZE) {
-        errors.push(`${file.name}: excede el limite de 5MB (${(file.size / 1024 / 1024).toFixed(1)}MB).`);
+        errors.push(
+          `${file.name}: excede el limite de 5MB (${(file.size / 1024 / 1024).toFixed(1)}MB).`,
+        );
         continue;
       }
 
@@ -96,12 +129,13 @@ export async function POST(req: NextRequest) {
     }
 
     if (results.length === 0 && errors.length > 0) {
-      return error(errors.join(" "), 400);
+      return jsonResponse({ success: false, error: errors.join(" ") }, 400);
     }
 
-    return success({ uploaded: results, errors }, results.length > 0 ? 201 : 400);
+    return jsonResponse({ success: true, data: { uploaded: results, errors } }, 201);
   } catch (err) {
     console.error("[upload] Error:", err);
-    return error("Error interno al procesar la subida", 500);
+    const message = err instanceof Error ? err.message : "Error interno al procesar la subida";
+    return jsonResponse({ success: false, error: message }, 500);
   }
 }

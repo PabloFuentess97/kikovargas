@@ -59,6 +59,20 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
           body: formData,
         });
 
+        // Handle non-JSON responses (e.g. nginx 413, redirect to login, etc.)
+        const contentType = uploadRes.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+          const text = await uploadRes.text();
+          console.error("[upload] Non-JSON response:", uploadRes.status, text.slice(0, 200));
+          if (uploadRes.status === 413) {
+            throw new Error("Archivo(s) demasiado grandes. El servidor rechaza la peticion. Revisa la configuracion de nginx (client_max_body_size).");
+          }
+          if (uploadRes.status === 401 || uploadRes.status === 302) {
+            throw new Error("Sesion expirada. Recarga la pagina e intenta de nuevo.");
+          }
+          throw new Error(`Error del servidor (${uploadRes.status}). Revisa los logs del contenedor.`);
+        }
+
         const uploadData = await uploadRes.json();
 
         if (!uploadRes.ok) {
