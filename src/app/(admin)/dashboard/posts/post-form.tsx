@@ -16,6 +16,8 @@ interface PostData {
   excerpt?: string | null;
   content?: string;
   status?: string;
+  coverId?: string | null;
+  cover?: { url: string; alt: string | null } | null;
 }
 
 type FieldErrors = Partial<Record<"title" | "slug" | "excerpt" | "content" | "status", string>>;
@@ -45,11 +47,16 @@ export function PostForm({ post }: { post?: PostData }) {
   const [aiContext, setAiContext] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
+  const [aiStep, setAiStep] = useState("");
 
   // Editor key for forcing re-render when AI fills content
   const [editorKey, setEditorKey] = useState(0);
   const [formTitle, setFormTitle] = useState(post?.title ?? "");
   const [formContent, setFormContent] = useState(post?.content ?? "");
+
+  // Cover image state
+  const [coverId, setCoverId] = useState<string | null>(post?.coverId ?? null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(post?.cover?.url ?? null);
 
   function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setFormTitle(e.target.value);
@@ -67,8 +74,10 @@ export function PostForm({ post }: { post?: PostData }) {
 
     setAiLoading(true);
     setAiError("");
+    setAiStep("Generando articulo...");
 
     try {
+      // Step 1: Generate article content
       const res = await fetch("/api/ai/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -104,7 +113,31 @@ export function PostForm({ post }: { post?: PostData }) {
       // Update editor content
       setFormContent(content);
       contentRef.current = content;
-      setEditorKey((k) => k + 1); // Force editor re-render
+      setEditorKey((k) => k + 1);
+
+      // Step 2: Generate cover image
+      setAiStep("Generando imagen de portada...");
+
+      try {
+        const imgRes = await fetch("/api/ai/generate-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, topic: aiTopic }),
+        });
+
+        const imgContentType = imgRes.headers.get("content-type") || "";
+        if (imgContentType.includes("application/json")) {
+          const imgData = await imgRes.json();
+          if (imgData.success) {
+            setCoverId(imgData.data.imageId);
+            setCoverUrl(imgData.data.url);
+          }
+          // If image fails, just continue without cover — not critical
+        }
+      } catch {
+        // Image generation failed silently — article is already generated
+        console.warn("[ai] Cover image generation failed, continuing without cover");
+      }
 
       // Close AI panel
       setAiOpen(false);
@@ -113,7 +146,13 @@ export function PostForm({ post }: { post?: PostData }) {
       setAiError(err instanceof Error ? err.message : "Error al generar contenido");
     } finally {
       setAiLoading(false);
+      setAiStep("");
     }
+  }
+
+  function handleRemoveCover() {
+    setCoverId(null);
+    setCoverUrl(null);
   }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -128,6 +167,7 @@ export function PostForm({ post }: { post?: PostData }) {
       excerpt: (fd.get("excerpt") as string) || undefined,
       content: contentRef.current,
       status: fd.get("status") as string,
+      coverId: coverId || undefined,
     };
 
     const schema = isEdit ? updatePostSchema : createPostSchema;
@@ -251,7 +291,7 @@ export function PostForm({ post }: { post?: PostData }) {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Generando...
+                  {aiStep || "Generando..."}
                 </>
               ) : (
                 "Generar articulo"
@@ -260,13 +300,55 @@ export function PostForm({ post }: { post?: PostData }) {
             <button
               type="button"
               onClick={() => setAiOpen(false)}
-              className="rounded-lg px-4 py-2.5 text-sm text-muted hover:text-foreground transition-colors"
+              disabled={aiLoading}
+              className="rounded-lg px-4 py-2.5 text-sm text-muted hover:text-foreground transition-colors disabled:opacity-50"
             >
               Cancelar
             </button>
           </div>
+
+          <p className="text-[0.6rem] text-muted/50">
+            Genera titulo, contenido e imagen de portada con DALL-E
+          </p>
         </div>
       )}
+
+      {/* Cover Image */}
+      <FormField>
+        <FormLabel>Imagen de portada</FormLabel>
+        {coverUrl ? (
+          <div className="relative rounded-lg overflow-hidden border border-border">
+            <img
+              src={coverUrl}
+              alt="Portada"
+              className="w-full h-48 object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <button
+              type="button"
+              onClick={handleRemoveCover}
+              className="absolute top-2 right-2 rounded-lg bg-black/70 p-1.5 text-white/80 hover:text-white hover:bg-danger/80 transition-colors"
+              title="Quitar portada"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <span className="absolute bottom-2 left-3 text-[0.6rem] uppercase tracking-widest text-white/60 font-medium">
+              Portada
+            </span>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed border-border p-6 text-center">
+            <p className="text-sm text-muted/60">
+              Sin imagen de portada
+            </p>
+            <p className="text-[0.6rem] text-muted/40 mt-1">
+              Usa &quot;Generar con IA&quot; para crear una automaticamente
+            </p>
+          </div>
+        )}
+      </FormField>
 
       <FormField>
         <FormLabel htmlFor="title">Titulo</FormLabel>

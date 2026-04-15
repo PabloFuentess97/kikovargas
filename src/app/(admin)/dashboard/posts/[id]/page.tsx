@@ -10,7 +10,10 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
 
   const post = await prisma.post.findUnique({
     where: { id },
-    select: { id: true, title: true, slug: true, excerpt: true, content: true, status: true },
+    select: {
+      id: true, title: true, slug: true, excerpt: true, content: true, status: true,
+      coverId: true, cover: { select: { url: true, alt: true } },
+    },
   });
 
   if (!post) notFound();
