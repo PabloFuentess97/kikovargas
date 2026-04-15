@@ -123,11 +123,16 @@ export function GalleryGrid({ images }: { images: GalleryImage[] }) {
                 key={img.id}
                 variants={scaleIn}
                 onClick={() => setSelected(img)}
-                className={`${getSpan(i)} relative overflow-hidden group cursor-pointer`}
+                className={`${getSpan(i)} relative overflow-hidden group cursor-pointer bg-elevated`}
               >
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-[1.2s] ease-out group-hover:scale-[1.06]"
-                  style={{ backgroundImage: `url('${img.url}')` }}
+                <img
+                  src={img.url}
+                  alt={img.alt || "Galería"}
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-[1.06]"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
                 />
                 <div className="absolute inset-0 bg-void/25 transition-all duration-500 group-hover:bg-void/5" />
                 {/* Inset border on hover */}
@@ -161,12 +166,13 @@ export function GalleryGrid({ images }: { images: GalleryImage[] }) {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="relative max-w-5xl max-h-[85vh] w-full aspect-[4/3] overflow-hidden"
+              className="relative max-w-5xl max-h-[85vh] w-full flex items-center justify-center overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <div
-                className="w-full h-full bg-cover bg-center"
-                style={{ backgroundImage: `url('${selected.url}')` }}
+              <img
+                src={selected.url}
+                alt={selected.alt || "Galería"}
+                className="max-w-full max-h-[85vh] object-contain"
               />
               {/* Close bar */}
               <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 bg-gradient-to-b from-void/60 to-transparent">

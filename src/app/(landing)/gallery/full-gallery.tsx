@@ -71,7 +71,14 @@ export function FullGallery({ images }: { images: GalleryImage[] }) {
               loading="lazy"
               className="w-full h-auto object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-[1.04]"
               onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
+                const el = e.target as HTMLImageElement;
+                el.style.display = "none";
+                if (el.parentElement) {
+                  const placeholder = document.createElement("div");
+                  placeholder.className = "w-full aspect-[4/5] flex items-center justify-center bg-elevated text-tertiary/30";
+                  placeholder.innerHTML = `<span class="font-display text-2xl font-bold uppercase">&#128247;</span>`;
+                  el.parentElement.insertBefore(placeholder, el);
+                }
               }}
             />
             <div className="absolute inset-0 bg-void/20 transition-all duration-500 group-hover:bg-void/5" />

@@ -29,7 +29,12 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
 
-  const { startUpload } = useUploadThing("galleryImage");
+  const { startUpload } = useUploadThing("galleryImage", {
+    onUploadError: (err) => {
+      setError(`Error al subir: ${err.message}`);
+      setUploading(false);
+    },
+  });
 
   const filtered = images.filter((img) => {
     if (filter === "featured") return img.gallery;
@@ -48,31 +53,53 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
       setError("");
 
       try {
-        const res = await startUpload(files);
-        if (!res) throw new Error("Upload failed");
+        const uploadResult = await startUpload(files);
+        if (!uploadResult || uploadResult.length === 0) {
+          throw new Error("No se recibió respuesta del servidor de uploads");
+        }
 
-        for (const file of res) {
-          await fetch("/api/images", {
+        const errors: string[] = [];
+
+        for (const file of uploadResult) {
+          // Get the URL — use ufsUrl (primary) or fall back to serverData.url
+          const imageUrl = file.ufsUrl || file.serverData?.url;
+
+          if (!imageUrl) {
+            errors.push(`Sin URL para ${file.name}`);
+            continue;
+          }
+
+          const res = await fetch("/api/images", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              url: file.ufsUrl,
+              url: imageUrl,
               key: file.key,
               alt: file.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "),
               size: file.size,
-              mime: file.type,
+              mime: file.type || "image/jpeg",
               gallery: true,
               order: images.length,
             }),
           });
+
+          if (!res.ok) {
+            const data = await res.json().catch(() => null);
+            errors.push(data?.error || `Error guardando ${file.name}`);
+          }
         }
 
+        if (errors.length > 0) {
+          setError(errors.join(". "));
+        }
+
+        // Refresh image list from server
         router.refresh();
-        const galleryRes = await fetch("/api/images?all=true");
+        const galleryRes = await fetch("/api/images");
         const galleryData = await galleryRes.json();
         if (galleryData.success) setImages(galleryData.data);
-      } catch {
-        setError("Error al subir las imagenes. Intentalo de nuevo.");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error al subir las imagenes");
       } finally {
         setUploading(false);
         e.target.value = "";
@@ -165,6 +192,12 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
       {error && (
         <div className="rounded-lg border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger">
           {error}
+          <button
+            onClick={() => setError("")}
+            className="ml-3 text-xs text-danger/60 hover:text-danger underline"
+          >
+            Cerrar
+          </button>
         </div>
       )}
 
@@ -206,14 +239,22 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
                 : "border-border hover:border-a-accent/20"
             }`}
           >
-            <div className="aspect-[4/5] overflow-hidden">
+            <div className="aspect-[4/5] overflow-hidden bg-a-surface">
               <img
                 src={img.url}
                 alt={img.alt}
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = "";
-                  (e.target as HTMLImageElement).alt = "Imagen no disponible";
+                  const el = e.target as HTMLImageElement;
+                  el.style.display = "none";
+                  el.parentElement!.innerHTML = `
+                    <div class="h-full w-full flex flex-col items-center justify-center text-muted/40 gap-2">
+                      <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+                      </svg>
+                      <span class="text-[0.55rem] uppercase tracking-wider">URL invalida</span>
+                    </div>
+                  `;
                 }}
               />
             </div>
@@ -225,7 +266,7 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
               </div>
             )}
 
-            {/* Featured toggle button — always visible top-right */}
+            {/* Featured toggle button */}
             <button
               onClick={() => toggleGallery(img.id, img.gallery)}
               className={`absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
@@ -285,7 +326,7 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
         ))}
       </div>
 
-      {/* Empty state */}
+      {/* Empty states */}
       {images.length === 0 && (
         <div className="flex flex-col items-center py-16 text-center">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-a-accent-dim">
