@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/session";
 import { getLandingConfig, updateConfigSection } from "@/lib/config/get-config";
 import { CONFIG_KEYS, type ConfigKey } from "@/lib/config/landing-defaults";
@@ -34,6 +35,9 @@ export async function PATCH(req: NextRequest) {
     }
 
     await updateConfigSection(key as ConfigKey, value);
+
+    // Bust Next.js cache so landing page reflects changes immediately
+    revalidatePath("/", "layout");
 
     return success({ key, updated: true });
   } catch (err) {
