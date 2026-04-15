@@ -33,6 +33,7 @@ export interface SectionsConfig {
   gallery: boolean;
   achievements: boolean;
   blog: boolean;
+  newsletter: boolean;
   contact: boolean;
 }
 
@@ -43,6 +44,7 @@ export const DEFAULT_SECTIONS: SectionsConfig = {
   gallery: true,
   achievements: true,
   blog: true,
+  newsletter: true,
   contact: true,
 };
 

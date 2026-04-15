@@ -125,6 +125,46 @@ model SiteConfig {
   @@map("site_config")
 }
 
+// ─── Subscriber ─────────────────────────────────────
+
+model Subscriber {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String    @default("")
+  active        Boolean   @default(true)
+  confirmedAt   DateTime? @map("confirmed_at")
+  unsubscribedAt DateTime? @map("unsubscribed_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([active])
+  @@index([createdAt])
+  @@map("subscribers")
+}
+
+// ─── Newsletter Campaign ────────────────────────────
+
+enum CampaignStatus {
+  DRAFT
+  SENT
+}
+
+model Campaign {
+  id         String         @id @default(cuid())
+  subject    String
+  content    String         // HTML body
+  template   String         @default("custom") // "new_post" | "custom"
+  postId     String?        @map("post_id")
+  status     CampaignStatus @default(DRAFT)
+  sentAt     DateTime?      @map("sent_at")
+  sentCount  Int            @default(0) @map("sent_count")
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("campaigns")
+}
+
 // ─── Contact ────────────────────────────────────────
 
 model Contact {

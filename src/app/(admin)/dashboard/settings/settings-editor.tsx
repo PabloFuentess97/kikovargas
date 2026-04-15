@@ -363,6 +363,7 @@ function SectionsTab({ sections, onChange, onSave, saving, saved }: {
     { key: "gallery", label: "Galeria", desc: "Grid de imagenes con lightbox" },
     { key: "achievements", label: "Logros", desc: "Timeline de competencias" },
     { key: "blog", label: "Blog", desc: "Ultimos posts del blog" },
+    { key: "newsletter", label: "Newsletter", desc: "Formulario de suscripcion al newsletter" },
     { key: "contact", label: "Contacto", desc: "Formulario y datos de contacto" },
   ];
 

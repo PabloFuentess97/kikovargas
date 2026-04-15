@@ -8,6 +8,7 @@ import { GallerySection } from "@/components/landing/gallery-section";
 import { AchievementsSection } from "@/components/landing/achievements-section";
 import { BlogSection } from "@/components/landing/blog-section";
 import { ContactSection } from "@/components/landing/contact-section";
+import { NewsletterSection } from "@/components/landing/newsletter-section";
 import { Divider } from "@/components/landing/divider";
 
 export default async function HomePage() {
@@ -27,6 +28,7 @@ export default async function HomePage() {
           <BlogSection />
         </>
       )}
+      {s.newsletter !== false && <NewsletterSection />}
       {s.contact !== false && <ContactSection config={config.contact} social={config.social} />}
     </>
   );
