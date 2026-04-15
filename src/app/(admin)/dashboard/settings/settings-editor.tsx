@@ -84,12 +84,12 @@ export function SettingsEditor({ initialConfig }: { initialConfig: LandingConfig
   return (
     <div>
       {/* Tab navigation */}
-      <div className="flex flex-wrap gap-1 mb-6 p-1 rounded-lg bg-a-surface border border-border">
+      <div className="flex gap-1 mb-6 p-1 rounded-lg bg-a-surface border border-border overflow-x-auto scrollbar-hide">
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-4 py-2 rounded-md text-xs font-medium transition-all ${
+            className={`px-4 py-2 rounded-md text-xs font-medium transition-all whitespace-nowrap shrink-0 ${
               tab === t.key
                 ? "bg-a-accent text-black"
                 : "text-muted hover:text-foreground hover:bg-card-hover"

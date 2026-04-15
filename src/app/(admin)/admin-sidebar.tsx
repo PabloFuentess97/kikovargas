@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -88,6 +89,22 @@ const NAV_SECTIONS = [
 export function AdminSidebar({ userName, userEmail }: { userName: string; userEmail: string }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [open, setOpen] = useState(false);
+
+  // Close drawer on route change
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -100,8 +117,8 @@ export function AdminSidebar({ userName, userEmail }: { userName: string; userEm
     router.refresh();
   }
 
-  return (
-    <aside className="flex w-[250px] shrink-0 flex-col border-r border-border bg-a-surface">
+  const sidebarContent = (
+    <>
       {/* Brand */}
       <div className="px-5 py-5">
         <Link href="/dashboard" className="flex items-center gap-3">
@@ -165,6 +182,60 @@ export function AdminSidebar({ userName, userEmail }: { userName: string; userEm
           Cerrar sesion
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* ── Mobile top bar ── */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between border-b border-border bg-a-surface px-4 h-14">
+        <Link href="/dashboard" className="flex items-center gap-2.5">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-a-accent/10">
+            <span className="text-xs font-bold text-a-accent">KV</span>
+          </div>
+          <span className="text-sm font-semibold tracking-tight">KikoVargas</span>
+        </Link>
+        <button
+          onClick={() => setOpen(!open)}
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:text-foreground hover:bg-card-hover transition-colors"
+          aria-label={open ? "Cerrar menu" : "Abrir menu"}
+        >
+          {open ? (
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          )}
+        </button>
+      </div>
+
+      {/* ── Mobile drawer overlay ── */}
+      {open && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* ── Mobile drawer ── */}
+      <aside
+        className={`
+          md:hidden fixed top-0 left-0 z-50 h-full w-[280px] flex flex-col
+          bg-a-surface border-r border-border
+          transform transition-transform duration-300 ease-in-out
+          ${open ? "translate-x-0" : "-translate-x-full"}
+        `}
+      >
+        {sidebarContent}
+      </aside>
+
+      {/* ── Desktop sidebar ── */}
+      <aside className="hidden md:flex w-[250px] shrink-0 flex-col border-r border-border bg-a-surface">
+        {sidebarContent}
+      </aside>
+    </>
   );
 }

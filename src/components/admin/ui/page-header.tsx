@@ -49,9 +49,9 @@ export function PageHeader({ title, subtitle, eyebrow, action, breadcrumb, class
       {eyebrow && (
         <p className="text-xs font-medium uppercase tracking-[0.15em] text-a-accent mb-1">{eyebrow}</p>
       )}
-      <div className={action ? "flex items-center justify-between" : ""}>
+      <div className={action ? "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" : ""}>
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">{title}</h1>
           {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
         </div>
         {action}

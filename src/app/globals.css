@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* ─── Utility: hide scrollbar ────────────────────── */
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
 /* ═══════════════════════════════════════════════════════
    DARK ATHLETIC DESIGN SYSTEM — Premium Tier
    ═══════════════════════════════════════════════════════ */

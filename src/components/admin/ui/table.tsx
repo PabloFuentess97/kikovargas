@@ -10,9 +10,11 @@ interface TableProps {
 export function Table({ children, className = "" }: TableProps) {
   return (
     <div className="admin-card overflow-hidden">
-      <table className={`w-full text-sm ${className}`}>
-        {children}
-      </table>
+      <div className="overflow-x-auto">
+        <table className={`w-full text-sm ${className}`}>
+          {children}
+        </table>
+      </div>
     </div>
   );
 }
@@ -38,7 +40,7 @@ interface TableHeaderProps {
 export function TableHeader({ children, align = "left", className = "" }: TableHeaderProps) {
   return (
     <th
-      className={`px-5 py-3.5 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted ${
+      className={`px-3 sm:px-5 py-3 sm:py-3.5 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted whitespace-nowrap ${
         align === "right" ? "text-right" : align === "center" ? "text-center" : "text-left"
       } ${className}`}
     >
@@ -76,7 +78,7 @@ export function TableCell({ children, align = "left", className = "", colSpan }:
   return (
     <td
       colSpan={colSpan}
-      className={`px-5 py-4 ${
+      className={`px-3 sm:px-5 py-3 sm:py-4 ${
         align === "right" ? "text-right" : align === "center" ? "text-center" : ""
       } ${className}`}
     >

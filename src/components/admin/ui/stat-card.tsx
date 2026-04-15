@@ -21,7 +21,7 @@ export function StatCard({ label, value, sub, href, accent, icon }: StatCardProp
           </div>
         )}
       </div>
-      <p className={`text-3xl font-bold tracking-tight ${accent ? "text-warning" : ""}`}>
+      <p className={`text-2xl sm:text-3xl font-bold tracking-tight ${accent ? "text-warning" : ""}`}>
         {typeof value === "number" ? value.toLocaleString("es-MX") : value}
       </p>
       {sub && <p className="mt-1.5 text-xs text-muted">{sub}</p>}
