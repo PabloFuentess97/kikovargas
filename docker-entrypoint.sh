@@ -53,16 +53,28 @@ wait_for_db() {
   die "PostgreSQL at ${DB_HOST}:${DB_PORT} did not become ready after $((MAX_RETRIES * RETRY_INTERVAL))s"
 }
 
-# ─── Run Prisma migrations ───────────────────────────
-run_migrations() {
-  log "Running Prisma migrations..."
+# ─── Run Prisma migrations (with retries) ───────────
+MIGRATE_MAX_RETRIES=5
+MIGRATE_RETRY_INTERVAL=5
 
-  if node ./node_modules/prisma/build/index.js migrate deploy --schema=./prisma/schema.prisma 2>&1; then
-    log "Migrations applied successfully."
-  else
-    exit_code=$?
-    die "prisma migrate deploy failed (exit code ${exit_code})"
-  fi
+run_migrations() {
+  attempt=0
+  while [ "$attempt" -lt "$MIGRATE_MAX_RETRIES" ]; do
+    attempt=$((attempt + 1))
+    log "Running Prisma migrations (attempt ${attempt}/${MIGRATE_MAX_RETRIES})..."
+
+    if node ./node_modules/prisma/build/index.js migrate deploy --schema=./prisma/schema.prisma 2>&1; then
+      log "Migrations applied successfully."
+      return 0
+    fi
+
+    if [ "$attempt" -lt "$MIGRATE_MAX_RETRIES" ]; then
+      log "Migration failed, PostgreSQL may still be recovering. Retrying in ${MIGRATE_RETRY_INTERVAL}s..."
+      sleep "$MIGRATE_RETRY_INTERVAL"
+    fi
+  done
+
+  die "prisma migrate deploy failed after ${MIGRATE_MAX_RETRIES} attempts"
 }
 
 # ─── Ensure uploads directory ────────────────────────
