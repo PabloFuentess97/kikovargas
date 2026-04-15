@@ -1,13 +1,24 @@
 import { Resend } from "resend";
-import { env } from "@/config/env";
+import { getConfigSection } from "@/lib/config/get-config";
 
-let _resend: Resend | null = null;
-function getResend() {
-  if (!_resend) {
-    if (!env.RESEND_API_KEY) throw new Error("RESEND_API_KEY is not configured");
-    _resend = new Resend(env.RESEND_API_KEY);
+/** Get Resend API key: DB config first, then env fallback */
+async function getResendClient(): Promise<Resend> {
+  // Try DB config first (already decrypted by getConfigSection)
+  const emailConfig = await getConfigSection("email");
+  let apiKey = emailConfig.resendApiKey;
+
+  // Fallback to env var
+  if (!apiKey) {
+    apiKey = process.env.RESEND_API_KEY || "";
   }
-  return _resend;
+
+  if (!apiKey) {
+    throw new Error(
+      "Resend API key no configurada. Configurala en Dashboard > Ajustes > Email, o define RESEND_API_KEY en las variables de entorno.",
+    );
+  }
+
+  return new Resend(apiKey);
 }
 
 interface ContactEmailParams {
@@ -21,9 +32,16 @@ interface ContactEmailParams {
 export async function sendContactNotification(params: ContactEmailParams) {
   const { name, email, phone, subject, message } = params;
 
-  return getResend().emails.send({
-    from: "Kiko Vargas Web <noreply@kikovargass.com>",
-    to: env.CONTACT_EMAIL_TO,
+  const emailConfig = await getConfigSection("email");
+  const resend = await getResendClient();
+
+  const fromName = emailConfig.fromName || "Kiko Vargas Web";
+  const fromEmail = emailConfig.fromEmail || "noreply@kikovargass.com";
+  const contactTo = emailConfig.contactEmailTo || process.env.CONTACT_EMAIL_TO || "contacto@kikovargass.com";
+
+  return resend.emails.send({
+    from: `${fromName} <${fromEmail}>`,
+    to: contactTo,
     replyTo: email,
     subject: `Nuevo contacto: ${subject}`,
     html: `
@@ -38,7 +56,7 @@ export async function sendContactNotification(params: ContactEmailParams) {
             <td style="padding:8px 12px;font-weight:600;vertical-align:top">Email</td>
             <td style="padding:8px 12px"><a href="mailto:${email}">${email}</a></td>
           </tr>
-          ${phone ? `<tr><td style="padding:8px 12px;font-weight:600;vertical-align:top">Teléfono</td><td style="padding:8px 12px">${phone}</td></tr>` : ""}
+          ${phone ? `<tr><td style="padding:8px 12px;font-weight:600;vertical-align:top">Telefono</td><td style="padding:8px 12px">${phone}</td></tr>` : ""}
           <tr>
             <td style="padding:8px 12px;font-weight:600;vertical-align:top">Asunto</td>
             <td style="padding:8px 12px">${subject}</td>

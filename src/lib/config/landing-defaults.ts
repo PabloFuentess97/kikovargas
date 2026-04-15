@@ -183,6 +183,22 @@ export const DEFAULT_AI: AIConfig = {
   systemPrompt: "Eres un coach profesional de bodybuilding y fitness. Escribe articulos informativos, motivadores y con autoridad. Usa un tono profesional pero cercano. El contenido debe ser util para atletas y entusiastas del fitness.",
 };
 
+/* ─── Email Settings ─────────────────────────────── */
+
+export interface EmailConfig {
+  resendApiKey: string;
+  fromName: string;
+  fromEmail: string;
+  contactEmailTo: string;
+}
+
+export const DEFAULT_EMAIL: EmailConfig = {
+  resendApiKey: "",
+  fromName: "Kiko Vargas Web",
+  fromEmail: "noreply@kikovargass.com",
+  contactEmailTo: "contacto@kikovargass.com",
+};
+
 /* ─── Full Landing Config ─────────────────────────── */
 
 export interface LandingConfig {
@@ -195,6 +211,7 @@ export interface LandingConfig {
   social: SocialLinks;
   navbar: NavbarContent;
   ai: AIConfig;
+  email: EmailConfig;
 }
 
 export const DEFAULT_CONFIG: LandingConfig = {
@@ -207,6 +224,7 @@ export const DEFAULT_CONFIG: LandingConfig = {
   social: DEFAULT_SOCIAL,
   navbar: DEFAULT_NAVBAR,
   ai: DEFAULT_AI,
+  email: DEFAULT_EMAIL,
 };
 
 /* ─── Config Keys (DB storage keys) ───────────────── */
@@ -221,6 +239,7 @@ export const CONFIG_KEYS = [
   "social",
   "navbar",
   "ai",
+  "email",
 ] as const;
 
 export type ConfigKey = (typeof CONFIG_KEYS)[number];

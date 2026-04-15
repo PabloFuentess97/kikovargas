@@ -1,11 +1,11 @@
 import { requireAdmin } from "@/lib/auth/session";
-import { getLandingConfig } from "@/lib/config/get-config";
+import { getLandingConfigMasked } from "@/lib/config/get-config";
 import { PageHeader } from "@/components/admin/ui";
 import { SettingsEditor } from "./settings-editor";
 
 export default async function SettingsPage() {
   await requireAdmin();
-  const config = await getLandingConfig();
+  const config = await getLandingConfigMasked();
 
   return (
     <div className="admin-fade-in">

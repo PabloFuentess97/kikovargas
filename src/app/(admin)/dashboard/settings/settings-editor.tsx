@@ -6,7 +6,7 @@ import type { LandingConfig, ConfigKey } from "@/lib/config/landing-defaults";
 import { DEFAULT_CONFIG } from "@/lib/config/landing-defaults";
 import { Card, CardHeader, CardContent, Button, FormLabel } from "@/components/admin/ui";
 
-type Tab = "theme" | "sections" | "hero" | "about" | "stats" | "contact" | "social" | "navbar" | "ai";
+type Tab = "theme" | "sections" | "hero" | "about" | "stats" | "contact" | "social" | "navbar" | "ai" | "email";
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "theme", label: "Colores" },
@@ -18,6 +18,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "social", label: "Redes" },
   { key: "navbar", label: "Navbar" },
   { key: "ai", label: "IA" },
+  { key: "email", label: "Email" },
 ];
 
 export function SettingsEditor({ initialConfig }: { initialConfig: LandingConfig }) {
@@ -231,6 +232,16 @@ export function SettingsEditor({ initialConfig }: { initialConfig: LandingConfig
             onReset={() => resetSection("ai")}
             saving={saving === "ai"}
             saved={saved === "ai"}
+          />
+        )}
+        {tab === "email" && (
+          <EmailTab
+            email={config.email}
+            onChange={(field, value) => update("email", field, value)}
+            onSave={() => saveSection("email", config.email)}
+            onReset={() => resetSection("email")}
+            saving={saving === "email"}
+            saved={saved === "email"}
           />
         )}
       </div>
@@ -617,15 +628,13 @@ function AITab({ ai, onChange, onSave, onReset, saving, saved }: {
             <div className="space-y-4 mb-6">
               <div>
                 <FormLabel>API Key</FormLabel>
-                <input
-                  type="password"
+                <SecretInput
                   value={ai.openaiApiKey}
-                  onChange={(e) => onChange("openaiApiKey", e.target.value)}
-                  className="w-full px-4 py-3 text-sm font-mono"
+                  onChange={(v) => onChange("openaiApiKey", v)}
                   placeholder="sk-..."
                 />
                 <p className="mt-1 text-[0.6rem] text-muted/60">
-                  Obtenerla en platform.openai.com/api-keys
+                  Obtenerla en platform.openai.com/api-keys — se almacena cifrada
                 </p>
               </div>
               <div>
@@ -690,6 +699,124 @@ function AITab({ ai, onChange, onSave, onReset, saving, saved }: {
             className="w-full px-4 py-3 text-sm resize-y"
             placeholder="Ej: Eres un coach profesional de bodybuilding..."
           />
+          <SaveBar onSave={onSave} onReset={onReset} saving={saving} saved={saved} />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+/* ─── Secret Input (for API keys) ─────────────────── */
+
+function SecretInput({ value, onChange, placeholder }: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const isMasked = value.includes("••");
+
+  if (isMasked && !editing) {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="flex-1 px-4 py-3 text-sm font-mono bg-a-surface border border-border rounded-lg text-muted">
+          {value}
+        </div>
+        <button
+          type="button"
+          onClick={() => { onChange(""); setEditing(true); }}
+          className="px-3 py-2 text-xs font-medium rounded-lg bg-a-surface border border-border text-muted hover:text-foreground transition-colors"
+        >
+          Cambiar
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <input
+      type="password"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full px-4 py-3 text-sm font-mono"
+      placeholder={placeholder}
+      autoFocus={editing}
+    />
+  );
+}
+
+/* ─── Email Settings Tab ─────────────────────────── */
+
+function EmailTab({ email, onChange, onSave, onReset, saving, saved }: {
+  email: LandingConfig["email"];
+  onChange: (field: string, value: unknown) => void;
+  onSave: () => void;
+  onReset: () => void;
+  saving: boolean;
+  saved: boolean;
+}) {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader title="Configuracion de Email" />
+        <CardContent>
+          <p className="text-sm text-muted mb-6">
+            Configura Resend para enviar notificaciones de contacto por email.
+          </p>
+
+          <div className="space-y-4 mb-6">
+            <div>
+              <FormLabel>Resend API Key</FormLabel>
+              <SecretInput
+                value={email.resendApiKey}
+                onChange={(v) => onChange("resendApiKey", v)}
+                placeholder="re_..."
+              />
+              <p className="mt-1 text-[0.6rem] text-muted/60">
+                Obtenerla en resend.com/api-keys — se almacena cifrada. Si esta vacia, usa la variable de entorno RESEND_API_KEY.
+              </p>
+            </div>
+
+            <div>
+              <FormLabel>Nombre del remitente</FormLabel>
+              <input
+                type="text"
+                value={email.fromName}
+                onChange={(e) => onChange("fromName", e.target.value)}
+                className="w-full px-4 py-3 text-sm"
+                placeholder="Kiko Vargas Web"
+              />
+            </div>
+
+            <div>
+              <FormLabel>Email del remitente</FormLabel>
+              <input
+                type="email"
+                value={email.fromEmail}
+                onChange={(e) => onChange("fromEmail", e.target.value)}
+                className="w-full px-4 py-3 text-sm font-mono"
+                placeholder="noreply@kikovargass.com"
+              />
+              <p className="mt-1 text-[0.6rem] text-muted/60">
+                Debe estar verificado en Resend
+              </p>
+            </div>
+
+            <div>
+              <FormLabel>Email de destino (contacto)</FormLabel>
+              <input
+                type="email"
+                value={email.contactEmailTo}
+                onChange={(e) => onChange("contactEmailTo", e.target.value)}
+                className="w-full px-4 py-3 text-sm font-mono"
+                placeholder="contacto@kikovargass.com"
+              />
+              <p className="mt-1 text-[0.6rem] text-muted/60">
+                A donde llegan los mensajes del formulario de contacto
+              </p>
+            </div>
+          </div>
+
           <SaveBar onSave={onSave} onReset={onReset} saving={saving} saved={saved} />
         </CardContent>
       </Card>
