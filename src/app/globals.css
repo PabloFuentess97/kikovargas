@@ -598,3 +598,147 @@ img {
 .post-content li > p {
   margin: 0;
 }
+
+/* ─── Knowledge Base Article Content ────────────── */
+
+.kb-article-content {
+  color: var(--admin-muted);
+  font-size: 0.875rem;
+  line-height: 1.8;
+}
+
+.kb-article-content > * + * {
+  margin-top: 1em;
+}
+
+.kb-article-content h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--admin-fg);
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+  padding-bottom: 0.4em;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.kb-article-content h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--admin-fg);
+  margin-top: 1.5em;
+  margin-bottom: 0.4em;
+}
+
+.kb-article-content p {
+  line-height: 1.8;
+  color: rgba(240, 240, 242, 0.65);
+}
+
+.kb-article-content strong {
+  color: var(--admin-fg);
+  font-weight: 600;
+}
+
+.kb-article-content ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.kb-article-content ul li {
+  position: relative;
+  padding-left: 1.25em;
+  margin-top: 0.4em;
+  line-height: 1.75;
+}
+
+.kb-article-content ul li::before {
+  content: "\25B8";
+  position: absolute;
+  left: 0;
+  color: var(--admin-accent);
+  font-size: 0.75rem;
+}
+
+.kb-article-content ol {
+  padding-left: 1.5em;
+  list-style-type: decimal;
+}
+
+.kb-article-content ol li {
+  margin-top: 0.4em;
+  line-height: 1.75;
+  padding-left: 0.25em;
+}
+
+.kb-article-content ol li::marker {
+  color: var(--admin-accent);
+  font-weight: 600;
+}
+
+.kb-article-content a {
+  color: var(--admin-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* KB Info callout box */
+.kb-article-content .kb-info {
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  border-left: 3px solid #10b981;
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  margin: 1.25em 0;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: rgba(240, 240, 242, 0.75);
+}
+
+.kb-article-content .kb-info strong {
+  color: #10b981;
+}
+
+/* KB Warning callout box */
+.kb-article-content .kb-warning {
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  border-left: 3px solid #f59e0b;
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  margin: 1.25em 0;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: rgba(240, 240, 242, 0.75);
+}
+
+.kb-article-content .kb-warning strong {
+  color: #f59e0b;
+}
+
+/* KB Code block */
+.kb-code-wrapper {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 1.25em 0;
+}
+
+.kb-article-content .kb-code {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-family: "SF Mono", "Fira Code", "Fira Mono", "Roboto Mono", monospace;
+  font-size: 0.75rem;
+  line-height: 1.8;
+  color: rgba(240, 240, 242, 0.8);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Standalone kb-code (not inside wrapper) */
+.kb-article-content > .kb-code {
+  margin: 1.25em 0;
+}
