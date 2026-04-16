@@ -230,6 +230,62 @@ model Availability {
   @@map("availability")
 }
 
+// ─── Event Page (Landing Builder) ───────────────────
+
+enum EventPageStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model EventPage {
+  id          String          @id @default(cuid())
+  slug        String          @unique
+  title       String
+  description String          @default("")
+  status      EventPageStatus @default(DRAFT)
+  template    String          @default("custom") // "webinar" | "fitness" | "coaching" | "custom"
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  blocks EventBlock[]
+  leads  EventLead[]
+
+  @@index([status])
+  @@index([slug])
+  @@map("event_pages")
+}
+
+model EventBlock {
+  id      String @id @default(cuid())
+  type    String // "hero" | "text" | "image" | "cta" | "gallery" | "form" | "countdown" | "faq"
+  data    Json   // block-specific content
+  order   Int    @default(0)
+
+  pageId String    @map("page_id")
+  page   EventPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId, order])
+  @@map("event_blocks")
+}
+
+model EventLead {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String   @default("")
+  message   String   @default("")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  pageId String    @map("page_id")
+  page   EventPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId])
+  @@index([email])
+  @@index([createdAt])
+  @@map("event_leads")
+}
+
 // ─── Contact ────────────────────────────────────────
 
 model Contact {
