@@ -165,6 +165,71 @@ model Campaign {
   @@map("campaigns")
 }
 
+// ─── Booking Link ───────────────────────────────────
+
+model BookingLink {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String    @default("Reserva tu cita")
+  description String    @default("")
+  duration    Int       @default(60) // minutes per session
+  active      Boolean   @default(true)
+  expiresAt   DateTime? @map("expires_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  bookings Booking[]
+
+  @@index([active])
+  @@index([expiresAt])
+  @@map("booking_links")
+}
+
+// ─── Booking ────────────────────────────────────────
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model Booking {
+  id        String        @id @default(cuid())
+  date      DateTime      // Date + time of booking
+  duration  Int           @default(60) // minutes
+  name      String
+  email     String
+  phone     String        @default("")
+  notes     String        @default("")
+  status    BookingStatus @default(CONFIRMED)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  linkId String      @map("link_id")
+  link   BookingLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  @@index([linkId])
+  @@index([date])
+  @@index([status])
+  @@index([email])
+  @@map("bookings")
+}
+
+// ─── Availability ───────────────────────────────────
+
+model Availability {
+  id        String   @id @default(cuid())
+  dayOfWeek Int      // 0=Sunday, 1=Monday ... 6=Saturday
+  startTime String   // "HH:mm" (e.g. "15:00")
+  endTime   String   // "HH:mm" (e.g. "21:00")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([dayOfWeek])
+  @@index([active])
+  @@map("availability")
+}
+
 // ─── Contact ────────────────────────────────────────
 
 model Contact {
