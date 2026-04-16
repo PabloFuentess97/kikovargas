@@ -599,38 +599,55 @@ img {
   margin: 0;
 }
 
-/* ─── Knowledge Base Article Content ────────────── */
+/* ─── Knowledge Base ────────────────────────────── */
 
+/* Category card hover */
+.kb-category-card {
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+.kb-category-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Table of contents */
+.kb-toc {
+  transition: opacity 0.2s;
+}
+
+/* Article typography */
 .kb-article-content {
-  color: var(--admin-muted);
+  color: rgba(240, 240, 242, 0.7);
   font-size: 0.875rem;
-  line-height: 1.8;
+  line-height: 1.85;
 }
 
 .kb-article-content > * + * {
-  margin-top: 1em;
+  margin-top: 1.15em;
 }
 
 .kb-article-content h2 {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--admin-fg);
-  margin-top: 2em;
-  margin-bottom: 0.5em;
-  padding-bottom: 0.4em;
+  margin-top: 2.25em;
+  margin-bottom: 0.6em;
+  padding-bottom: 0.5em;
   border-bottom: 1px solid var(--admin-border);
+  scroll-margin-top: 2rem;
 }
 
 .kb-article-content h3 {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--admin-fg);
-  margin-top: 1.5em;
+  margin-top: 1.75em;
   margin-bottom: 0.4em;
 }
 
 .kb-article-content p {
-  line-height: 1.8;
+  line-height: 1.85;
   color: rgba(240, 240, 242, 0.65);
 }
 
@@ -639,6 +656,22 @@ img {
   font-weight: 600;
 }
 
+.kb-article-content em {
+  color: rgba(240, 240, 242, 0.55);
+  font-style: italic;
+}
+
+.kb-article-content code {
+  background: rgba(201, 168, 76, 0.08);
+  color: var(--admin-accent);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.8em;
+  font-weight: 500;
+}
+
+/* Unordered lists */
 .kb-article-content ul {
   list-style: none;
   padding-left: 0;
@@ -646,92 +679,153 @@ img {
 
 .kb-article-content ul li {
   position: relative;
-  padding-left: 1.25em;
-  margin-top: 0.4em;
-  line-height: 1.75;
+  padding-left: 1.35em;
+  margin-top: 0.5em;
+  line-height: 1.8;
 }
 
 .kb-article-content ul li::before {
-  content: "\25B8";
+  content: "";
   position: absolute;
-  left: 0;
-  color: var(--admin-accent);
-  font-size: 0.75rem;
+  left: 0.1em;
+  top: 0.7em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--admin-accent);
+  opacity: 0.5;
 }
 
+/* Nested lists */
+.kb-article-content ul ul,
+.kb-article-content ol ul {
+  margin-top: 0.25em;
+}
+
+.kb-article-content ul ul li::before {
+  background: var(--admin-muted);
+  width: 4px;
+  height: 4px;
+  opacity: 0.4;
+}
+
+/* Ordered lists */
 .kb-article-content ol {
-  padding-left: 1.5em;
-  list-style-type: decimal;
+  padding-left: 0;
+  list-style: none;
+  counter-reset: kb-step;
 }
 
 .kb-article-content ol li {
-  margin-top: 0.4em;
-  line-height: 1.75;
-  padding-left: 0.25em;
+  counter-increment: kb-step;
+  position: relative;
+  padding-left: 2.25em;
+  margin-top: 0.6em;
+  line-height: 1.8;
 }
 
-.kb-article-content ol li::marker {
+.kb-article-content ol li::before {
+  content: counter(kb-step);
+  position: absolute;
+  left: 0;
+  top: 0.15em;
+  width: 1.5em;
+  height: 1.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--admin-accent);
+  color: var(--admin-bg);
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 50%;
+}
+
+/* Nested ordered lists inside ordered lists */
+.kb-article-content ol ol,
+.kb-article-content ul ol {
+  counter-reset: kb-substep;
+  margin-top: 0.25em;
+}
+
+.kb-article-content ol ol li {
+  counter-increment: kb-substep;
+}
+
+.kb-article-content ol ol li::before {
+  content: counter(kb-substep);
+  background: rgba(201, 168, 76, 0.15);
   color: var(--admin-accent);
-  font-weight: 600;
+  font-size: 0.6rem;
+  width: 1.35em;
+  height: 1.35em;
 }
 
+/* Links */
 .kb-article-content a {
   color: var(--admin-accent);
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: color 0.15s;
 }
 
-/* KB Info callout box */
+.kb-article-content a:hover {
+  color: var(--admin-accent-hover, #dfc06a);
+}
+
+/* Info callout */
 .kb-article-content .kb-info {
-  background: rgba(16, 185, 129, 0.06);
-  border: 1px solid rgba(16, 185, 129, 0.15);
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.12);
   border-left: 3px solid #10b981;
   border-radius: 8px;
-  padding: 0.875rem 1rem;
-  margin: 1.25em 0;
+  padding: 1rem 1.15rem;
+  margin: 1.5em 0;
   font-size: 0.8125rem;
-  line-height: 1.7;
-  color: rgba(240, 240, 242, 0.75);
+  line-height: 1.75;
+  color: rgba(240, 240, 242, 0.72);
 }
 
 .kb-article-content .kb-info strong {
-  color: #10b981;
+  color: #34d399;
 }
 
-/* KB Warning callout box */
+/* Warning callout */
 .kb-article-content .kb-warning {
-  background: rgba(245, 158, 11, 0.06);
-  border: 1px solid rgba(245, 158, 11, 0.15);
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.12);
   border-left: 3px solid #f59e0b;
   border-radius: 8px;
-  padding: 0.875rem 1rem;
-  margin: 1.25em 0;
+  padding: 1rem 1.15rem;
+  margin: 1.5em 0;
   font-size: 0.8125rem;
-  line-height: 1.7;
-  color: rgba(240, 240, 242, 0.75);
+  line-height: 1.75;
+  color: rgba(240, 240, 242, 0.72);
 }
 
 .kb-article-content .kb-warning strong {
-  color: #f59e0b;
+  color: #fbbf24;
 }
 
-/* KB Code block */
+/* Code block wrapper */
 .kb-code-wrapper {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.25);
   border: 1px solid var(--admin-border);
   border-radius: 8px;
   padding: 0.75rem 1rem;
-  margin: 1.25em 0;
+  margin: 1.5em 0;
 }
 
+/* Code block */
 .kb-article-content .kb-code {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid var(--admin-border);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 6px;
-  padding: 0.75rem 1rem;
+  padding: 0.875rem 1rem;
   font-family: "SF Mono", "Fira Code", "Fira Mono", "Roboto Mono", monospace;
   font-size: 0.75rem;
-  line-height: 1.8;
+  line-height: 1.85;
   color: rgba(240, 240, 242, 0.8);
   overflow-x: auto;
   white-space: pre-wrap;
@@ -740,5 +834,5 @@ img {
 
 /* Standalone kb-code (not inside wrapper) */
 .kb-article-content > .kb-code {
-  margin: 1.25em 0;
+  margin: 1.5em 0;
 }
