@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { success, error } from "@/lib/api-response";
 import { z } from "zod";
-import { sendBookingConfirmation } from "@/lib/email/booking-templates";
+import { sendBookingEmails } from "@/lib/email/booking-templates";
 
 const bookingSchema = z.object({
   slug: z.string().min(1),
@@ -173,11 +173,13 @@ export async function POST(req: NextRequest) {
       console.error("[bookings/public] Contact save error:", e);
     }
 
-    // Send confirmation email (fire and forget)
+    // Send confirmation + admin notification emails (fire and forget)
     try {
-      await sendBookingConfirmation({
+      await sendBookingEmails({
         name,
         email,
+        phone: phone || "",
+        notes: notes || "",
         date: bookingDate,
         duration: link.duration,
         linkTitle: link.title,
