@@ -256,6 +256,24 @@ function BlockPreview({ block }: { block: Block }) {
         const items = (data.items as unknown[]) || [];
         return `${items.length} preguntas`;
       }
+      case "testimonials": {
+        const tItems = (data.items as unknown[]) || [];
+        return `${tItems.length} testimonios`;
+      }
+      case "video": return (data.heading as string) || (data.url as string) || "Video";
+      case "pricing": {
+        const plans = (data.plans as unknown[]) || [];
+        return `${plans.length} planes`;
+      }
+      case "stats": {
+        const sItems = (data.items as unknown[]) || [];
+        return `${sItems.length} estadisticas`;
+      }
+      case "divider": return (data.label as string) || `Separador (${(data.style as string) || "line"})`;
+      case "features": {
+        const fItems = (data.items as unknown[]) || [];
+        return `${fItems.length} caracteristicas`;
+      }
       default: return "Bloque";
     }
   })();
@@ -387,6 +405,48 @@ function BlockEditor({
           inputField("Titulo", "heading"),
           <FaqEditor key="faq" data={data} onChange={setData} />,
         ];
+      case "testimonials":
+        return [
+          inputField("Titulo", "heading"),
+          <TestimonialsEditor key="testimonials" data={data} onChange={setData} />,
+        ];
+      case "video":
+        return [
+          inputField("Titulo", "heading"),
+          textareaField("Descripcion", "description", 2),
+          inputField("URL del video (YouTube, Vimeo)", "url", "url"),
+        ];
+      case "pricing":
+        return [
+          inputField("Titulo", "heading"),
+          textareaField("Descripcion", "description", 2),
+          <PricingEditor key="pricing" data={data} onChange={setData} />,
+        ];
+      case "stats":
+        return [
+          inputField("Titulo (opcional)", "heading"),
+          <StatsEditor key="stats" data={data} onChange={setData} />,
+        ];
+      case "divider":
+        return [
+          inputField("Etiqueta (opcional)", "label"),
+          selectField("Estilo", "style", [
+            { value: "line", label: "Linea" },
+            { value: "dots", label: "Puntos" },
+            { value: "space", label: "Espacio" },
+          ]),
+        ];
+      case "features":
+        return [
+          inputField("Titulo", "heading"),
+          textareaField("Descripcion", "description", 2),
+          selectField("Columnas", "columns", [
+            { value: "2", label: "2 columnas" },
+            { value: "3", label: "3 columnas" },
+            { value: "4", label: "4 columnas" },
+          ]),
+          <FeaturesEditor key="features" data={data} onChange={setData} />,
+        ];
       default:
         return [<p key="unknown" className="text-xs text-muted">Editor no disponible para este tipo de bloque</p>];
     }
@@ -485,6 +545,298 @@ function FormFieldsEditor({ data, onChange }: { data: BlockData; onChange: (d: B
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+/* ─── Testimonials sub-editor ───────────────────── */
+
+function TestimonialsEditor({ data, onChange }: { data: BlockData; onChange: (d: BlockData) => void }) {
+  const items = (data.items as { name: string; role?: string; text: string; avatar?: string }[]) || [];
+
+  function addItem() {
+    onChange({ ...data, items: [...items, { name: "", role: "", text: "", avatar: "" }] });
+  }
+
+  function updateItem(idx: number, field: string, value: string) {
+    const updated = [...items];
+    updated[idx] = { ...updated[idx], [field]: value };
+    onChange({ ...data, items: updated });
+  }
+
+  function removeItem(idx: number) {
+    onChange({ ...data, items: items.filter((_, i) => i !== idx) });
+  }
+
+  return (
+    <div>
+      <label className="block text-xs font-medium text-muted mb-2">Testimonios</label>
+      <div className="space-y-3">
+        {items.map((item, i) => (
+          <div key={i} className="space-y-1.5 p-3 rounded-lg bg-card-hover">
+            <div className="flex items-center justify-between">
+              <span className="text-[0.6rem] text-muted">#{i + 1}</span>
+              <button onClick={() => removeItem(i)} className="text-xs text-muted hover:text-danger">✕</button>
+            </div>
+            <input
+              type="text"
+              value={item.name}
+              onChange={(e) => updateItem(i, "name", e.target.value)}
+              placeholder="Nombre"
+              className="w-full rounded-lg border border-border bg-a-surface px-3 py-2 text-sm focus:border-a-accent focus:outline-none"
+            />
+            <input
+              type="text"
+              value={item.role || ""}
+              onChange={(e) => updateItem(i, "role", e.target.value)}
+              placeholder="Rol (ej: Alumno, Competidor...)"
+              className="w-full rounded-lg border border-border bg-a-surface px-3 py-2 text-sm focus:border-a-accent focus:outline-none"
+            />
+            <textarea
+              value={item.text}
+              onChange={(e) => updateItem(i, "text", e.target.value)}
+              placeholder="Testimonio"
+              rows={2}
+              className="w-full rounded-lg border border-border bg-a-surface px-3 py-2 text-sm focus:border-a-accent focus:outline-none resize-none"
+            />
+            <input
+              type="url"
+              value={item.avatar || ""}
+              onChange={(e) => updateItem(i, "avatar", e.target.value)}
+              placeholder="URL avatar (opcional)"
+              className="w-full rounded-lg border border-border bg-a-surface px-3 py-2 text-sm focus:border-a-accent focus:outline-none"
+            />
+          </div>
+        ))}
+      </div>
+      <button onClick={addItem} className="mt-2 text-xs text-a-accent hover:underline">+ Agregar testimonio</button>
+    </div>
+  );
+}
+
+/* ─── Pricing sub-editor ────────────────────────── */
+
+function PricingEditor({ data, onChange }: { data: BlockData; onChange: (d: BlockData) => void }) {
+  const plans = (data.plans as { name: string; price: string; period?: string; features: string[]; buttonText: string; buttonHref: string; highlighted?: boolean }[]) || [];
+
+  function addPlan() {
+    onChange({
+      ...data,
+      plans: [...plans, { name: "Nuevo plan", price: "0€", period: "/mes", features: ["Caracteristica 1"], buttonText: "Elegir", buttonHref: "#form", highlighted: false }],
+    });
+  }
+
+  function updatePlan(idx: number, field: string, value: unknown) {
+    const updated = [...plans];
+    updated[idx] = { ...updated[idx], [field]: value };
+    onChange({ ...data, plans: updated });
+  }
+
+  function removePlan(idx: number) {
+    onChange({ ...data, plans: plans.filter((_, i) => i !== idx) });
+  }
+
+  function updateFeature(planIdx: number, featIdx: number, value: string) {
+    const updated = [...plans];
+    const feats = [...updated[planIdx].features];
+    feats[featIdx] = value;
+    updated[planIdx] = { ...updated[planIdx], features: feats };
+    onChange({ ...data, plans: updated });
+  }
+
+  function addFeature(planIdx: number) {
+    const updated = [...plans];
+    updated[planIdx] = { ...updated[planIdx], features: [...updated[planIdx].features, ""] };
+    onChange({ ...data, plans: updated });
+  }
+
+  function removeFeature(planIdx: number, featIdx: number) {
+    const updated = [...plans];
+    updated[planIdx] = { ...updated[planIdx], features: updated[planIdx].features.filter((_, i) => i !== featIdx) };
+    onChange({ ...data, plans: updated });
+  }
+
+  return (
+    <div>
+      <label className="block text-xs font-medium text-muted mb-2">Planes</label>
+      <div className="space-y-4">
+        {plans.map((plan, i) => (
+          <div key={i} className="p-3 rounded-lg bg-card-hover space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[0.6rem] text-muted">Plan #{i + 1}</span>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={plan.highlighted || false}
+                    onChange={(e) => updatePlan(i, "highlighted", e.target.checked)}
+                    className="rounded border-border"
+                  />
+                  <span className="text-[0.6rem] text-muted">Destacado</span>
+                </label>
+                <button onClick={() => removePlan(i)} className="text-xs text-muted hover:text-danger">✕</button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="text"
+                value={plan.name}
+                onChange={(e) => updatePlan(i, "name", e.target.value)}
+                placeholder="Nombre del plan"
+                className="rounded-lg border border-border bg-a-surface px-3 py-2 text-sm focus:border-a-accent focus:outline-none"
+              />
+              <div className="flex gap-1">
+                <input
+                  type="text"
+                  value={plan.price}
+                  onChange={(e) => updatePlan(i, "price", e.target.value)}
+                  placeholder="Precio"
+                  className="flex-1 rounded-lg border border-border bg-a-surface px-3 py-2 text-sm focus:border-a-accent focus:outline-none"
+                />
+                <input
+                  type="text"
+                  value={plan.period || ""}
+                  onChange={(e) => updatePlan(i, "period", e.target.value)}
+                  placeholder="/mes"
+                  className="w-16 rounded-lg border border-border bg-a-surface px-2 py-2 text-sm focus:border-a-accent focus:outline-none"
+                />
+              </div>
+            </div>
+            <input
+              type="text"
+              value={plan.buttonText}
+              onChange={(e) => updatePlan(i, "buttonText", e.target.value)}
+              placeholder="Texto del boton"
+              className="w-full rounded-lg border border-border bg-a-surface px-3 py-2 text-sm focus:border-a-accent focus:outline-none"
+            />
+            <div>
+              <span className="text-[0.6rem] text-muted">Caracteristicas:</span>
+              {plan.features.map((feat, fi) => (
+                <div key={fi} className="flex gap-1 mt-1">
+                  <input
+                    type="text"
+                    value={feat}
+                    onChange={(e) => updateFeature(i, fi, e.target.value)}
+                    placeholder="Caracteristica"
+                    className="flex-1 rounded-lg border border-border bg-a-surface px-3 py-1.5 text-sm focus:border-a-accent focus:outline-none"
+                  />
+                  <button onClick={() => removeFeature(i, fi)} className="text-xs text-muted hover:text-danger px-1">✕</button>
+                </div>
+              ))}
+              <button onClick={() => addFeature(i)} className="mt-1 text-[0.6rem] text-a-accent hover:underline">+ Caracteristica</button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <button onClick={addPlan} className="mt-2 text-xs text-a-accent hover:underline">+ Agregar plan</button>
+    </div>
+  );
+}
+
+/* ─── Stats sub-editor ──────────────────────────── */
+
+function StatsEditor({ data, onChange }: { data: BlockData; onChange: (d: BlockData) => void }) {
+  const items = (data.items as { value: string; label: string }[]) || [];
+
+  function addItem() {
+    onChange({ ...data, items: [...items, { value: "0", label: "Etiqueta" }] });
+  }
+
+  function updateItem(idx: number, field: string, value: string) {
+    const updated = [...items];
+    updated[idx] = { ...updated[idx], [field]: value };
+    onChange({ ...data, items: updated });
+  }
+
+  function removeItem(idx: number) {
+    onChange({ ...data, items: items.filter((_, i) => i !== idx) });
+  }
+
+  return (
+    <div>
+      <label className="block text-xs font-medium text-muted mb-2">Estadisticas</label>
+      <div className="space-y-2">
+        {items.map((item, i) => (
+          <div key={i} className="flex gap-2 items-center">
+            <input
+              type="text"
+              value={item.value}
+              onChange={(e) => updateItem(i, "value", e.target.value)}
+              placeholder="Valor (ej: 500+)"
+              className="w-28 rounded-lg border border-border bg-a-surface px-3 py-2 text-sm focus:border-a-accent focus:outline-none"
+            />
+            <input
+              type="text"
+              value={item.label}
+              onChange={(e) => updateItem(i, "label", e.target.value)}
+              placeholder="Etiqueta"
+              className="flex-1 rounded-lg border border-border bg-a-surface px-3 py-2 text-sm focus:border-a-accent focus:outline-none"
+            />
+            <button onClick={() => removeItem(i)} className="text-xs text-muted hover:text-danger">✕</button>
+          </div>
+        ))}
+      </div>
+      <button onClick={addItem} className="mt-2 text-xs text-a-accent hover:underline">+ Agregar estadistica</button>
+    </div>
+  );
+}
+
+/* ─── Features sub-editor ───────────────────────── */
+
+function FeaturesEditor({ data, onChange }: { data: BlockData; onChange: (d: BlockData) => void }) {
+  const items = (data.items as { icon?: string; title: string; description: string }[]) || [];
+
+  function addItem() {
+    onChange({ ...data, items: [...items, { icon: "✓", title: "", description: "" }] });
+  }
+
+  function updateItem(idx: number, field: string, value: string) {
+    const updated = [...items];
+    updated[idx] = { ...updated[idx], [field]: value };
+    onChange({ ...data, items: updated });
+  }
+
+  function removeItem(idx: number) {
+    onChange({ ...data, items: items.filter((_, i) => i !== idx) });
+  }
+
+  return (
+    <div>
+      <label className="block text-xs font-medium text-muted mb-2">Caracteristicas</label>
+      <div className="space-y-3">
+        {items.map((item, i) => (
+          <div key={i} className="space-y-1.5 p-3 rounded-lg bg-card-hover">
+            <div className="flex items-center justify-between">
+              <span className="text-[0.6rem] text-muted">#{i + 1}</span>
+              <button onClick={() => removeItem(i)} className="text-xs text-muted hover:text-danger">✕</button>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={item.icon || ""}
+                onChange={(e) => updateItem(i, "icon", e.target.value)}
+                placeholder="Icono/Emoji"
+                className="w-16 rounded-lg border border-border bg-a-surface px-3 py-2 text-sm text-center focus:border-a-accent focus:outline-none"
+              />
+              <input
+                type="text"
+                value={item.title}
+                onChange={(e) => updateItem(i, "title", e.target.value)}
+                placeholder="Titulo"
+                className="flex-1 rounded-lg border border-border bg-a-surface px-3 py-2 text-sm focus:border-a-accent focus:outline-none"
+              />
+            </div>
+            <textarea
+              value={item.description}
+              onChange={(e) => updateItem(i, "description", e.target.value)}
+              placeholder="Descripcion"
+              rows={2}
+              className="w-full rounded-lg border border-border bg-a-surface px-3 py-2 text-sm focus:border-a-accent focus:outline-none resize-none"
+            />
+          </div>
+        ))}
+      </div>
+      <button onClick={addItem} className="mt-2 text-xs text-a-accent hover:underline">+ Agregar caracteristica</button>
     </div>
   );
 }

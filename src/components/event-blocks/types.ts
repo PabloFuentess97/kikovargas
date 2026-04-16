@@ -1,6 +1,6 @@
 /* ─── Block Type Definitions ─────────────────────── */
 
-export const BLOCK_TYPES = ["hero", "text", "image", "cta", "gallery", "form", "countdown", "faq"] as const;
+export const BLOCK_TYPES = ["hero", "text", "image", "cta", "gallery", "form", "countdown", "faq", "testimonials", "video", "pricing", "stats", "divider", "features"] as const;
 export type BlockType = (typeof BLOCK_TYPES)[number];
 
 export interface BlockData {
@@ -68,6 +68,48 @@ export interface FaqData {
   items?: { question: string; answer: string }[];
 }
 
+export interface TestimonialsData {
+  heading?: string;
+  items?: { name: string; role?: string; text: string; avatar?: string }[];
+}
+
+export interface VideoData {
+  heading?: string;
+  description?: string;
+  url?: string; // YouTube or Vimeo URL
+}
+
+export interface PricingData {
+  heading?: string;
+  description?: string;
+  plans?: {
+    name: string;
+    price: string;
+    period?: string;
+    features: string[];
+    buttonText: string;
+    buttonHref: string;
+    highlighted?: boolean;
+  }[];
+}
+
+export interface StatsData {
+  heading?: string;
+  items?: { value: string; label: string }[];
+}
+
+export interface DividerData {
+  label?: string;
+  style?: "line" | "dots" | "space";
+}
+
+export interface FeaturesData {
+  heading?: string;
+  description?: string;
+  items?: { icon?: string; title: string; description: string }[];
+  columns?: number;
+}
+
 /* ─── Block label map for admin ──────────────────── */
 
 export const BLOCK_LABELS: Record<BlockType, string> = {
@@ -79,6 +121,12 @@ export const BLOCK_LABELS: Record<BlockType, string> = {
   form: "Formulario",
   countdown: "Cuenta Regresiva",
   faq: "Preguntas Frecuentes",
+  testimonials: "Testimonios",
+  video: "Video",
+  pricing: "Precios",
+  stats: "Estadisticas",
+  divider: "Separador",
+  features: "Caracteristicas",
 };
 
 /* ─── Default data for each block type ───────────── */
@@ -92,4 +140,10 @@ export const BLOCK_DEFAULTS: Record<BlockType, BlockData> = {
   form: { heading: "Registrate", description: "Completa el formulario para reservar tu plaza", buttonText: "Enviar", fields: ["name", "email", "phone"] },
   countdown: { targetDate: new Date(Date.now() + 7 * 86400000).toISOString(), heading: "El evento comienza en", description: "" },
   faq: { heading: "Preguntas frecuentes", items: [{ question: "Pregunta de ejemplo?", answer: "Respuesta de ejemplo." }] },
+  testimonials: { heading: "Lo que dicen nuestros alumnos", items: [{ name: "Nombre", role: "Alumno", text: "Testimonio de ejemplo..." }] },
+  video: { heading: "Mira el video", description: "", url: "" },
+  pricing: { heading: "Elige tu plan", description: "", plans: [{ name: "Basico", price: "49€", period: "/mes", features: ["Caracteristica 1"], buttonText: "Elegir plan", buttonHref: "#form", highlighted: false }] },
+  stats: { heading: "", items: [{ value: "100+", label: "Alumnos" }] },
+  divider: { label: "", style: "line" },
+  features: { heading: "Que incluye", description: "", items: [{ icon: "✓", title: "Caracteristica", description: "Descripcion de la caracteristica" }], columns: 3 },
 };

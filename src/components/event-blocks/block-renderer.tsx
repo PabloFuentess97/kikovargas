@@ -9,6 +9,12 @@ import { GalleryBlock } from "./blocks/gallery-block";
 import { FormBlock } from "./blocks/form-block";
 import { CountdownBlock } from "./blocks/countdown-block";
 import { FaqBlock } from "./blocks/faq-block";
+import { TestimonialsBlock } from "./blocks/testimonials-block";
+import { VideoBlock } from "./blocks/video-block";
+import { PricingBlock } from "./blocks/pricing-block";
+import { StatsBlock } from "./blocks/stats-block";
+import { DividerBlock } from "./blocks/divider-block";
+import { FeaturesBlock } from "./blocks/features-block";
 
 const BLOCK_MAP: Record<string, React.ComponentType<{ data: Record<string, unknown>; pageId: string }>> = {
   hero: HeroBlock,
@@ -19,6 +25,12 @@ const BLOCK_MAP: Record<string, React.ComponentType<{ data: Record<string, unkno
   form: FormBlock,
   countdown: CountdownBlock,
   faq: FaqBlock,
+  testimonials: TestimonialsBlock,
+  video: VideoBlock,
+  pricing: PricingBlock,
+  stats: StatsBlock,
+  divider: DividerBlock,
+  features: FeaturesBlock,
 };
 
 export function BlockRenderer({ blocks, pageId }: { blocks: EventBlockRecord[]; pageId: string }) {

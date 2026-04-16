@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/auth/session";
 import { success, error } from "@/lib/api-response";
 import { z } from "zod";
 
-const BLOCK_TYPES = ["hero", "text", "image", "cta", "gallery", "form", "countdown", "faq"] as const;
+const BLOCK_TYPES = ["hero", "text", "image", "cta", "gallery", "form", "countdown", "faq", "testimonials", "video", "pricing", "stats", "divider", "features"] as const;
 
 const createBlockSchema = z.object({
   type: z.enum(BLOCK_TYPES),

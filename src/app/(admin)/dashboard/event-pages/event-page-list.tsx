@@ -152,34 +152,44 @@ export function EventPageList({ initialPages }: { initialPages: EventPageItem[] 
               {/* Template selection */}
               <div>
                 <label className="block text-xs font-medium text-muted mb-2">Plantilla</label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setTemplate("custom")}
-                    className={`p-3 rounded-lg border text-left transition-all ${
+                    className={`p-4 rounded-lg border text-left transition-all ${
                       template === "custom"
                         ? "border-a-accent bg-a-accent/5"
                         : "border-border hover:border-a-accent/30"
                     }`}
                   >
-                    <p className="text-xs font-medium text-foreground">En blanco</p>
-                    <p className="text-[0.6rem] text-muted mt-0.5">Empieza desde cero</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm">📄</span>
+                      <p className="text-xs font-medium text-foreground">En blanco</p>
+                    </div>
+                    <p className="text-[0.6rem] text-muted">Empieza desde cero y agrega bloques manualmente</p>
                   </button>
-                  {EVENT_TEMPLATES.map((tpl) => (
-                    <button
-                      type="button"
-                      key={tpl.id}
-                      onClick={() => setTemplate(tpl.id)}
-                      className={`p-3 rounded-lg border text-left transition-all ${
-                        template === tpl.id
-                          ? "border-a-accent bg-a-accent/5"
-                          : "border-border hover:border-a-accent/30"
-                      }`}
-                    >
-                      <p className="text-xs font-medium text-foreground">{tpl.name}</p>
-                      <p className="text-[0.6rem] text-muted mt-0.5">{tpl.blocks.length} bloques</p>
-                    </button>
-                  ))}
+                  {EVENT_TEMPLATES.map((tpl) => {
+                    const icons: Record<string, string> = { webinar: "🎓", fitness: "🏋️", coaching: "💪" };
+                    return (
+                      <button
+                        type="button"
+                        key={tpl.id}
+                        onClick={() => setTemplate(tpl.id)}
+                        className={`p-4 rounded-lg border text-left transition-all ${
+                          template === tpl.id
+                            ? "border-a-accent bg-a-accent/5"
+                            : "border-border hover:border-a-accent/30"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm">{icons[tpl.id] || "📄"}</span>
+                          <p className="text-xs font-medium text-foreground">{tpl.name}</p>
+                          <span className="text-[0.55rem] text-muted bg-card-hover px-1.5 py-0.5 rounded">{tpl.blocks.length} bloques</span>
+                        </div>
+                        <p className="text-[0.6rem] text-muted">{tpl.description}</p>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
