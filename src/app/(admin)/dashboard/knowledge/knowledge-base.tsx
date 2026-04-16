@@ -3,12 +3,28 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { KB_CATEGORIES, type KBCategory, type KBArticle } from "./kb-content";
 
+/* ─── Types ───────────────────────────────────────── */
+interface DbCategory {
+  id: string;
+  label: string;
+  icon: string;
+  description: string;
+  sortOrder: number;
+}
+
+interface DbArticle {
+  id: string;
+  categoryId: string;
+  title: string;
+  content: string;
+  sortOrder: number;
+}
+
 /* ─── Helpers ─────────────────────────────────────── */
 
 function estimateReadingTime(html: string): number {
   const text = html.replace(/<[^>]*>/g, "").replace(/\s+/g, " ");
-  const words = text.split(" ").length;
-  return Math.max(1, Math.ceil(words / 200));
+  return Math.max(1, Math.ceil(text.split(" ").length / 200));
 }
 
 function stripHtml(html: string): string {
@@ -26,10 +42,44 @@ function extractHeadings(html: string): { id: string; text: string }[] {
   return headings;
 }
 
+/** Merge DB content over static defaults. DB wins where present. */
+function buildCategories(
+  dbCategories: DbCategory[],
+  dbArticles: DbArticle[]
+): KBCategory[] {
+  // If no DB data, return static
+  if (dbCategories.length === 0) return KB_CATEGORIES;
+
+  const catMap = new Map(dbCategories.map((c) => [c.id, c]));
+  const artByCat = new Map<string, DbArticle[]>();
+  for (const a of dbArticles) {
+    if (!artByCat.has(a.categoryId)) artByCat.set(a.categoryId, []);
+    artByCat.get(a.categoryId)!.push(a);
+  }
+
+  // Sort categories
+  const sortedCats = [...dbCategories].sort((a, b) => a.sortOrder - b.sortOrder);
+
+  return sortedCats.map((dbCat) => {
+    const arts = artByCat.get(dbCat.id) || [];
+    arts.sort((a, b) => a.sortOrder - b.sortOrder);
+    return {
+      id: dbCat.id,
+      label: dbCat.label,
+      icon: dbCat.icon,
+      description: dbCat.description,
+      articles: arts.map((a) => ({
+        id: a.id, // full ID like "getting-started/welcome"
+        title: a.title,
+        content: a.content,
+      })),
+    };
+  });
+}
+
 /* ─── Copy-to-clipboard ──────────────────────────── */
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
-
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -37,25 +87,11 @@ function CopyButton({ text }: { text: string }) {
   }, [text]);
 
   return (
-    <button
-      onClick={handleCopy}
-      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[0.65rem] font-medium transition-all text-muted hover:text-a-accent"
-      title="Copiar al portapapeles"
-    >
+    <button onClick={handleCopy} className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[0.65rem] font-medium transition-all text-muted hover:text-a-accent" title="Copiar al portapapeles">
       {copied ? (
-        <>
-          <svg className="h-3 w-3 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
-          Copiado!
-        </>
+        <><svg className="h-3 w-3 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>Copiado!</>
       ) : (
-        <>
-          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
-          </svg>
-          Copiar
-        </>
+        <><svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" /></svg>Copiar</>
       )}
     </button>
   );
@@ -67,38 +103,130 @@ function highlightMatch(text: string, query: string) {
   const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const parts = text.split(new RegExp(`(${escaped})`, "gi"));
   return parts.map((part, i) =>
-    part.toLowerCase() === query.toLowerCase() ? (
-      <mark key={i} className="bg-a-accent/25 text-a-accent rounded-sm px-0.5">{part}</mark>
-    ) : (
-      part
-    )
+    part.toLowerCase() === query.toLowerCase()
+      ? <mark key={i} className="bg-a-accent/25 text-a-accent rounded-sm px-0.5">{part}</mark>
+      : part
   );
 }
 
 /* ─── Icons ───────────────────────────────────────── */
 const SearchIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-  </svg>
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
 );
-
 const BookIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-  </svg>
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>
 );
-
 const ClockIcon = ({ className = "h-3.5 w-3.5" }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+);
+const ChevronIcon = ({ className = "h-3 w-3" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+);
+const PencilIcon = ({ className = "h-3.5 w-3.5" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
 );
 
-const ChevronIcon = ({ className = "h-3 w-3" }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-  </svg>
-);
+/* ─── Edit Modal ──────────────────────────────────── */
+function EditModal({
+  article,
+  onClose,
+  onSave,
+}: {
+  article: KBArticle;
+  onClose: () => void;
+  onSave: (title: string, content: string) => void;
+}) {
+  const [title, setTitle] = useState(article.title);
+  const [content, setContent] = useState(article.content);
+  const [saving, setSaving] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Focus title on open
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [onClose]);
+
+  async function handleSave() {
+    setSaving(true);
+    onSave(title, content);
+    setSaving(false);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+
+      {/* Modal */}
+      <div className="relative w-full max-w-4xl max-h-[90vh] bg-card border border-border rounded-xl flex flex-col overflow-hidden shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
+          <div className="flex items-center gap-2.5">
+            <PencilIcon className="h-4 w-4 text-a-accent" />
+            <h2 className="text-sm font-semibold">Editar articulo</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="px-3 py-1.5 text-xs text-muted hover:text-foreground transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="px-4 py-1.5 text-xs font-medium rounded-lg bg-a-accent text-background hover:bg-a-accent-hover transition-colors disabled:opacity-50"
+            >
+              {saving ? "Guardando..." : "Guardar cambios"}
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          {/* Title */}
+          <div>
+            <label className="block text-xs font-medium text-muted mb-1.5">Titulo del articulo</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full rounded-lg border border-border bg-a-surface px-3 py-2 text-sm font-medium focus:border-a-accent focus:outline-none"
+            />
+          </div>
+
+          {/* Content */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-medium text-muted">Contenido (HTML)</label>
+              <span className="text-[0.6rem] text-muted/50">
+                Usa clases: <code className="text-a-accent/70">kb-info</code>, <code className="text-a-accent/70">kb-warning</code>, <code className="text-a-accent/70">kb-code</code>
+              </span>
+            </div>
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={20}
+              className="w-full rounded-lg border border-border bg-a-surface px-4 py-3 text-xs font-mono leading-relaxed focus:border-a-accent focus:outline-none resize-y"
+              spellCheck={false}
+            />
+          </div>
+
+          {/* Preview */}
+          <div>
+            <label className="block text-xs font-medium text-muted mb-1.5">Vista previa</label>
+            <div className="rounded-lg border border-border bg-background p-6 overflow-y-auto max-h-96">
+              <div className="kb-article-content" dangerouslySetInnerHTML={{ __html: content }} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /* ─── Main Component ──────────────────────────────── */
 export function KnowledgeBase() {
@@ -109,12 +237,42 @@ export function KnowledgeBase() {
   const contentRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // Search across all categories
+  // DB state
+  const [dbCategories, setDbCategories] = useState<DbCategory[]>([]);
+  const [dbArticles, setDbArticles] = useState<DbArticle[]>([]);
+  const [dbLoaded, setDbLoaded] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [editingArticle, setEditingArticle] = useState<KBArticle | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+
+  const isDbMode = dbCategories.length > 0;
+
+  // Build final categories from DB or static
+  const categories = useMemo(
+    () => buildCategories(dbCategories, dbArticles),
+    [dbCategories, dbArticles]
+  );
+
+  // Fetch DB data on mount
+  useEffect(() => {
+    fetch("/api/kb/articles")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && json.data) {
+          setDbCategories(json.data.categories || []);
+          setDbArticles(json.data.articles || []);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setDbLoaded(true));
+  }, []);
+
+  // Search
   const searchResults = useMemo(() => {
     if (!search.trim()) return null;
     const q = search.toLowerCase();
     const results: { category: KBCategory; article: KBArticle; matchType: "title" | "content" }[] = [];
-    for (const cat of KB_CATEGORIES) {
+    for (const cat of categories) {
       for (const art of cat.articles) {
         const titleMatch = art.title.toLowerCase().includes(q);
         const contentMatch = art.content.toLowerCase().includes(q);
@@ -123,17 +281,15 @@ export function KnowledgeBase() {
         }
       }
     }
-    // Title matches first
     results.sort((a, b) => (a.matchType === "title" ? -1 : 1) - (b.matchType === "title" ? -1 : 1));
     return results;
-  }, [search]);
+  }, [search, categories]);
 
-  const activeCategory = activeCategoryId ? KB_CATEGORIES.find((c) => c.id === activeCategoryId) : null;
+  const activeCategory = activeCategoryId ? categories.find((c) => c.id === activeCategoryId) : null;
   const activeArticle = activeCategory && activeArticleId
     ? activeCategory.articles.find((a) => a.id === activeArticleId) || null
     : null;
 
-  // Get current article index for prev/next navigation
   const currentArticleIndex = activeCategory?.articles.findIndex((a) => a.id === activeArticleId) ?? -1;
   const prevArticle = activeCategory && currentArticleIndex > 0 ? activeCategory.articles[currentArticleIndex - 1] : null;
   const nextArticle = activeCategory && currentArticleIndex < (activeCategory.articles.length - 1) ? activeCategory.articles[currentArticleIndex + 1] : null;
@@ -147,7 +303,7 @@ export function KnowledgeBase() {
   }
 
   function selectCategory(catId: string) {
-    const cat = KB_CATEGORIES.find((c) => c.id === catId);
+    const cat = categories.find((c) => c.id === catId);
     if (cat) {
       setActiveCategoryId(catId);
       setActiveArticleId(cat.articles[0]?.id || null);
@@ -163,12 +319,54 @@ export function KnowledgeBase() {
     setMobileSidebarOpen(false);
   }
 
-  // Keyboard shortcut: Ctrl/Cmd+K for search
+  // Sync static content to DB
+  async function handleSync() {
+    setSyncing(true);
+    try {
+      const res = await fetch("/api/kb/seed", { method: "POST" });
+      const json = await res.json();
+      if (json.success) {
+        // Re-fetch DB data
+        const r2 = await fetch("/api/kb/articles");
+        const j2 = await r2.json();
+        if (j2.success) {
+          setDbCategories(j2.data.categories || []);
+          setDbArticles(j2.data.articles || []);
+        }
+      }
+    } catch { /* ignore */ }
+    setSyncing(false);
+  }
+
+  // Save article edit
+  async function handleSaveArticle(title: string, content: string) {
+    if (!editingArticle) return;
+    setSaveStatus("saving");
+    try {
+      const res = await fetch(`/api/kb/articles/${encodeURIComponent(editingArticle.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, content }),
+      });
+      if (res.ok) {
+        // Update local state
+        setDbArticles((prev) =>
+          prev.map((a) => a.id === editingArticle.id ? { ...a, title, content } : a)
+        );
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus("idle"), 2000);
+      }
+    } catch { /* ignore */ }
+    setEditingArticle(null);
+  }
+
+  // Keyboard shortcuts
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        if (search) setSearch("");
-        else setMobileSidebarOpen(false);
+        if (editingArticle) { setEditingArticle(null); return; }
+        if (search) { setSearch(""); return; }
+        setMobileSidebarOpen(false);
       }
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
@@ -177,39 +375,30 @@ export function KnowledgeBase() {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [search]);
+  }, [search, editingArticle]);
 
-  // Inject heading IDs into article HTML for anchor links
+  // Process HTML headings
   function processHtml(html: string): string {
-    return html.replace(/<h2([^>]*)>(.*?)<\/h2>/gi, (_match, attrs, content) => {
+    return html.replace(/<h2([^>]*)>(.*?)<\/h2>/gi, (_m, attrs, content) => {
       const text = stripHtml(content);
       const id = text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
       return `<h2${attrs} id="${id}">${content}</h2>`;
     });
   }
 
-  // Parse and render content with code block copy buttons
   function renderContent(html: string) {
     const processed = processHtml(html);
     const codeBlockRegex = /<div class="kb-code">([\s\S]*?)<\/div>/g;
     const parts: { type: "html" | "code"; content: string }[] = [];
     let lastIndex = 0;
     let match;
-
     while ((match = codeBlockRegex.exec(processed)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push({ type: "html", content: processed.slice(lastIndex, match.index) });
-      }
+      if (match.index > lastIndex) parts.push({ type: "html", content: processed.slice(lastIndex, match.index) });
       parts.push({ type: "code", content: match[1] });
       lastIndex = match.index + match[0].length;
     }
-    if (lastIndex < processed.length) {
-      parts.push({ type: "html", content: processed.slice(lastIndex) });
-    }
-
-    if (parts.length === 0) {
-      return <div className="kb-article-content" dangerouslySetInnerHTML={{ __html: processed }} />;
-    }
+    if (lastIndex < processed.length) parts.push({ type: "html", content: processed.slice(lastIndex) });
+    if (parts.length === 0) return <div className="kb-article-content" dangerouslySetInnerHTML={{ __html: processed }} />;
 
     return (
       <div className="kb-article-content">
@@ -230,10 +419,9 @@ export function KnowledgeBase() {
     );
   }
 
-  // Total article count
-  const totalArticles = KB_CATEGORIES.reduce((sum, cat) => sum + cat.articles.length, 0);
+  const totalArticles = categories.reduce((sum, cat) => sum + cat.articles.length, 0);
 
-  /* ─── Home view (no article selected) ───────────── */
+  /* ─── Home view ─────────────────────────────────── */
   function renderHome() {
     return (
       <div className="p-6 md:p-8">
@@ -246,10 +434,43 @@ export function KnowledgeBase() {
           <p className="text-sm text-muted max-w-md mx-auto">
             Todo lo que necesitas saber para sacarle el maximo partido a tu panel de administracion.
           </p>
-          <p className="text-xs text-muted/50 mt-2">{KB_CATEGORIES.length} categorias &middot; {totalArticles} articulos</p>
+          <p className="text-xs text-muted/50 mt-2">
+            {categories.length} categorias &middot; {totalArticles} articulos
+            {isDbMode && <span className="ml-2 text-success/60">&#x2022; Editable desde el panel</span>}
+          </p>
         </div>
 
-        {/* Search bar (home) */}
+        {/* Sync/Edit mode banner */}
+        {dbLoaded && !isDbMode && (
+          <div className="max-w-lg mx-auto mb-8 p-4 rounded-xl border border-a-accent/15 bg-a-accent/5 text-center">
+            <p className="text-xs text-muted mb-3">
+              La documentacion esta en modo estatico. Sincronizala con la base de datos para poder editarla desde el panel.
+            </p>
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="px-4 py-2 text-xs font-medium rounded-lg bg-a-accent text-background hover:bg-a-accent-hover transition-colors disabled:opacity-50"
+            >
+              {syncing ? (
+                <span className="flex items-center gap-2">
+                  <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                  Sincronizando...
+                </span>
+              ) : (
+                "Sincronizar con base de datos"
+              )}
+            </button>
+          </div>
+        )}
+
+        {isDbMode && (
+          <div className="max-w-lg mx-auto mb-8 flex items-center justify-center gap-2 text-[0.65rem] text-success/70">
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+            Modo editable activo — Haz clic en el boton de edicion en cualquier articulo para modificarlo
+          </div>
+        )}
+
+        {/* Search */}
         <div className="max-w-lg mx-auto mb-10">
           <div className="relative">
             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted pointer-events-none" />
@@ -266,7 +487,7 @@ export function KnowledgeBase() {
           </div>
         </div>
 
-        {/* Search results overlay on home */}
+        {/* Search results */}
         {searchResults ? (
           <div className="max-w-2xl mx-auto">
             <p className="text-xs font-medium text-muted mb-3">
@@ -276,7 +497,7 @@ export function KnowledgeBase() {
               <div className="text-center py-12">
                 <SearchIcon className="h-10 w-10 text-muted/20 mx-auto mb-3" />
                 <p className="text-sm text-muted">No se encontraron resultados</p>
-                <p className="text-xs text-muted/50 mt-1">Intenta con otras palabras o busca por categoria</p>
+                <p className="text-xs text-muted/50 mt-1">Intenta con otras palabras</p>
               </div>
             ) : (
               <div className="space-y-1">
@@ -302,7 +523,7 @@ export function KnowledgeBase() {
         ) : (
           /* Category grid */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {KB_CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => selectCategory(cat.id)}
@@ -318,7 +539,6 @@ export function KnowledgeBase() {
                   {cat.label}
                 </h3>
                 <p className="text-xs text-muted leading-relaxed">{cat.description}</p>
-                {/* First 2 article titles as preview */}
                 <div className="mt-3 pt-3 border-t border-border/50 space-y-1">
                   {cat.articles.slice(0, 2).map((art) => (
                     <p key={art.id} className="text-[0.65rem] text-muted/60 truncate flex items-center gap-1.5">
@@ -341,7 +561,6 @@ export function KnowledgeBase() {
   /* ─── Article view ──────────────────────────────── */
   function renderArticle() {
     if (!activeArticle || !activeCategory) return null;
-
     const readingTime = estimateReadingTime(activeArticle.content);
     const headings = extractHeadings(activeArticle.content);
 
@@ -349,14 +568,9 @@ export function KnowledgeBase() {
       <div className="p-6 md:p-8 lg:p-10 max-w-3xl">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-xs mb-6 flex-wrap">
-          <button onClick={goHome} className="text-muted hover:text-a-accent transition-colors">
-            Inicio
-          </button>
+          <button onClick={goHome} className="text-muted hover:text-a-accent transition-colors">Inicio</button>
           <ChevronIcon className="h-2.5 w-2.5 text-muted/40" />
-          <button
-            onClick={() => selectCategory(activeCategory.id)}
-            className="text-muted hover:text-a-accent transition-colors flex items-center gap-1"
-          >
+          <button onClick={() => selectCategory(activeCategory.id)} className="text-muted hover:text-a-accent transition-colors flex items-center gap-1">
             <span className="text-xs">{activeCategory.icon}</span>
             {activeCategory.label}
           </button>
@@ -364,10 +578,22 @@ export function KnowledgeBase() {
           <span className="text-foreground/70 font-medium">{activeArticle.title}</span>
         </nav>
 
-        {/* Title + meta */}
-        <h1 className="text-xl md:text-2xl font-bold text-foreground leading-snug mb-3">
-          {activeArticle.title}
-        </h1>
+        {/* Title + meta + edit button */}
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <h1 className="text-xl md:text-2xl font-bold text-foreground leading-snug">
+            {activeArticle.title}
+          </h1>
+          {isDbMode && (
+            <button
+              onClick={() => setEditingArticle(activeArticle)}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border text-muted hover:text-a-accent hover:border-a-accent/30 transition-all"
+            >
+              <PencilIcon className="h-3.5 w-3.5" />
+              Editar
+            </button>
+          )}
+        </div>
+
         <div className="flex items-center gap-3 mb-8 text-xs text-muted/60">
           <span className="inline-flex items-center gap-1">
             <ClockIcon className="h-3 w-3" />
@@ -375,14 +601,21 @@ export function KnowledgeBase() {
           </span>
           <span className="h-3 w-px bg-border" />
           <span>{activeCategory.label}</span>
+          {saveStatus === "saved" && (
+            <>
+              <span className="h-3 w-px bg-border" />
+              <span className="text-success flex items-center gap-1">
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                Guardado
+              </span>
+            </>
+          )}
         </div>
 
-        {/* Table of Contents (for articles with 3+ headings) */}
+        {/* Table of contents */}
         {headings.length >= 3 && (
           <div className="kb-toc mb-8 rounded-lg border border-border bg-a-surface/50 p-4">
-            <p className="text-[0.65rem] font-semibold text-muted uppercase tracking-widest mb-2.5">
-              En esta pagina
-            </p>
+            <p className="text-[0.65rem] font-semibold text-muted uppercase tracking-widest mb-2.5">En esta pagina</p>
             <nav className="space-y-1">
               {headings.map((h) => (
                 <a
@@ -390,8 +623,7 @@ export function KnowledgeBase() {
                   href={`#${h.id}`}
                   onClick={(e) => {
                     e.preventDefault();
-                    const el = contentRef.current?.querySelector(`#${h.id}`);
-                    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    contentRef.current?.querySelector(`#${h.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }}
                   className="block text-xs text-muted hover:text-a-accent transition-colors py-0.5 pl-3 border-l-2 border-transparent hover:border-a-accent/40"
                 >
@@ -405,39 +637,26 @@ export function KnowledgeBase() {
         {/* Content */}
         {renderContent(activeArticle.content)}
 
-        {/* Prev/Next navigation */}
+        {/* Prev/Next */}
         <div className="mt-12 pt-6 border-t border-border">
           <div className="grid grid-cols-2 gap-3">
             {prevArticle ? (
-              <button
-                onClick={() => navigateTo(activeCategory.id, prevArticle.id)}
-                className="text-left p-4 rounded-lg border border-border hover:border-a-accent/20 transition-all group"
-              >
+              <button onClick={() => navigateTo(activeCategory.id, prevArticle.id)} className="text-left p-4 rounded-lg border border-border hover:border-a-accent/20 transition-all group">
                 <p className="text-[0.6rem] font-medium text-muted/50 uppercase tracking-wider mb-1">Anterior</p>
-                <p className="text-xs font-medium text-foreground group-hover:text-a-accent transition-colors">
-                  {prevArticle.title}
-                </p>
+                <p className="text-xs font-medium text-foreground group-hover:text-a-accent transition-colors">{prevArticle.title}</p>
               </button>
             ) : <div />}
             {nextArticle ? (
-              <button
-                onClick={() => navigateTo(activeCategory.id, nextArticle.id)}
-                className="text-right p-4 rounded-lg border border-border hover:border-a-accent/20 transition-all group"
-              >
+              <button onClick={() => navigateTo(activeCategory.id, nextArticle.id)} className="text-right p-4 rounded-lg border border-border hover:border-a-accent/20 transition-all group">
                 <p className="text-[0.6rem] font-medium text-muted/50 uppercase tracking-wider mb-1">Siguiente</p>
-                <p className="text-xs font-medium text-foreground group-hover:text-a-accent transition-colors">
-                  {nextArticle.title}
-                </p>
+                <p className="text-xs font-medium text-foreground group-hover:text-a-accent transition-colors">{nextArticle.title}</p>
               </button>
             ) : <div />}
           </div>
         </div>
 
-        {/* Helpful? */}
         <div className="mt-8 text-center">
-          <p className="text-[0.65rem] text-muted/40">
-            Ultima actualizacion: Abril 2026
-          </p>
+          <p className="text-[0.65rem] text-muted/40">Ultima actualizacion: Abril 2026</p>
         </div>
       </div>
     );
@@ -448,29 +667,33 @@ export function KnowledgeBase() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-7rem)] md:h-[calc(100vh-4rem)]">
-      {/* Header bar */}
+      {/* Edit modal */}
+      {editingArticle && (
+        <EditModal
+          article={editingArticle}
+          onClose={() => setEditingArticle(null)}
+          onSave={handleSaveArticle}
+        />
+      )}
+
+      {/* Header */}
       <div className="flex items-center justify-between mb-4 shrink-0">
         <div className="flex items-center gap-3">
-          <button
-            onClick={goHome}
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-a-accent/10 hover:bg-a-accent/15 transition-colors"
-          >
+          <button onClick={goHome} className="flex h-9 w-9 items-center justify-center rounded-lg bg-a-accent/10 hover:bg-a-accent/15 transition-colors">
             <BookIcon className="h-5 w-5 text-a-accent" />
           </button>
           <div>
             <h1 className="text-lg font-semibold">
-              {isHome ? "Guia de uso" : (
-                <button onClick={goHome} className="hover:text-a-accent transition-colors">
-                  Guia de uso
-                </button>
-              )}
+              {isHome ? "Guia de uso" : <button onClick={goHome} className="hover:text-a-accent transition-colors">Guia de uso</button>}
             </h1>
-            <p className="text-xs text-muted">Documentacion completa del panel</p>
+            <p className="text-xs text-muted">
+              Documentacion completa del panel
+              {isDbMode && <span className="text-success/50 ml-1">&middot; Editable</span>}
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Desktop search shortcut hint */}
           {!isHome && (
             <div className="hidden md:flex items-center">
               <div className="relative">
@@ -483,22 +706,16 @@ export function KnowledgeBase() {
                   placeholder="Buscar..."
                   className="w-48 rounded-lg border border-border bg-a-surface pl-9 pr-14 py-1.5 text-xs focus:border-a-accent focus:outline-none focus:w-72 transition-all"
                 />
-                <kbd className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center px-1 py-0.5 rounded text-[0.55rem] text-muted/40 bg-background border border-border/50 font-mono">
-                  CtrlK
-                </kbd>
+                <kbd className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center px-1 py-0.5 rounded text-[0.55rem] text-muted/40 bg-background border border-border/50 font-mono">CtrlK</kbd>
               </div>
             </div>
           )}
-
-          {/* Mobile sidebar toggle */}
           {!isHome && (
             <button
               onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
               className="md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-card border border-border text-muted hover:text-foreground transition-colors"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-              </svg>
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
               Indice
             </button>
           )}
@@ -507,83 +724,43 @@ export function KnowledgeBase() {
 
       {/* Main layout */}
       <div className="flex flex-1 min-h-0 gap-4">
-        {/* ── Mobile overlay ── */}
-        {mobileSidebarOpen && (
-          <div
-            className="md:hidden fixed inset-0 z-30 bg-black/50 backdrop-blur-sm"
-            onClick={() => setMobileSidebarOpen(false)}
-          />
-        )}
+        {mobileSidebarOpen && <div className="md:hidden fixed inset-0 z-30 bg-black/50 backdrop-blur-sm" onClick={() => setMobileSidebarOpen(false)} />}
 
-        {/* ── Sidebar (only when article is active) ── */}
+        {/* Sidebar */}
         {!isHome && (
-          <aside
-            className={`
-              ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"}
-              md:translate-x-0
-              fixed md:relative z-40 md:z-auto
-              top-0 md:top-auto left-0 md:left-auto
-              h-full md:h-auto
-              w-[280px] md:w-[240px] shrink-0
-              bg-a-surface md:bg-card border-r md:border border-border md:rounded-xl
-              flex flex-col
-              transform transition-transform duration-300 md:transform-none
-              overflow-hidden
-            `}
-          >
-            {/* Mobile close */}
+          <aside className={`${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:relative z-40 md:z-auto top-0 md:top-auto left-0 md:left-auto h-full md:h-auto w-[280px] md:w-[240px] shrink-0 bg-a-surface md:bg-card border-r md:border border-border md:rounded-xl flex flex-col transform transition-transform duration-300 md:transform-none overflow-hidden`}>
             <div className="md:hidden flex items-center justify-between p-3 border-b border-border">
               <span className="text-xs font-semibold">Navegacion</span>
               <button onClick={() => setMobileSidebarOpen(false)} className="text-muted hover:text-foreground">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
 
-            {/* Category list */}
             <div className="flex-1 overflow-y-auto p-2.5">
-              {/* Home link */}
-              <button
-                onClick={goHome}
-                className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-muted hover:text-foreground hover:bg-card-hover transition-all flex items-center gap-2 mb-2"
-              >
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-                </svg>
+              <button onClick={goHome} className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-muted hover:text-foreground hover:bg-card-hover transition-all flex items-center gap-2 mb-2">
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
                 Todas las categorias
               </button>
-
               <div className="h-px bg-border mx-2 mb-2" />
 
-              {KB_CATEGORIES.map((cat) => {
+              {categories.map((cat) => {
                 const isActiveCat = activeCategoryId === cat.id;
                 return (
                   <div key={cat.id} className="mb-1">
                     <button
                       onClick={() => selectCategory(cat.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-all flex items-center gap-2 ${
-                        isActiveCat
-                          ? "bg-a-accent/8 text-a-accent"
-                          : "text-muted hover:text-foreground hover:bg-card-hover"
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded-lg transition-all flex items-center gap-2 ${isActiveCat ? "bg-a-accent/8 text-a-accent" : "text-muted hover:text-foreground hover:bg-card-hover"}`}
                     >
                       <span className="text-sm shrink-0">{cat.icon}</span>
                       <span className="text-xs font-medium truncate">{cat.label}</span>
                     </button>
-
-                    {/* Expanded articles for active category */}
                     {isActiveCat && (
                       <div className="ml-5 mt-0.5 mb-1 pl-3 border-l border-border/50 space-y-0.5">
                         {cat.articles.map((art) => (
                           <button
                             key={art.id}
                             onClick={() => navigateTo(cat.id, art.id)}
-                            className={`w-full text-left px-2 py-1.5 rounded text-[0.7rem] transition-all ${
-                              activeArticleId === art.id
-                                ? "text-a-accent font-medium bg-a-accent/5"
-                                : "text-muted/70 hover:text-foreground"
-                            }`}
+                            className={`w-full text-left px-2 py-1.5 rounded text-[0.7rem] transition-all ${activeArticleId === art.id ? "text-a-accent font-medium bg-a-accent/5" : "text-muted/70 hover:text-foreground"}`}
                           >
                             {art.title}
                           </button>
@@ -597,9 +774,8 @@ export function KnowledgeBase() {
           </aside>
         )}
 
-        {/* ── Content area ── */}
+        {/* Content */}
         <div className={`flex-1 flex flex-col min-w-0 ${isHome ? "" : "border border-border rounded-xl bg-card"} overflow-hidden`}>
-          {/* Search results dropdown when typing in header search */}
           {!isHome && searchResults && (
             <div className="hidden md:block border-b border-border bg-card-hover/50 max-h-64 overflow-y-auto">
               <div className="p-3">
@@ -607,7 +783,7 @@ export function KnowledgeBase() {
                   {searchResults.length} resultado{searchResults.length !== 1 ? "s" : ""}
                 </p>
                 {searchResults.length === 0 ? (
-                  <p className="text-xs text-muted text-center py-4">Sin resultados para &ldquo;{search}&rdquo;</p>
+                  <p className="text-xs text-muted text-center py-4">Sin resultados</p>
                 ) : (
                   <div className="space-y-0.5">
                     {searchResults.slice(0, 8).map(({ category, article }) => (
@@ -618,9 +794,7 @@ export function KnowledgeBase() {
                       >
                         <span className="text-sm">{category.icon}</span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-foreground group-hover:text-a-accent truncate transition-colors">
-                            {highlightMatch(article.title, search)}
-                          </p>
+                          <p className="text-xs font-medium text-foreground group-hover:text-a-accent truncate transition-colors">{highlightMatch(article.title, search)}</p>
                           <p className="text-[0.6rem] text-muted/50">{category.label}</p>
                         </div>
                       </button>
@@ -630,8 +804,6 @@ export function KnowledgeBase() {
               </div>
             </div>
           )}
-
-          {/* Content */}
           <div ref={contentRef} className="flex-1 overflow-y-auto">
             {isHome ? renderHome() : renderArticle()}
           </div>

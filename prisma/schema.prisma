@@ -286,6 +286,32 @@ model EventLead {
   @@map("event_leads")
 }
 
+// ─── Knowledge Base ─────────────────────────────────
+
+model KbArticle {
+  id         String   @id // matches static article key e.g. "getting-started/welcome"
+  categoryId String   @map("category_id") // e.g. "getting-started"
+  title      String
+  content    String   // HTML
+  sortOrder  Int      @default(0) @map("sort_order")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([categoryId, sortOrder])
+  @@map("kb_articles")
+}
+
+model KbCategory {
+  id          String   @id // e.g. "getting-started"
+  label       String
+  icon        String   @default("📄")
+  description String   @default("")
+  sortOrder   Int      @default(0) @map("sort_order")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([sortOrder])
+  @@map("kb_categories")
+}
+
 // ─── Contact ────────────────────────────────────────
 
 model Contact {
