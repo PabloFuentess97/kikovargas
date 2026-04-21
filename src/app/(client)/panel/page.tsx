@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireClient } from "@/lib/auth/session";
+import { requireClientArea } from "@/lib/auth/client-access";
 import { prisma } from "@/lib/db/prisma";
 
 export const dynamic = "force-dynamic";
@@ -9,28 +9,42 @@ function formatEuro(cents: number, currency = "EUR"): string {
 }
 
 export default async function ClientDashboardPage() {
-  const session = await requireClient();
+  const { session, access } = await requireClientArea("home");
 
+  // Only query what we'll actually display (respect permissions)
   const [user, activeWorkouts, openTasks, activeDiet, unpaidInvoices, docsCount] = await Promise.all([
     prisma.user.findUnique({
       where: { id: session.sub },
       select: { name: true, startedAt: true },
     }),
-    prisma.workout.count({ where: { clientId: session.sub, status: "ACTIVE" } }),
-    prisma.clientTask.count({ where: { clientId: session.sub, completed: false } }),
-    prisma.diet.findFirst({ where: { clientId: session.sub, active: true }, select: { title: true } }),
-    prisma.invoice.findMany({
-      where: { clientId: session.sub, status: { in: ["PENDING", "OVERDUE"] } },
-      select: { id: true, amount: true, currency: true, dueDate: true },
-    }),
-    prisma.clientDocument.count({ where: { clientId: session.sub } }),
+    access.allowedAreas.workouts
+      ? prisma.workout.count({ where: { clientId: session.sub, status: "ACTIVE" } })
+      : 0,
+    access.allowedAreas.tasks
+      ? prisma.clientTask.count({ where: { clientId: session.sub, completed: false } })
+      : 0,
+    access.allowedAreas.diet
+      ? prisma.diet.findFirst({
+          where: { clientId: session.sub, active: true },
+          select: { title: true },
+        })
+      : null,
+    access.allowedAreas.invoices
+      ? prisma.invoice.findMany({
+          where: { clientId: session.sub, status: { in: ["PENDING", "OVERDUE"] } },
+          select: { id: true, amount: true, currency: true, dueDate: true },
+        })
+      : [],
+    access.allowedAreas.documents
+      ? prisma.clientDocument.count({ where: { clientId: session.sub } })
+      : 0,
   ]);
 
   const unpaidTotal = unpaidInvoices.reduce((s, i) => s + i.amount, 0);
   const unpaidCurrency = unpaidInvoices[0]?.currency ?? "EUR";
 
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
+  const greeting = hour < 12 ? "Buenos dias" : hour < 19 ? "Buenas tardes" : "Buenas noches";
 
   return (
     <div className="admin-fade-in">
@@ -47,92 +61,130 @@ export default async function ClientDashboardPage() {
         )}
       </div>
 
-      {/* Quick stats grid */}
+      {/* Inactive account banner */}
+      {!access.active && (
+        <div className="mb-6 rounded-2xl border border-warning/25 bg-warning/5 p-4 sm:p-5">
+          <div className="flex items-start gap-3">
+            <div className="shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-warning/15">
+              <svg className="h-5 w-5 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zM12 15.75h.008v.008H12v-.008z" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">Cuenta inactiva</p>
+              <p className="text-xs text-muted mt-1 leading-relaxed">
+                Tu periodo de coaching ha finalizado. Mantienes acceso a tus documentos
+                y facturas. Contacta con Kiko si quieres retomar el entrenamiento.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick stats grid — only show what's allowed */}
       <div className="grid grid-cols-2 gap-3 mb-6">
-        <Link href="/panel/entrenamientos" className="admin-card admin-card-interactive p-4 block group">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted">Entrenamientos</p>
-            <Icon name="dumbbell" />
-          </div>
-          <p className="text-2xl font-bold tracking-tight">{activeWorkouts}</p>
-          <p className="mt-0.5 text-[0.7rem] text-muted">activos</p>
-        </Link>
+        {access.allowedAreas.workouts && (
+          <Link href="/panel/entrenamientos" className="admin-card admin-card-interactive p-4 block group">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted">Entrenamientos</p>
+              <Icon name="dumbbell" />
+            </div>
+            <p className="text-2xl font-bold tracking-tight">{activeWorkouts}</p>
+            <p className="mt-0.5 text-[0.7rem] text-muted">activos</p>
+          </Link>
+        )}
 
-        <Link href="/panel/checklist" className="admin-card admin-card-interactive p-4 block group">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted">Tareas</p>
-            <Icon name="check" />
-          </div>
-          <p className={`text-2xl font-bold tracking-tight ${openTasks > 0 ? "text-warning" : ""}`}>{openTasks}</p>
-          <p className="mt-0.5 text-[0.7rem] text-muted">pendientes</p>
-        </Link>
+        {access.allowedAreas.tasks && (
+          <Link href="/panel/checklist" className="admin-card admin-card-interactive p-4 block group">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted">Tareas</p>
+              <Icon name="check" />
+            </div>
+            <p className={`text-2xl font-bold tracking-tight ${openTasks > 0 ? "text-warning" : ""}`}>{openTasks}</p>
+            <p className="mt-0.5 text-[0.7rem] text-muted">pendientes</p>
+          </Link>
+        )}
 
-        <Link href="/panel/dieta" className="admin-card admin-card-interactive p-4 block group">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted">Dieta</p>
-            <Icon name="diet" />
-          </div>
-          <p className="text-sm font-semibold truncate">{activeDiet?.title ?? "Sin dieta activa"}</p>
-          <p className="mt-0.5 text-[0.7rem] text-muted">plan actual</p>
-        </Link>
+        {access.allowedAreas.diet && (
+          <Link href="/panel/dieta" className="admin-card admin-card-interactive p-4 block group">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted">Dieta</p>
+              <Icon name="diet" />
+            </div>
+            <p className="text-sm font-semibold truncate">{activeDiet?.title ?? "Sin dieta activa"}</p>
+            <p className="mt-0.5 text-[0.7rem] text-muted">plan actual</p>
+          </Link>
+        )}
 
-        <Link href="/panel/facturas" className="admin-card admin-card-interactive p-4 block group">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted">Por pagar</p>
-            <Icon name="receipt" />
-          </div>
-          <p className={`text-2xl font-bold tracking-tight ${unpaidTotal > 0 ? "text-warning" : ""}`}>
-            {unpaidTotal > 0 ? formatEuro(unpaidTotal, unpaidCurrency) : "—"}
-          </p>
-          <p className="mt-0.5 text-[0.7rem] text-muted">{unpaidInvoices.length} facturas</p>
-        </Link>
+        {access.allowedAreas.invoices && (
+          <Link href="/panel/facturas" className="admin-card admin-card-interactive p-4 block group">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted">Por pagar</p>
+              <Icon name="receipt" />
+            </div>
+            <p className={`text-2xl font-bold tracking-tight ${unpaidTotal > 0 ? "text-warning" : ""}`}>
+              {unpaidTotal > 0 ? formatEuro(unpaidTotal, unpaidCurrency) : "—"}
+            </p>
+            <p className="mt-0.5 text-[0.7rem] text-muted">{unpaidInvoices.length} facturas</p>
+          </Link>
+        )}
       </div>
 
-      {/* Quick actions */}
-      <h2 className="text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-muted mb-3">Accesos rapidos</h2>
-      <div className="space-y-2">
-        <Link
-          href="/panel/entrenamientos"
-          className="flex items-center gap-3 px-4 h-[56px] rounded-xl bg-card border border-border active:bg-card-hover active:scale-[0.99] transition-all"
-        >
-          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-a-accent/10 text-a-accent">
-            <Icon name="dumbbell" large />
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground">Mis entrenamientos</p>
-            <p className="text-[0.7rem] text-muted">Rutinas asignadas por Kiko</p>
-          </div>
-          <span className="text-muted">→</span>
-        </Link>
+      {/* Quick actions — only show what's allowed */}
+      {(access.allowedAreas.workouts || access.allowedAreas.documents || access.allowedAreas.invoices) && (
+        <>
+          <h2 className="text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-muted mb-3">Accesos rapidos</h2>
+          <div className="space-y-2">
+            {access.allowedAreas.workouts && (
+              <Link
+                href="/panel/entrenamientos"
+                className="flex items-center gap-3 px-4 h-[56px] rounded-xl bg-card border border-border active:bg-card-hover active:scale-[0.99] transition-all"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-a-accent/10 text-a-accent">
+                  <Icon name="dumbbell" large />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">Mis entrenamientos</p>
+                  <p className="text-[0.7rem] text-muted">Rutinas asignadas por Kiko</p>
+                </div>
+                <span className="text-muted">→</span>
+              </Link>
+            )}
 
-        <Link
-          href="/panel/documentos"
-          className="flex items-center gap-3 px-4 h-[56px] rounded-xl bg-card border border-border active:bg-card-hover active:scale-[0.99] transition-all"
-        >
-          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-a-accent/10 text-a-accent">
-            <Icon name="docs" large />
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground">Mis documentos</p>
-            <p className="text-[0.7rem] text-muted">{docsCount} documento{docsCount !== 1 ? "s" : ""} compartido{docsCount !== 1 ? "s" : ""}</p>
-          </div>
-          <span className="text-muted">→</span>
-        </Link>
+            {access.allowedAreas.documents && (
+              <Link
+                href="/panel/documentos"
+                className="flex items-center gap-3 px-4 h-[56px] rounded-xl bg-card border border-border active:bg-card-hover active:scale-[0.99] transition-all"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-a-accent/10 text-a-accent">
+                  <Icon name="docs" large />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">Mis documentos</p>
+                  <p className="text-[0.7rem] text-muted">{docsCount} documento{docsCount !== 1 ? "s" : ""} compartido{docsCount !== 1 ? "s" : ""}</p>
+                </div>
+                <span className="text-muted">→</span>
+              </Link>
+            )}
 
-        <Link
-          href="/panel/facturas"
-          className="flex items-center gap-3 px-4 h-[56px] rounded-xl bg-card border border-border active:bg-card-hover active:scale-[0.99] transition-all"
-        >
-          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-a-accent/10 text-a-accent">
-            <Icon name="receipt" large />
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground">Mis facturas</p>
-            <p className="text-[0.7rem] text-muted">Historial de pagos</p>
+            {access.allowedAreas.invoices && (
+              <Link
+                href="/panel/facturas"
+                className="flex items-center gap-3 px-4 h-[56px] rounded-xl bg-card border border-border active:bg-card-hover active:scale-[0.99] transition-all"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-a-accent/10 text-a-accent">
+                  <Icon name="receipt" large />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">Mis facturas</p>
+                  <p className="text-[0.7rem] text-muted">Historial de pagos</p>
+                </div>
+                <span className="text-muted">→</span>
+              </Link>
+            )}
           </div>
-          <span className="text-muted">→</span>
-        </Link>
-      </div>
+        </>
+      )}
     </div>
   );
 }

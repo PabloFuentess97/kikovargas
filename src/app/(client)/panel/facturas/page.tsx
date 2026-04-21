@@ -1,4 +1,4 @@
-import { requireClient } from "@/lib/auth/session";
+import { requireClientArea } from "@/lib/auth/client-access";
 import { prisma } from "@/lib/db/prisma";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ const STATUS_LABEL: Record<string, { text: string; color: string }> = {
 };
 
 export default async function ClientInvoicesPage() {
-  const session = await requireClient();
+  const { session } = await requireClientArea("invoices");
 
   const invoices = await prisma.invoice.findMany({
     where: { clientId: session.sub, status: { not: "DRAFT" } },

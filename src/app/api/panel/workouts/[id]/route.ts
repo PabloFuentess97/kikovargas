@@ -1,13 +1,13 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { getSession } from "@/lib/auth/session";
+import { requireClientAreaApi } from "@/lib/auth/api-client-access";
 import { success, error } from "@/lib/api-response";
 
-// PATCH /api/panel/workouts/:id — client can update the `exercises` JSON (mark as completed, etc.)
-// Strict isolation: only allowed if workout belongs to session.sub
+// PATCH /api/panel/workouts/:id — client updates the `exercises` JSON
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getSession();
-  if (!session) return error("Unauthorized", 401);
+  const auth = await requireClientAreaApi("workouts");
+  if (!auth.ok) return auth.response;
+  const { session } = auth;
 
   const { id } = await params;
   const body = (await req.json()) as { exercises?: unknown };
@@ -16,12 +16,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return error("Campo 'exercises' requerido", 422);
   }
 
-  // Enforce ownership BEFORE update
   const workout = await prisma.workout.findUnique({
     where: { id },
     select: { clientId: true },
   });
-  if (!workout || workout.clientId !== session.sub) {
+  if (!workout) return error("No encontrado", 404);
+
+  // Admins can modify any; clients only their own
+  if (session!.role !== "ADMIN" && workout.clientId !== session!.sub) {
     return error("No encontrado", 404);
   }
 

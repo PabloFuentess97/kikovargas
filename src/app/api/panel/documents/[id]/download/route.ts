@@ -3,6 +3,7 @@ import { readFile } from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/db/prisma";
 import { getSession } from "@/lib/auth/session";
+import { getClientAccess } from "@/lib/auth/client-access";
 
 // GET /api/panel/documents/:id/download — stream the private file if caller owns it
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -17,6 +18,14 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   // Isolation: client can only read own docs; admin can read any
   if (session.role !== "ADMIN" && doc.clientId !== session.sub) {
     return new NextResponse("Forbidden", { status: 403 });
+  }
+
+  // Inactive clients: respect the configured access flag for documents
+  if (session.role !== "ADMIN") {
+    const access = await getClientAccess(session);
+    if (!access.allowedAreas.documents) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
   }
 
   // Use fileKey (the actual filename in public/uploads/) — not fileUrl which

@@ -1,14 +1,15 @@
 import { prisma } from "@/lib/db/prisma";
-import { getSession } from "@/lib/auth/session";
-import { success, error } from "@/lib/api-response";
+import { requireClientAreaApi } from "@/lib/auth/api-client-access";
+import { success } from "@/lib/api-response";
 
 // GET /api/panel/documents — list documents shared with logged-in client
 export async function GET() {
-  const session = await getSession();
-  if (!session) return error("Unauthorized", 401);
+  const auth = await requireClientAreaApi("documents");
+  if (!auth.ok) return auth.response;
+  const { session } = auth;
 
   const documents = await prisma.clientDocument.findMany({
-    where: { clientId: session.sub },
+    where: { clientId: session!.sub },
     orderBy: { createdAt: "desc" },
   });
 

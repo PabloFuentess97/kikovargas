@@ -29,9 +29,14 @@ export default async function AdminClientsPage() {
         title="Clientes"
         subtitle={`${clients.length} cliente${clients.length !== 1 ? "s" : ""} en total`}
         action={
-          <LinkButton href="/dashboard/clients/new" size="md">
-            + Nuevo cliente
-          </LinkButton>
+          <div className="flex gap-2">
+            <LinkButton href="/dashboard/clients/access-config" variant="secondary" size="md">
+              Acceso inactivos
+            </LinkButton>
+            <LinkButton href="/dashboard/clients/new" size="md">
+              + Nuevo cliente
+            </LinkButton>
+          </div>
         }
       />
 

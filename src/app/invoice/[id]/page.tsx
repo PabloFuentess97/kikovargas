@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import { getSession } from "@/lib/auth/session";
+import { getClientAccess } from "@/lib/auth/client-access";
 import { InvoiceView } from "./invoice-view";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,12 @@ export default async function InvoicePrintPage({
   // Isolation: admins see any; clients see only their own
   if (session.role !== "ADMIN" && invoice.clientId !== session.sub) {
     notFound();
+  }
+
+  // Inactive clients: block PDF if invoices are not allowed
+  if (session.role !== "ADMIN") {
+    const access = await getClientAccess(session);
+    if (!access.allowedAreas.invoices) notFound();
   }
 
   // Get business data from config

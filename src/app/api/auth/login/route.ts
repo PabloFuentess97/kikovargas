@@ -18,7 +18,14 @@ export async function POST(req: NextRequest) {
 
     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user || !user.active) {
+    if (!user) {
+      return error("Credenciales inválidas", 401);
+    }
+
+    // Admins: deben estar activos. Clientes (role USER) con cuenta inactiva
+    // SÍ pueden acceder — entrarán al panel con acceso limitado según la
+    // config global (ver lib/auth/client-access.ts).
+    if (user.role === "ADMIN" && !user.active) {
       return error("Credenciales inválidas", 401);
     }
 

@@ -213,6 +213,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/contacts": "Contactos",
   "/dashboard/clients": "Clientes",
   "/dashboard/clients/new": "Nuevo cliente",
+  "/dashboard/clients/access-config": "Acceso inactivos",
   "/dashboard/templates": "Plantillas",
   "/dashboard/users": "Usuarios",
   "/dashboard/settings": "Configuracion",

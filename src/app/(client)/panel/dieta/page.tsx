@@ -1,4 +1,4 @@
-import { requireClient } from "@/lib/auth/session";
+import { requireClientArea } from "@/lib/auth/client-access";
 import { prisma } from "@/lib/db/prisma";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ interface Meal {
 }
 
 export default async function ClientDietPage() {
-  const session = await requireClient();
+  const { session } = await requireClientArea("diet");
 
   const [activeDiet, historyDiets] = await Promise.all([
     prisma.diet.findFirst({

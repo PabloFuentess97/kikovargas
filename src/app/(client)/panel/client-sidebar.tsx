@@ -57,26 +57,26 @@ const I = {
   ),
 };
 
+type ClientArea = "home" | "workouts" | "tasks" | "diet" | "documents" | "invoices";
+
 interface NavItem {
+  area: ClientArea;
   href: string;
   label: string;
   shortLabel: string;
   icon: ReactNode;
 }
 
-const NAV: NavItem[] = [
-  { href: "/panel", label: "Inicio", shortLabel: "Inicio", icon: I.home },
-  { href: "/panel/entrenamientos", label: "Entrenamientos", shortLabel: "Entreno", icon: I.dumbbell },
-  { href: "/panel/checklist", label: "Checklist", shortLabel: "Check", icon: I.check },
-  { href: "/panel/dieta", label: "Dieta", shortLabel: "Dieta", icon: I.diet },
-  { href: "/panel/documentos", label: "Documentos", shortLabel: "Docs", icon: I.docs },
-  { href: "/panel/facturas", label: "Facturas", shortLabel: "Facturas", icon: I.receipt },
+const ALL_NAV: NavItem[] = [
+  { area: "home",       href: "/panel",                 label: "Inicio",         shortLabel: "Inicio",   icon: I.home },
+  { area: "workouts",   href: "/panel/entrenamientos",  label: "Entrenamientos", shortLabel: "Entreno",  icon: I.dumbbell },
+  { area: "tasks",      href: "/panel/checklist",       label: "Checklist",      shortLabel: "Check",    icon: I.check },
+  { area: "diet",       href: "/panel/dieta",           label: "Dieta",          shortLabel: "Dieta",    icon: I.diet },
+  { area: "documents",  href: "/panel/documentos",      label: "Documentos",     shortLabel: "Docs",     icon: I.docs },
+  { area: "invoices",   href: "/panel/facturas",        label: "Facturas",       shortLabel: "Facturas", icon: I.receipt },
 ];
 
-// Bottom tabs (5 principales)
-const MOBILE_TABS = NAV.slice(0, 5);
-
-const PAGE_TITLES: Record<string, string> = Object.fromEntries(NAV.map((n) => [n.href, n.label]));
+const PAGE_TITLES: Record<string, string> = Object.fromEntries(ALL_NAV.map((n) => [n.href, n.label]));
 
 function resolvePageTitle(pathname: string): string {
   if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
@@ -93,10 +93,24 @@ function isDetailPage(pathname: string): boolean {
   return !PAGE_TITLES[pathname] && pathname !== "/panel";
 }
 
-export function ClientSidebar({ userName, userEmail }: { userName: string; userEmail: string }) {
+export function ClientSidebar({
+  userName,
+  userEmail,
+  active,
+  allowedAreas,
+}: {
+  userName: string;
+  userEmail: string;
+  active: boolean;
+  allowedAreas: Record<ClientArea, boolean>;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [userOpen, setUserOpen] = useState(false);
+
+  // Filter nav by what this client can see
+  const NAV = ALL_NAV.filter((n) => allowedAreas[n.area]);
+  const MOBILE_TABS = NAV.slice(0, 5);
 
   useEffect(() => {
     setUserOpen(false);

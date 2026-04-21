@@ -1,4 +1,4 @@
-import { requireClient } from "@/lib/auth/session";
+import { requireClientArea } from "@/lib/auth/client-access";
 import { prisma } from "@/lib/db/prisma";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +18,7 @@ function fileIcon(mime: string): string {
 }
 
 export default async function ClientDocumentsPage() {
-  const session = await requireClient();
+  const { session } = await requireClientArea("documents");
 
   const docs = await prisma.clientDocument.findMany({
     where: { clientId: session.sub },

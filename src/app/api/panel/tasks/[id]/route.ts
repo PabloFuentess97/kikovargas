@@ -1,12 +1,13 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { getSession } from "@/lib/auth/session";
+import { requireClientAreaApi } from "@/lib/auth/api-client-access";
 import { success, error } from "@/lib/api-response";
 
 // PATCH /api/panel/tasks/:id — toggle completed
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getSession();
-  if (!session) return error("Unauthorized", 401);
+  const auth = await requireClientAreaApi("tasks");
+  if (!auth.ok) return auth.response;
+  const { session } = auth;
 
   const { id } = await params;
   const body = (await req.json()) as { completed?: boolean };
@@ -19,7 +20,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     where: { id },
     select: { clientId: true },
   });
-  if (!task || task.clientId !== session.sub) {
+  if (!task) return error("No encontrado", 404);
+  if (session!.role !== "ADMIN" && task.clientId !== session!.sub) {
     return error("No encontrado", 404);
   }
 
