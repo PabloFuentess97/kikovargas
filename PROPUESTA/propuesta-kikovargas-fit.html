@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Kikovargas.fit — Propuesta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-void: #030303;
+    --bg-surface: #080808;
+    --bg-card: #0f0f0f;
+    --bg-elevated: #151515;
+    --text-primary: #ededed;
+    --text-secondary: #a8a8a8;
+    --text-muted: #6b6b76;
+    --text-tertiary: #3d3d3d;
+    --accent: #c9a84c;
+    --accent-bright: #dfc06a;
+    --accent-dim: rgba(201, 168, 76, 0.08);
+    --border: rgba(255, 255, 255, 0.06);
+    --border-accent: rgba(201, 168, 76, 0.2);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background: var(--bg-void);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 11pt;
+    line-height: 1.7;
+  }
+
+  /* ═══════════════════════════════════════════════════
+     PAGE STRUCTURE (for print)
+     ═══════════════════════════════════════════════════ */
+
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  @media print {
+    body {
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+    .page-break { page-break-after: always; }
+    .no-break { page-break-inside: avoid; }
+  }
+
+  .page {
+    position: relative;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 22mm 20mm;
+    margin: 0 auto 10mm;
+    background: var(--bg-void);
+    overflow: hidden;
+    page-break-after: always;
+  }
+
+  .page:last-child { page-break-after: auto; }
+
+  /* ═══════════════════════════════════════════════════
+     COVER PAGE
+     ═══════════════════════════════════════════════════ */
+
+  .cover {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background:
+      radial-gradient(ellipse at top right, rgba(201, 168, 76, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at bottom left, rgba(201, 168, 76, 0.04) 0%, transparent 50%),
+      var(--bg-void);
+  }
+
+  .cover::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--accent) 20%, var(--accent) 80%, transparent);
+  }
+
+  .cover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 60px,
+        rgba(201, 168, 76, 0.015) 60px,
+        rgba(201, 168, 76, 0.015) 61px
+      );
+    pointer-events: none;
+  }
+
+  .cover-header {
+    padding: 22mm 20mm 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    font-size: 9pt;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    position: relative;
+    z-index: 1;
+  }
+
+  .cover-header strong {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .cover-body {
+    padding: 0 20mm;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cover-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--accent);
+    font-family: 'Inter', sans-serif;
+    font-size: 9pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    margin-bottom: 24px;
+  }
+
+  .cover-eyebrow::before {
+    content: "";
+    width: 40px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  .cover-title {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 88pt;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    margin-bottom: 2mm;
+  }
+
+  .cover-title .dot { color: var(--accent); }
+  .cover-title .fit { color: var(--accent); }
+
+  .cover-subtitle {
+    font-family: 'Oswald', sans-serif;
+    font-size: 18pt;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    margin-bottom: 18mm;
+    max-width: 140mm;
+    line-height: 1.25;
+  }
+
+  .cover-tagline {
+    font-family: 'Oswald', sans-serif;
+    font-size: 22pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    max-width: 140mm;
+    border-left: 3px solid var(--accent);
+    padding-left: 20px;
+    color: var(--text-primary);
+    margin-bottom: 20mm;
+  }
+
+  .cover-tagline .accent { color: var(--accent); }
+
+  .cover-footer {
+    padding: 0 20mm 22mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    font-size: 9pt;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    padding-top: 14mm;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cover-footer .label {
+    color: var(--text-tertiary);
+    font-size: 7.5pt;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .cover-footer strong {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 10pt;
+    letter-spacing: 0.1em;
+  }
+
+  /* ═══════════════════════════════════════════════════
+     CONTENT PAGES
+     ═══════════════════════════════════════════════════ */
+
+  .section-number {
+    position: absolute;
+    top: 18mm;
+    right: 20mm;
+    font-family: 'Oswald', sans-serif;
+    font-size: 7pt;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+  }
+
+  .section-number .num {
+    color: var(--accent);
+    margin-right: 8px;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--accent);
+    font-size: 8pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    margin-bottom: 14px;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 28px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  h1.section-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 32pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: 12mm;
+    max-width: 150mm;
+  }
+
+  h1.section-title .accent { color: var(--accent); }
+
+  h2 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 16pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    margin-top: 10mm;
+    margin-bottom: 5mm;
+  }
+
+  h2::before {
+    content: "";
+    display: inline-block;
+    width: 24px;
+    height: 2px;
+    background: var(--accent);
+    margin-right: 14px;
+    vertical-align: middle;
+    opacity: 0.6;
+  }
+
+  h3 {
+    font-family: 'Inter', sans-serif;
+    font-size: 11.5pt;
+    font-weight: 600;
+    color: var(--accent);
+    margin-top: 6mm;
+    margin-bottom: 2mm;
+    letter-spacing: 0.01em;
+  }
+
+  p {
+    color: var(--text-secondary);
+    margin-bottom: 3.5mm;
+    line-height: 1.75;
+    font-size: 10.5pt;
+  }
+
+  p strong, .strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  ul, ol {
+    margin: 4mm 0 4mm 0;
+    padding-left: 0;
+    list-style: none;
+  }
+
+  ul li, ol li {
+    position: relative;
+    padding-left: 24px;
+    margin-bottom: 2.5mm;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-size: 10.5pt;
+  }
+
+  ul li::before {
+    content: "◆";
+    position: absolute;
+    left: 0;
+    top: 1px;
+    color: var(--accent);
+    font-size: 7pt;
+  }
+
+  ol {
+    counter-reset: mycount;
+  }
+
+  ol li {
+    counter-increment: mycount;
+  }
+
+  ol li::before {
+    content: counter(mycount, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--accent);
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 9pt;
+    letter-spacing: 0.1em;
+  }
+
+  li strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  /* ═══════════════════════════════════════════════════
+     COMPONENTS
+     ═══════════════════════════════════════════════════ */
+
+  /* Pull quote */
+  .pull-quote {
+    border-left: 3px solid var(--accent);
+    padding: 5mm 0 5mm 8mm;
+    margin: 6mm 0;
+    font-family: 'Oswald', sans-serif;
+    font-size: 14pt;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    line-height: 1.3;
+    color: var(--text-primary);
+  }
+
+  .pull-quote .accent { color: var(--accent); }
+
+  /* Stat/feature card */
+  .feature-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 6mm 7mm;
+    margin-bottom: 4mm;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feature-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+
+  .feature-card-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 12pt;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2mm;
+    letter-spacing: 0.01em;
+  }
+
+  .feature-card-title .num {
+    color: var(--accent);
+    font-size: 10pt;
+    margin-right: 10px;
+    font-weight: 500;
+  }
+
+  .feature-card p {
+    margin-bottom: 0;
+    font-size: 10pt;
+    color: var(--text-secondary);
+  }
+
+  /* Comparison table */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 6mm 0;
+    font-size: 9.5pt;
+  }
+
+  .compare-table th {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 8.5pt;
+    letter-spacing: 0.1em;
+    padding: 4mm 4mm;
+    text-align: left;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .compare-table th:first-child {
+    color: var(--text-muted);
+  }
+
+  .compare-table th.highlight {
+    color: var(--accent);
+  }
+
+  .compare-table td {
+    padding: 3mm 4mm;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  .compare-table td:first-child {
+    color: var(--text-primary);
+    font-weight: 500;
+    width: 35%;
+  }
+
+  .compare-table td.bad { color: #999; }
+  .compare-table td.good {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* Info box */
+  .info-box {
+    background: rgba(201, 168, 76, 0.04);
+    border: 1px solid rgba(201, 168, 76, 0.15);
+    border-left: 3px solid var(--accent);
+    padding: 5mm 6mm;
+    margin: 5mm 0;
+  }
+
+  .info-box .label {
+    font-family: 'Oswald', sans-serif;
+    color: var(--accent);
+    font-size: 8.5pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 2mm;
+    display: block;
+  }
+
+  .info-box p:last-child { margin-bottom: 0; }
+
+  /* Closing quote */
+  .closing-block {
+    background: linear-gradient(135deg, rgba(201, 168, 76, 0.08) 0%, rgba(201, 168, 76, 0.02) 100%);
+    border: 1px solid var(--border-accent);
+    padding: 10mm;
+    margin: 8mm 0 0;
+    text-align: center;
+  }
+
+  .closing-block .label {
+    color: var(--accent);
+    font-size: 8pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    margin-bottom: 4mm;
+    display: block;
+  }
+
+  .closing-block .title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 20pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: 3mm;
+  }
+
+  .closing-block p {
+    max-width: 120mm;
+    margin: 0 auto;
+    color: var(--text-secondary);
+  }
+
+  /* Two-column layout */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6mm;
+  }
+
+  /* Footer on every page */
+  .page-footer {
+    position: absolute;
+    bottom: 10mm;
+    left: 20mm;
+    right: 20mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-tertiary);
+    border-top: 1px solid var(--border);
+    padding-top: 4mm;
+  }
+
+  .page-footer .brand { color: var(--accent); font-weight: 600; }
+
+  /* Section number dot marker */
+  .dot-marker {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+
+  /* Subtle emphasis */
+  em {
+    font-style: normal;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+</style>
+</head>
+
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     COVER PAGE
+     ═══════════════════════════════════════════════════ -->
+<div class="page cover">
+
+  <div class="cover-header">
+    <span>Propuesta · <strong>2026</strong></span>
+    <span>Confidencial</span>
+  </div>
+
+  <div class="cover-body">
+    <div class="cover-eyebrow">Plataforma Digital Premium</div>
+
+    <h1 class="cover-title">
+      Kiko<span class="dot">.</span>Vargas<br><span class="fit">.fit</span>
+    </h1>
+
+    <p class="cover-subtitle">
+      Plataforma Digital<br>para Marca Personal Fitness
+    </p>
+
+    <div class="cover-tagline">
+      No vendemos una web.<br>
+      Construimos el <span class="accent">activo digital</span><br>
+      de tu carrera.
+    </div>
+  </div>
+
+  <div class="cover-footer">
+    <div>
+      <span class="label">Preparado para</span>
+      <strong>Kiko Vargas · IFBB Pro</strong>
+    </div>
+    <div style="text-align: right;">
+      <span class="label">Desarrollado por</span>
+      <strong>Uxea Soluciones</strong>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 2 — INTRODUCCION
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="section-number"><span class="num">01</span>Introducción</div>
+
+  <div class="eyebrow">El punto de partida</div>
+  <h1 class="section-title">Más que una web.<br>Un <span class="accent">ecosistema</span>.</h1>
+
+  <p>
+    Kikovargas.fit no es simplemente un sitio web. Es un <strong>ecosistema digital completo</strong> diseñado para profesionales del fitness que entienden una verdad fundamental del negocio moderno:
+  </p>
+
+  <div class="pull-quote">
+    Tu marca personal es tu <span class="accent">activo más valioso</span>. Y ese activo necesita una casa que sea <span class="accent">tuya</span>.
+  </div>
+
+  <p>
+    Esta plataforma combina todo lo que necesita un IFBB Pro para construir, gestionar y escalar su carrera profesional desde un único lugar: contenido, reservas, captación de clientes, email marketing, landing pages para eventos, y una inteligencia artificial integrada que acelera todo el trabajo diario.
+  </p>
+
+  <p>
+    No es una página de presentación. <strong>Es la infraestructura digital completa de tu negocio.</strong>
+  </p>
+
+  <div class="info-box">
+    <span class="label">La diferencia clave</span>
+    <p>
+      Una web te muestra al mundo. Un ecosistema digital te permite trabajar, vender, captar y escalar — todo desde el mismo lugar, sin intermediarios, sin depender de nadie.
+    </p>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span> · Propuesta 2026</span>
+    <span>02 / 12</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 3 — PROBLEMA
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="section-number"><span class="num">02</span>El Problema</div>
+
+  <div class="eyebrow">Realidad del mercado</div>
+  <h1 class="section-title">El riesgo de depender solo de <span class="accent">redes sociales</span>.</h1>
+
+  <p>
+    Hoy, miles de profesionales del fitness han construido audiencias enormes en Instagram, TikTok o YouTube. Y todos comparten el mismo miedo silencioso:
+  </p>
+
+  <div class="pull-quote">
+    Si mañana cambia el <span class="accent">algoritmo</span>,<br>lo pierdo todo.
+  </div>
+
+  <p>No es una exageración. Es una realidad que ya ha ocurrido miles de veces.</p>
+
+  <h2>Los cuatro riesgos reales</h2>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">01</span>Dependencia del algoritmo</div>
+    <p>Instagram decide cuántos de tus seguidores ven tu contenido. En los últimos tres años, el alcance orgánico ha caído más del 60% en la mayoría de cuentas profesionales.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">02</span>Pérdida de alcance progresiva</div>
+    <p>Un post que hace tres años llegaba al 20% de tu audiencia, hoy apenas llega al 3%. Tu trabajo no cambió; las reglas sí.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">03</span>No eres dueño de tu audiencia</div>
+    <p>Los seguidores no son tuyos. Son de la plataforma. Si tu cuenta desaparece mañana (hackeo, suspensión, cambio de políticas), pierdes años de construcción.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">04</span>Sin control sobre tu monetización</div>
+    <p>Cada plataforma decide cómo, cuándo y si puedes vender. Imponen comisiones, restricciones de contenido y límites que tú nunca aceptaste.</p>
+  </div>
+
+  <div class="info-box">
+    <span class="label">La verdad incómoda</span>
+    <p>
+      Si toda tu carrera vive en redes sociales, <strong>no tienes un negocio. Tienes un permiso temporal para operar en terreno ajeno.</strong>
+    </p>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span> · Propuesta 2026</span>
+    <span>03 / 12</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 4 — SOLUCION
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="section-number"><span class="num">03</span>La Solución</div>
+
+  <div class="eyebrow">Nuestra propuesta</div>
+  <h1 class="section-title">Una plataforma donde <span class="accent">tú controlas todo</span>.</h1>
+
+  <p>
+    Kikovargas.fit pone el control exactamente donde debería estar: <strong>en tus manos</strong>. Sin intermediarios. Sin reglas impuestas. Sin sorpresas.
+  </p>
+
+  <h2>Tres pilares fundamentales</h2>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">01</span>Plataforma propia</div>
+    <p>Tu dominio. Tu diseño. Tus reglas. Nadie puede cerrarla, suspenderla o cambiar las reglas del juego.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">02</span>Audiencia propia</div>
+    <p>Cada visitante se convierte en un contacto en tu base de datos. Tu lista de emails es tuya para siempre, sin importar qué pase con Instagram.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">03</span>Sistema centralizado</div>
+    <p>Blog, reservas, landing pages, newsletter, contactos, analytics. Todo integrado. Todo gestionado desde un único panel.</p>
+  </div>
+
+  <div class="pull-quote">
+    Las redes sociales dejan de ser el destino final.<br>
+    Pasan a ser el <span class="accent">canal de captación</span><br>
+    hacia tu propia plataforma.
+  </div>
+
+  <p>
+    Donde conviertes seguidores en <strong>clientes reales</strong>, contactos en tu CRM, y curiosos en ingresos recurrentes.
+  </p>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span> · Propuesta 2026</span>
+    <span>04 / 12</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 5 — QUE INCLUYE (parte 1)
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="section-number"><span class="num">04</span>Funcionalidades</div>
+
+  <div class="eyebrow">Qué incluye la plataforma</div>
+  <h1 class="section-title">Diez herramientas <span class="accent">profesionales</span>, un único producto.</h1>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">01</span>Landing page orientada a conversión</div>
+    <p>Una portada impactante que transmite autoridad desde el primer segundo. Diseño cinematográfico con hero, sobre ti, estadísticas, galería, logros, formulario de contacto y newsletter. Cada sección activable o desactivable.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">02</span>Blog con generación por IA</div>
+    <p>Editor visual profesional y SEO-optimizado. La IA integrada genera artículos completos en segundos: título, contenido y portada con DALL-E. De idea a post listo en minutos.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">03</span>Galería de imágenes (portfolio)</div>
+    <p>Sistema de galería profesional con subida por arrastre, gestión de imágenes destacadas y lightbox en móvil. Ideal para sesiones, transformaciones y competiciones.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">04</span>Sistema de reservas online</div>
+    <p>Los clientes agendan citas <strong>sin mensajes de ida y vuelta</strong>. Defines tu disponibilidad una vez. Enlaces únicos por servicio. Confirmaciones automáticas por email.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">05</span>Panel de administración completo</div>
+    <p>Dashboard profesional dark premium, responsive, rápido. Pensado para usarse desde el móvil entre entrenamientos.</p>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span> · Propuesta 2026</span>
+    <span>05 / 12</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 6 — QUE INCLUYE (parte 2)
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="section-number"><span class="num">04</span>Funcionalidades</div>
+
+  <div class="eyebrow">Continuación</div>
+  <h1 class="section-title">Diez herramientas <span class="accent">profesionales</span>, un único producto.</h1>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">06</span>Sistema de contactos y leads</div>
+    <p>Cada formulario enviado desde cualquier parte de la web se centraliza en tu CRM. Contactos, leads, reservas: toda la información en un único lugar, con estados de seguimiento.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">07</span>Email marketing automatizado</div>
+    <p>Integración con Resend para enviar newsletters. Dos modos: campañas personalizadas o envíos automáticos al publicar nuevo contenido. 3.000 emails/mes gratuitos incluidos.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">08</span>Constructor de landing pages para eventos</div>
+    <p>¿Webinar, evento presencial, lanzamiento? Creas una landing completa <strong>sin programador</strong>. Sistema de bloques con 14 componentes y tres plantillas listas para usar.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">09</span>Base de conocimiento interna</div>
+    <p>Documentación profesional integrada en el panel. Cualquier duda sobre cómo usar una función tiene respuesta a un clic. Editable desde el propio panel.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">10</span>Inteligencia artificial integrada</div>
+    <p>Generación de artículos completos. Generador de ideas para el blog. Creación automática de imágenes. Personalizable con tu tono y estilo propios. OpenAI o IA local.</p>
+  </div>
+
+  <div class="info-box">
+    <span class="label">Resultado</span>
+    <p>
+      <strong>10 herramientas profesionales</strong> que normalmente se contratarían por separado (y sumarían cientos de euros al mes), unificadas en un único producto bajo tu control.
+    </p>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span> · Propuesta 2026</span>
+    <span>06 / 12</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 7 — VENTAJAS
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="section-number"><span class="num">05</span>Ventajas</div>
+
+  <div class="eyebrow">Por qué un dominio propio</div>
+  <h1 class="section-title">Ventajas de una <span class="accent">marca personal</span> con dominio propio.</h1>
+
+  <h3>Control total sobre tu negocio</h3>
+  <p>Decides el diseño, el contenido, los precios, los servicios, las formas de pago. Nadie modifica las reglas sin tu permiso.</p>
+
+  <h3>Independencia de redes sociales</h3>
+  <p>Si Instagram cae, si cambia el algoritmo, si pierdes la cuenta: <strong>tu negocio sigue funcionando</strong>. Los clientes siguen reservando. Los emails siguen llegando.</p>
+
+  <h3>Imagen profesional</h3>
+  <p>Un dominio propio con diseño premium transmite algo que una cuenta de Instagram jamás transmitirá: <strong>te tomas en serio tu carrera</strong>. Marcas, sponsors y colaboradores lo notan.</p>
+
+  <h3>Confianza del cliente</h3>
+  <p>Un profesional con web propia inspira más confianza que uno que solo tiene redes sociales. Es un filtro que convierte curiosos en clientes de pago.</p>
+
+  <h3>Posicionamiento SEO</h3>
+  <p>Cada artículo del blog es una nueva puerta de entrada desde Google. Posicionar por términos como <em>"preparador IFBB pro"</em> te trae clientes <strong>de forma gratuita durante años</strong>.</p>
+
+  <h3>Activo a largo plazo</h3>
+  <p>Instagram se olvida de ti cada 24 horas. Tu web <strong>acumula valor</strong>. Cada artículo, cada cliente, cada email suma. Es una bola de nieve que crece con el tiempo.</p>
+
+  <h3>Escalabilidad</h3>
+  <p>La plataforma crece contigo. Desde un profesional independiente hasta una marca con productos digitales, membresías y comunidad privada.</p>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span> · Propuesta 2026</span>
+    <span>07 / 12</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 8 — BENEFICIOS DE NEGOCIO
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="section-number"><span class="num">06</span>Beneficios</div>
+
+  <div class="eyebrow">Impacto directo en tu negocio</div>
+  <h1 class="section-title">Lo que esto significa para tu <span class="accent">facturación</span>.</h1>
+
+  <div class="feature-card">
+    <div class="feature-card-title">Más clientes, mejor filtrados</div>
+    <p>Un potencial cliente que llega a tu web, lee tu blog, ve tu portfolio y reserva una consulta llega con el <strong>80% del trabajo de venta ya hecho</strong>.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title">Automatización que te devuelve horas</div>
+    <p>Reservas, confirmaciones, newsletters, respuestas iniciales: la plataforma se encarga sola. <strong>Tú te enfocas en entrenar y preparar atletas.</strong></p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title">Ahorro de tiempo real</div>
+    <ul style="margin-top: 1mm;">
+      <li>Responder mensajes repetitivos — automatizado</li>
+      <li>Cuadrar agendas por DM — eliminado</li>
+      <li>Publicar en varios sitios — centralizado</li>
+      <li>Crear contenido — asistido por IA</li>
+    </ul>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title">Múltiples vías de ingreso</div>
+    <p>Coaching presencial, coaching online, productos digitales, afiliaciones, patrocinios, eventos. Todo canalizable desde <strong>una sola plataforma</strong>.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title">Autoridad en la industria</div>
+    <p>Un blog activo con contenido de calidad te posiciona como <strong>referente</strong>. No como "otro más" de Instagram, sino como una voz respetada.</p>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span> · Propuesta 2026</span>
+    <span>08 / 12</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 9 — COMPARACION
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="section-number"><span class="num">07</span>Comparación</div>
+
+  <div class="eyebrow">Cara a cara</div>
+  <h1 class="section-title">Redes sociales vs. <span class="accent">plataforma propia</span>.</h1>
+
+  <p>
+    Ambos son necesarios. Pero cumplen roles muy diferentes. La siguiente tabla lo deja cristalino:
+  </p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Solo redes sociales</th>
+        <th class="highlight">Kikovargas.fit</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Propiedad de la audiencia</td>
+        <td class="bad">De la plataforma</td>
+        <td class="good">Tuya</td>
+      </tr>
+      <tr>
+        <td>Alcance</td>
+        <td class="bad">Limitado por algoritmo</td>
+        <td class="good">100% de tu lista</td>
+      </tr>
+      <tr>
+        <td>Control del diseño</td>
+        <td class="bad">Formato impuesto</td>
+        <td class="good">Total libertad</td>
+      </tr>
+      <tr>
+        <td>Posicionamiento en Google</td>
+        <td class="bad">Casi nulo</td>
+        <td class="good">Alto potencial SEO</td>
+      </tr>
+      <tr>
+        <td>Monetización</td>
+        <td class="bad">Con comisiones y restricciones</td>
+        <td class="good">Sin intermediarios</td>
+      </tr>
+      <tr>
+        <td>Riesgo de pérdida</td>
+        <td class="bad">Alto (ban, algoritmo)</td>
+        <td class="good">Bajo (controlas tú)</td>
+      </tr>
+      <tr>
+        <td>Imagen profesional</td>
+        <td class="bad">Básica</td>
+        <td class="good">Premium</td>
+      </tr>
+      <tr>
+        <td>Reservas automáticas</td>
+        <td class="bad">No</td>
+        <td class="good">Sí</td>
+      </tr>
+      <tr>
+        <td>Base de datos propia</td>
+        <td class="bad">No</td>
+        <td class="good">Sí</td>
+      </tr>
+      <tr>
+        <td>Escalabilidad</td>
+        <td class="bad">Limitada</td>
+        <td class="good">Total</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pull-quote">
+    Las redes sociales son <span class="accent">canales de captación</span>.<br>
+    La plataforma propia es el <span class="accent">destino</span>.
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span> · Propuesta 2026</span>
+    <span>09 / 12</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 10 — DESAFIOS (HONESTIDAD)
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="section-number"><span class="num">08</span>Consideraciones</div>
+
+  <div class="eyebrow">Honestidad total</div>
+  <h1 class="section-title">Posibles desafíos, y cómo los <span class="accent">gestionamos</span>.</h1>
+
+  <p>
+    Siendo completamente honestos: ninguna solución profesional es mágica. Estos son los puntos a considerar — y cómo están ya resueltos.
+  </p>
+
+  <h2>Esfuerzo inicial de configuración</h2>
+  <p><strong>El desafío:</strong> Hay que configurar claves API, subir contenido inicial, ajustar el tono de la IA.</p>
+  <p><strong>Cómo se gestiona:</strong> La plataforma incluye una <em>guía completa integrada</em>. En una sesión de 2 horas queda todo listo. Soporte dedicado durante el arranque.</p>
+
+  <h2>Requiere una estrategia de tráfico</h2>
+  <p><strong>El desafío:</strong> Una web, por muy buena que sea, necesita que la gente llegue a ella.</p>
+  <p><strong>Cómo se gestiona:</strong> Aquí es donde las redes sociales pasan a su rol correcto: <em>conducir tráfico</em>. Cada post, reel o story apunta al enlace en bio → kikovargas.fit. La web también trae tráfico orgánico por SEO a medio plazo.</p>
+
+  <h2>Mantenimiento continuo</h2>
+  <p><strong>El desafío:</strong> Como cualquier negocio, necesita dedicación: publicar, responder leads, actualizar galería.</p>
+  <p><strong>Cómo se gestiona:</strong> Gracias a la IA integrada, lo que antes tomaba 8 horas (escribir un artículo) ahora toma <em>20 minutos</em> (revisarlo y editarlo). El ahorro de tiempo compensa con creces el mantenimiento.</p>
+
+  <div class="info-box">
+    <span class="label">Punto clave</span>
+    <p>
+      Ningún proyecto profesional es "configurar y olvidar". Pero pocos proyectos tienen <strong>tanto retorno por tan poco esfuerzo continuo</strong>.
+    </p>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span> · Propuesta 2026</span>
+    <span>10 / 12</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 11 — FUTURO
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="section-number"><span class="num">09</span>Potencial</div>
+
+  <div class="eyebrow">El siguiente nivel</div>
+  <h1 class="section-title">Hacia dónde puede <span class="accent">crecer</span> esto.</h1>
+
+  <p>
+    Kikovargas.fit no es un destino final. Es <strong>el punto de partida</strong> de un ecosistema que puede crecer en muchas direcciones — sin tener que empezar de cero cada vez.
+  </p>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">→</span>Coaching online estructurado</div>
+    <p>Zona privada de clientes, seguimiento de planes nutricionales, subida de vídeos de ejercicios, check-ins semanales. Escalable sin contratar más horas de tu tiempo.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">→</span>Productos digitales</div>
+    <p>Ebooks, planes de entrenamiento descargables, guías de nutrición, cursos grabados. <strong>Se venden en piloto automático 24/7.</strong></p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">→</span>Comunidad privada</div>
+    <p>Un foro o zona exclusiva para clientes, con contenido premium, directos, preguntas y respuestas. Construye pertenencia y fidelidad.</p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">→</span>Suscripciones mensuales</div>
+    <p>Contenido exclusivo mensual, planes actualizados, acceso prioritario a eventos. <strong>Ingresos recurrentes predecibles.</strong></p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title"><span class="num">→</span>App móvil dedicada</div>
+    <p>Cuando la marca lo justifique, la plataforma puede evolucionar a una app con notificaciones push, acceso offline y experiencia premium.</p>
+  </div>
+
+  <div class="info-box">
+    <span class="label">Arquitectura preparada</span>
+    <p>
+      Todas estas extensiones están consideradas en la arquitectura <strong>desde el día uno</strong>. Crecer no requiere reconstruir nada.
+    </p>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span> · Propuesta 2026</span>
+    <span>11 / 12</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 12 — CONCLUSION
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="section-number"><span class="num">10</span>Conclusión</div>
+
+  <div class="eyebrow">El cierre</div>
+  <h1 class="section-title">No es un gasto.<br>Es una <span class="accent">inversión</span>.</h1>
+
+  <p>
+    Kikovargas.fit no es un gasto. Es una <strong>inversión estratégica</strong> en el activo más valioso de tu carrera: tu marca personal.
+  </p>
+
+  <p>
+    Las redes sociales van y vienen. Los algoritmos cambian. Las tendencias caducan. Pero un dominio propio, con una audiencia propia, con un sistema propio, <strong>se capitaliza y crece año tras año</strong>.
+  </p>
+
+  <p>
+    Cada artículo que publicas, cada cliente que reserva, cada email que se suma a tu lista — todo suma a un activo que solo tiene una dirección: <em>hacia arriba</em>.
+  </p>
+
+  <div class="pull-quote">
+    Lo que estamos construyendo<br>
+    no es una página web.<br>
+    Es la <span class="accent">infraestructura digital</span><br>
+    de la carrera de Kiko Vargas.
+  </div>
+
+  <p>
+    Y en cinco años, cuando otros profesionales del fitness sigan dependiendo de que Instagram les deje trabajar, tu negocio seguirá siendo <strong>tuyo</strong>.
+  </p>
+
+  <div class="closing-block">
+    <span class="label">Próximo paso</span>
+    <div class="title">Reunión de kick-off</div>
+    <p>
+      Definir objetivos, contenido inicial y plan de lanzamiento. Arrancar la construcción del activo digital que va a sostener tu carrera durante la próxima década.
+    </p>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span> · Propuesta 2026</span>
+    <span>12 / 12</span>
+  </div>
+</div>
+
+
+</body>
+</html>

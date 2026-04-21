@@ -7,7 +7,9 @@ import {
   Card, CardContent,
   Table, TableHead, TableHeader, TableBody, TableRow, TableCell, TableEmpty,
   Badge, Button,
+  useToast,
 } from "@/components/admin/ui";
+import { useCopy } from "@/lib/hooks/use-copy";
 import { EVENT_TEMPLATES } from "@/lib/event-templates";
 
 interface EventPageItem {
@@ -28,6 +30,8 @@ const STATUS_MAP: Record<string, { text: string; variant: "success" | "warning" 
 
 export function EventPageList({ initialPages }: { initialPages: EventPageItem[] }) {
   const router = useRouter();
+  const toast = useToast();
+  const { copy, copiedKey } = useCopy();
   const [pages, setPages] = useState(initialPages);
   const [showForm, setShowForm] = useState(false);
 
@@ -90,6 +94,7 @@ export function EventPageList({ initialPages }: { initialPages: EventPageItem[] 
     if (!confirm("Eliminar esta pagina y todos sus bloques?")) return;
     await fetch(`/api/event-pages/${id}`, { method: "DELETE" });
     setPages((prev) => prev.filter((p) => p.id !== id));
+    toast.success("Landing page eliminada");
     router.refresh();
   }
 
@@ -101,11 +106,13 @@ export function EventPageList({ initialPages }: { initialPages: EventPageItem[] 
       body: JSON.stringify({ status: newStatus }),
     });
     setPages((prev) => prev.map((p) => p.id === id ? { ...p, status: newStatus } : p));
+    toast.success(newStatus === "PUBLISHED" ? "Landing publicada" : "Landing despublicada");
     router.refresh();
   }
 
   function copyLink(slug: string) {
-    navigator.clipboard.writeText(`${window.location.origin}/event/${slug}`);
+    const url = `${window.location.origin}/event/${slug}`;
+    copy(url, { label: "Enlace de evento copiado", key: slug });
   }
 
   return (
@@ -253,30 +260,50 @@ export function EventPageList({ initialPages }: { initialPages: EventPageItem[] 
                     <Badge variant={status.variant}>{status.text}</Badge>
                   </TableCell>
                   <TableCell align="right">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-1">
                       <Link
                         href={`/dashboard/event-pages/${page.id}`}
-                        className="text-xs text-a-accent hover:underline"
+                        className="inline-flex h-10 px-3 items-center rounded-lg text-xs font-medium text-a-accent hover:bg-a-accent/10 active:scale-95 transition-all"
                       >
                         Editar
                       </Link>
                       <button
                         onClick={() => copyLink(page.slug)}
-                        className="text-xs text-muted hover:text-a-accent transition-colors"
+                        className={`inline-flex h-10 w-10 items-center justify-center rounded-lg transition-all active:scale-90 ${
+                          copiedKey === page.slug
+                            ? "text-success bg-success/10"
+                            : "text-muted hover:text-a-accent hover:bg-card-hover"
+                        }`}
+                        aria-label="Copiar enlace"
                       >
-                        Copiar
+                        {copiedKey === page.slug ? (
+                          <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                          </svg>
+                        ) : (
+                          <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                          </svg>
+                        )}
                       </button>
                       <button
                         onClick={() => handleToggleStatus(page.id, page.status)}
-                        className={`text-xs ${page.status === "PUBLISHED" ? "text-muted hover:text-warning" : "text-muted hover:text-success"} transition-colors`}
+                        className={`hidden sm:inline-flex h-9 px-2.5 items-center rounded-lg text-xs font-medium transition-all active:scale-95 ${
+                          page.status === "PUBLISHED"
+                            ? "text-muted hover:text-warning hover:bg-warning/10"
+                            : "text-muted hover:text-success hover:bg-success/10"
+                        }`}
                       >
                         {page.status === "PUBLISHED" ? "Despublicar" : "Publicar"}
                       </button>
                       <button
                         onClick={() => handleDelete(page.id)}
-                        className="text-xs text-muted hover:text-danger transition-colors"
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted hover:text-danger active:bg-danger/10 active:scale-90 transition-all"
+                        aria-label="Eliminar"
                       >
-                        Eliminar
+                        <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
                       </button>
                     </div>
                   </TableCell>

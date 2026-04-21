@@ -6,7 +6,9 @@ import {
   Card, CardContent,
   Table, TableHead, TableHeader, TableBody, TableRow, TableCell, TableEmpty,
   Badge, Button,
+  useToast,
 } from "@/components/admin/ui";
+import { useCopy } from "@/lib/hooks/use-copy";
 
 interface BookingLink {
   id: string;
@@ -22,6 +24,8 @@ interface BookingLink {
 
 export function BookingLinkList({ initialLinks }: { initialLinks: BookingLink[] }) {
   const router = useRouter();
+  const toast = useToast();
+  const { copy, copiedKey } = useCopy();
   const [links, setLinks] = useState(initialLinks);
   const [showForm, setShowForm] = useState(false);
 
@@ -77,6 +81,7 @@ export function BookingLinkList({ initialLinks }: { initialLinks: BookingLink[] 
     });
 
     setLinks((prev) => prev.map((l) => l.id === id ? { ...l, active: !active } : l));
+    toast.success(active ? "Enlace desactivado" : "Enlace activado");
     router.refresh();
   }
 
@@ -85,12 +90,13 @@ export function BookingLinkList({ initialLinks }: { initialLinks: BookingLink[] 
 
     await fetch(`/api/booking-links/${id}`, { method: "DELETE" });
     setLinks((prev) => prev.filter((l) => l.id !== id));
+    toast.success("Enlace eliminado");
     router.refresh();
   }
 
   function copyLink(slug: string) {
     const url = `${window.location.origin}/book/${slug}`;
-    navigator.clipboard.writeText(url);
+    copy(url, { label: "Enlace de reserva copiado", key: slug });
   }
 
   const isExpired = (expiresAt: string | null) => {
@@ -241,27 +247,66 @@ export function BookingLinkList({ initialLinks }: { initialLinks: BookingLink[] 
                   </span>
                 </TableCell>
                 <TableCell align="right">
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center justify-end gap-1">
                     <button
                       onClick={() => copyLink(link.slug)}
-                      className="text-xs text-muted hover:text-a-accent transition-colors"
+                      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg transition-all active:scale-90 ${
+                        copiedKey === link.slug
+                          ? "text-success bg-success/10"
+                          : "text-muted hover:text-a-accent hover:bg-card-hover"
+                      }`}
                       title="Copiar enlace"
+                      aria-label="Copiar enlace"
                     >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H6M15.75 18h2.25m-2.25 0v3M12 2.25c-1.892 0-3.758.11-5.593.322C5.318 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 002.25 2.25h10.5a2.25 2.25 0 002.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0012 2.25z" />
-                      </svg>
+                      {copiedKey === link.slug ? (
+                        <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      ) : (
+                        <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                        </svg>
+                      )}
                     </button>
                     <button
                       onClick={() => handleToggle(link.id, link.active)}
-                      className={`text-xs ${link.active ? "text-muted hover:text-warning" : "text-muted hover:text-success"} transition-colors`}
+                      className={`hidden sm:inline-flex px-2.5 h-9 items-center rounded-lg text-xs font-medium transition-all active:scale-95 ${
+                        link.active ? "text-muted hover:text-warning hover:bg-warning/10" : "text-muted hover:text-success hover:bg-success/10"
+                      }`}
                     >
                       {link.active ? "Desactivar" : "Activar"}
                     </button>
                     <button
                       onClick={() => handleDelete(link.id)}
-                      className="text-xs text-muted hover:text-danger transition-colors"
+                      className="hidden sm:inline-flex px-2.5 h-9 items-center rounded-lg text-xs font-medium text-muted hover:text-danger hover:bg-danger/10 transition-all active:scale-95"
                     >
                       Eliminar
+                    </button>
+                    {/* Mobile: overflow menu */}
+                    <button
+                      onClick={() => {
+                        const action = confirm(link.active ? "¿Desactivar este enlace?" : "¿Activar este enlace?");
+                        if (action) handleToggle(link.id, link.active);
+                      }}
+                      className="sm:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted active:bg-card-hover active:scale-90 transition-all"
+                      aria-label="Toggle activo"
+                    >
+                      <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        {link.active ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5.636 5.636a9 9 0 1012.728 0M12 3v9" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                        )}
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(link.id)}
+                      className="sm:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted hover:text-danger active:bg-danger/10 active:scale-90 transition-all"
+                      aria-label="Eliminar"
+                    >
+                      <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                      </svg>
                     </button>
                   </div>
                 </TableCell>

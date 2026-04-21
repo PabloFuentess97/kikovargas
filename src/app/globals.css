@@ -303,6 +303,46 @@ img {
   background: rgba(255, 255, 255, 0.15);
 }
 
+/* ─── Mobile-native admin shell ─────────────────── */
+
+/* Main content area — accommodates top bar (56px) and bottom tabs (58px) on mobile */
+.admin-main {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 56px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 58px);
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+@media (min-width: 768px) {
+  .admin-main {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
+
+/* Make buttons feel native — subtle tap feedback across the admin */
+[data-theme="admin"] button,
+[data-theme="admin"] a {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Slide-up animation for sheets/modals */
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+}
+
+@keyframes toast-in {
+  from { transform: translateY(-16px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
 /* Sidebar nav active state */
 .admin-nav-item {
   position: relative;

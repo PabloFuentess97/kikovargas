@@ -1,0 +1,2266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Kikovargas.fit — Entrega del Proyecto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-void: #030303;
+    --bg-surface: #080808;
+    --bg-card: #0e0e0e;
+    --bg-elevated: #141414;
+    --text-primary: #ededed;
+    --text-secondary: #a8a8a8;
+    --text-muted: #6b6b76;
+    --text-tertiary: #3d3d3d;
+    --accent: #c9a84c;
+    --accent-bright: #dfc06a;
+    --accent-dim: rgba(201, 168, 76, 0.08);
+    --accent-line: rgba(201, 168, 76, 0.2);
+    --border: rgba(255, 255, 255, 0.06);
+    --border-strong: rgba(255, 255, 255, 0.1);
+    --border-accent: rgba(201, 168, 76, 0.25);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background: var(--bg-void);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.7;
+  }
+
+  @page { size: A4; margin: 0; }
+  @media print {
+    body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .page-break { page-break-after: always; }
+    .no-break { page-break-inside: avoid; }
+  }
+
+  .page {
+    position: relative;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 24mm 22mm;
+    margin: 0 auto 10mm;
+    background: var(--bg-void);
+    overflow: hidden;
+    page-break-after: always;
+  }
+
+  .page:last-child { page-break-after: auto; }
+
+  /* ═══════════════════════════════════════════════════
+     SHARED COMPONENTS
+     ═══════════════════════════════════════════════════ */
+
+  /* Top corner brand mark (shared across content pages) */
+  .page-brand {
+    position: absolute;
+    top: 14mm;
+    left: 22mm;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 8pt;
+    font-weight: 600;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .page-brand::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--accent);
+    position: relative;
+    display: inline-block;
+  }
+
+  .page-brand .sep {
+    color: var(--accent);
+    margin: 0 2px;
+  }
+
+  .page-brand .bold { color: var(--text-primary); }
+
+  /* Chapter marker (top-right) */
+  .chapter-marker {
+    position: absolute;
+    top: 14mm;
+    right: 22mm;
+    font-family: 'Oswald', sans-serif;
+    font-size: 8pt;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+  }
+
+  .chapter-marker .num {
+    color: var(--accent);
+    margin-right: 8px;
+  }
+
+  /* Page footer */
+  .page-footer {
+    position: absolute;
+    bottom: 12mm;
+    left: 22mm;
+    right: 22mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 7pt;
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    color: var(--text-tertiary);
+    border-top: 1px solid var(--border);
+    padding-top: 5mm;
+  }
+
+  .page-footer .brand { color: var(--accent); font-weight: 600; }
+
+  /* Content area (space from header and footer) */
+  .content {
+    padding-top: 14mm;
+    padding-bottom: 14mm;
+  }
+
+  /* ═══════════════════════════════════════════════════
+     TYPOGRAPHY
+     ═══════════════════════════════════════════════════ */
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--accent);
+    font-family: 'Inter', sans-serif;
+    font-size: 8pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.32em;
+    margin-bottom: 18px;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 32px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  h1.section-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 34pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: 8mm;
+    max-width: 155mm;
+  }
+
+  h1.section-title .accent { color: var(--accent); }
+  h1.section-title .thin { font-weight: 300; color: var(--text-secondary); }
+
+  .lede {
+    font-family: 'Inter', sans-serif;
+    font-size: 12pt;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    max-width: 155mm;
+    margin-bottom: 10mm;
+    font-weight: 300;
+  }
+
+  .lede strong { color: var(--text-primary); font-weight: 500; }
+
+  h2 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 15pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    margin-top: 10mm;
+    margin-bottom: 4mm;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  h2::before {
+    content: "";
+    width: 20px;
+    height: 2px;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  h3 {
+    font-family: 'Inter', sans-serif;
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: var(--accent);
+    margin-top: 5mm;
+    margin-bottom: 2mm;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  p {
+    color: var(--text-secondary);
+    margin-bottom: 3.5mm;
+    line-height: 1.72;
+    font-size: 10.5pt;
+  }
+
+  p strong, .strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  em {
+    font-style: normal;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  ul { margin: 4mm 0; padding-left: 0; list-style: none; }
+  ul li {
+    position: relative;
+    padding-left: 22px;
+    margin-bottom: 2.5mm;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-size: 10.5pt;
+  }
+  ul li::before {
+    content: "◆";
+    position: absolute;
+    left: 0;
+    top: 1px;
+    color: var(--accent);
+    font-size: 7pt;
+  }
+  ul li strong { color: var(--text-primary); font-weight: 600; }
+
+  /* ═══════════════════════════════════════════════════
+     1. COVER PAGE
+     ═══════════════════════════════════════════════════ */
+
+  .cover {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    background:
+      radial-gradient(ellipse 800px 600px at 85% 15%, rgba(201, 168, 76, 0.1) 0%, transparent 55%),
+      radial-gradient(ellipse 800px 600px at 15% 85%, rgba(201, 168, 76, 0.05) 0%, transparent 55%),
+      var(--bg-void);
+  }
+
+  /* Gold top bar */
+  .cover::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent) 20%, var(--accent) 80%, transparent);
+    z-index: 2;
+  }
+
+  /* Subtle diagonal pattern */
+  .cover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(45deg, transparent, transparent 80px, rgba(201, 168, 76, 0.012) 80px, rgba(201, 168, 76, 0.012) 81px);
+    pointer-events: none;
+  }
+
+  .cover-header {
+    padding: 22mm 22mm 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cover-mark {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .cover-mark .square {
+    width: 28px;
+    height: 28px;
+    border: 1.5px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Oswald', sans-serif;
+    font-size: 12pt;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .cover-mark .text {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9pt;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .cover-mark .text strong { color: var(--text-primary); font-weight: 600; }
+
+  .cover-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(201, 168, 76, 0.08);
+    border: 1px solid rgba(201, 168, 76, 0.25);
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 7.5pt;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .cover-badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  .cover-body {
+    flex: 1;
+    padding: 0 22mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cover-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--accent);
+    font-size: 9pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    margin-bottom: 14mm;
+  }
+
+  .cover-eyebrow::before, .cover-eyebrow::after {
+    content: "";
+    width: 40px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  .cover-title {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 82pt;
+    line-height: 0.88;
+    letter-spacing: -0.035em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    margin-bottom: 6mm;
+  }
+
+  .cover-title .dot { color: var(--accent); }
+  .cover-title .fit { color: var(--accent); }
+
+  .cover-hr {
+    width: 30mm;
+    height: 2px;
+    background: var(--accent);
+    margin: 8mm 0 10mm;
+  }
+
+  .cover-subtitle {
+    font-family: 'Oswald', sans-serif;
+    font-size: 16pt;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-secondary);
+    max-width: 140mm;
+    line-height: 1.3;
+    margin-bottom: 16mm;
+  }
+
+  .cover-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8mm;
+    max-width: 150mm;
+  }
+
+  .cover-meta-item .label {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-tertiary);
+    font-size: 7pt;
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+
+  .cover-meta-item .value {
+    font-family: 'Oswald', sans-serif;
+    color: var(--text-primary);
+    font-size: 11pt;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .cover-meta-item .value.accent { color: var(--accent); }
+
+  .cover-footer {
+    padding: 0 22mm 22mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    border-top: 1px solid var(--border);
+    padding-top: 10mm;
+    margin-top: 10mm;
+    position: relative;
+    z-index: 1;
+    font-family: 'Oswald', sans-serif;
+    font-size: 8pt;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .cover-footer strong { color: var(--text-primary); font-weight: 500; }
+  .cover-footer .dot { color: var(--accent); margin: 0 6px; }
+
+  /* ═══════════════════════════════════════════════════
+     2. TABLE OF CONTENTS
+     ═══════════════════════════════════════════════════ */
+
+  .toc-hero {
+    margin-bottom: 16mm;
+  }
+
+  .toc-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 42pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    line-height: 0.95;
+    margin-bottom: 6mm;
+  }
+
+  .toc-title .accent { color: var(--accent); }
+
+  .toc-sub {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-secondary);
+    font-size: 10pt;
+    line-height: 1.6;
+    max-width: 130mm;
+  }
+
+  .toc-list {
+    border-top: 1px solid var(--border);
+  }
+
+  .toc-item {
+    display: grid;
+    grid-template-columns: 14mm 1fr 18mm;
+    gap: 6mm;
+    align-items: baseline;
+    padding: 5mm 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .toc-item.chapter-start {
+    border-top: 1px solid var(--accent-line);
+    padding-top: 6mm;
+    margin-top: 2mm;
+  }
+
+  .toc-num {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11pt;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+  }
+
+  .toc-chapter-label {
+    grid-column: 1 / 3;
+    font-family: 'Oswald', sans-serif;
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    margin-top: 2mm;
+    margin-bottom: 1mm;
+  }
+
+  .toc-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 12.5pt;
+    color: var(--text-primary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .toc-label .sub {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-size: 9pt;
+    font-weight: 400;
+    color: var(--text-muted);
+    text-transform: none;
+    letter-spacing: 0;
+    margin-top: 1mm;
+  }
+
+  .toc-page {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10pt;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    text-align: right;
+  }
+
+  /* ═══════════════════════════════════════════════════
+     3. EXECUTIVE SUMMARY / AT A GLANCE
+     ═══════════════════════════════════════════════════ */
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5mm;
+    margin: 6mm 0;
+  }
+
+  .summary-tile {
+    background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-surface) 100%);
+    border: 1px solid var(--border);
+    padding: 8mm 7mm;
+    position: relative;
+    min-height: 58mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .summary-tile::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+  }
+
+  .summary-tile-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 7.5pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    color: var(--text-muted);
+    margin-bottom: 2mm;
+  }
+
+  .summary-tile-value {
+    font-family: 'Oswald', sans-serif;
+    font-size: 36pt;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    margin-bottom: 4mm;
+  }
+
+  .summary-tile-desc {
+    font-family: 'Inter', sans-serif;
+    font-size: 9.5pt;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-top: auto;
+  }
+
+  .summary-tile-desc strong { color: var(--text-primary); font-weight: 500; }
+
+  /* Divider rule — for spacing sections */
+  .section-rule {
+    display: grid;
+    grid-template-columns: 14mm 1fr;
+    gap: 6mm;
+    align-items: center;
+    margin: 10mm 0 4mm;
+  }
+
+  .section-rule-num {
+    font-family: 'Oswald', sans-serif;
+    font-size: 7.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+  }
+
+  .section-rule-line {
+    height: 1px;
+    background: var(--border-strong);
+  }
+
+  /* ═══════════════════════════════════════════════════
+     4. CHAPTER / PART DIVIDER PAGE
+     ═══════════════════════════════════════════════════ */
+
+  .part-divider {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background:
+      radial-gradient(ellipse 600px 400px at center, rgba(201, 168, 76, 0.06) 0%, transparent 60%),
+      var(--bg-void);
+    position: relative;
+  }
+
+  .part-divider::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent) 30%, var(--accent) 70%, transparent);
+  }
+
+  .part-divider-inner {
+    padding: 0 22mm;
+    max-width: 170mm;
+  }
+
+  .part-roman {
+    font-family: 'Oswald', sans-serif;
+    font-size: 120pt;
+    font-weight: 300;
+    line-height: 1;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    margin-bottom: 4mm;
+    display: block;
+  }
+
+  .part-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-muted);
+    font-size: 9pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    margin-bottom: 10mm;
+  }
+
+  .part-label::before {
+    content: "";
+    width: 40px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  .part-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 48pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: 10mm;
+  }
+
+  .part-title .accent { color: var(--accent); }
+
+  .part-description {
+    font-family: 'Inter', sans-serif;
+    font-size: 12pt;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    max-width: 130mm;
+    font-weight: 300;
+  }
+
+  .part-description strong { color: var(--text-primary); font-weight: 500; }
+
+  .part-footer {
+    position: absolute;
+    bottom: 22mm;
+    left: 22mm;
+    right: 22mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Oswald', sans-serif;
+    font-size: 8pt;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  .part-footer .brand { color: var(--accent); font-weight: 600; }
+  .part-footer-index {
+    display: flex;
+    gap: 6px;
+    font-family: 'Oswald', sans-serif;
+  }
+
+  .part-footer-index span {
+    width: 20px;
+    height: 2px;
+    background: var(--border-strong);
+  }
+
+  .part-footer-index span.active { background: var(--accent); }
+
+  /* ═══════════════════════════════════════════════════
+     FEATURE CARDS & LAYOUT COMPONENTS
+     ═══════════════════════════════════════════════════ */
+
+  .feature-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 5mm 6mm;
+    margin-bottom: 3.5mm;
+    position: relative;
+    display: grid;
+    grid-template-columns: 10mm 1fr;
+    gap: 5mm;
+    align-items: start;
+  }
+
+  .feature-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+
+  .feature-card-num {
+    font-family: 'Oswald', sans-serif;
+    font-size: 14pt;
+    font-weight: 300;
+    color: var(--accent);
+    line-height: 1;
+    padding-top: 1mm;
+    letter-spacing: 0.05em;
+  }
+
+  .feature-card-body .title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11.5pt;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1.5mm;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .feature-card-body p {
+    margin: 0;
+    font-size: 10pt;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  /* Benefit list (single-column) */
+  .benefit-list { display: flex; flex-direction: column; gap: 5mm; }
+  .benefit-row {
+    display: grid;
+    grid-template-columns: 26mm 1fr;
+    gap: 8mm;
+    align-items: start;
+    padding-bottom: 5mm;
+    border-bottom: 1px solid var(--border);
+  }
+  .benefit-row:last-child { border-bottom: 0; padding-bottom: 0; }
+
+  .benefit-index {
+    font-family: 'Oswald', sans-serif;
+    color: var(--accent);
+    font-size: 24pt;
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .benefit-content h4 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 13pt;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 2mm;
+    line-height: 1.2;
+  }
+
+  .benefit-content p {
+    margin: 0;
+    font-size: 10pt;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  /* Pull quote */
+  .pull-quote {
+    border-left: 3px solid var(--accent);
+    padding: 6mm 0 6mm 10mm;
+    margin: 8mm 0;
+    font-family: 'Oswald', sans-serif;
+    font-size: 16pt;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0;
+    line-height: 1.25;
+    color: var(--text-primary);
+  }
+
+  .pull-quote .accent { color: var(--accent); }
+
+  .pull-quote-sm {
+    border-left: 3px solid var(--accent);
+    padding: 4mm 0 4mm 8mm;
+    margin: 6mm 0;
+    font-family: 'Oswald', sans-serif;
+    font-size: 13pt;
+    font-weight: 500;
+    text-transform: uppercase;
+    line-height: 1.28;
+    color: var(--text-primary);
+  }
+
+  .pull-quote-sm .accent { color: var(--accent); }
+
+  /* Info box */
+  .info-box {
+    background: rgba(201, 168, 76, 0.04);
+    border: 1px solid rgba(201, 168, 76, 0.15);
+    border-left: 3px solid var(--accent);
+    padding: 6mm 7mm;
+    margin: 6mm 0;
+  }
+
+  .info-box .label {
+    font-family: 'Oswald', sans-serif;
+    color: var(--accent);
+    font-size: 8.5pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    margin-bottom: 2.5mm;
+    display: block;
+  }
+
+  .info-box p { margin-bottom: 0; color: var(--text-secondary); }
+
+  /* Check card */
+  .check-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 6mm 7mm 6mm 18mm;
+    margin-bottom: 4mm;
+    position: relative;
+  }
+
+  .check-card::before {
+    content: "";
+    position: absolute;
+    left: 7mm;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid var(--accent);
+    border-radius: 50%;
+    background: rgba(201, 168, 76, 0.06);
+  }
+
+  .check-card::after {
+    content: "✓";
+    position: absolute;
+    left: 7mm;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 11pt;
+  }
+
+  .check-card .title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11.5pt;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 1.5mm;
+  }
+
+  .check-card p { margin: 0; font-size: 9.8pt; color: var(--text-secondary); line-height: 1.6; }
+
+  /* Timeline */
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 6mm 0;
+    position: relative;
+  }
+
+  .timeline::before {
+    content: "";
+    position: absolute;
+    left: 16mm;
+    top: 8mm;
+    bottom: 8mm;
+    width: 1px;
+    background: var(--border-strong);
+  }
+
+  .timeline-row {
+    display: grid;
+    grid-template-columns: 32mm 1fr;
+    gap: 6mm;
+    padding: 5mm 0;
+    align-items: start;
+    position: relative;
+  }
+
+  .timeline-row::before {
+    content: "";
+    position: absolute;
+    left: 14mm;
+    top: 7mm;
+    width: 5px;
+    height: 5px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px var(--bg-void), 0 0 0 5px rgba(201, 168, 76, 0.3);
+  }
+
+  .timeline-phase {
+    font-family: 'Oswald', sans-serif;
+  }
+
+  .timeline-phase .num {
+    display: block;
+    font-size: 32pt;
+    font-weight: 300;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin-bottom: 2mm;
+  }
+
+  .timeline-phase .label {
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+  }
+
+  .timeline-content h4 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 13pt;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 2mm;
+    padding-top: 2mm;
+  }
+
+  .timeline-content p { margin: 0; font-size: 10pt; color: var(--text-secondary); line-height: 1.65; }
+
+  /* Future grid */
+  .future-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4mm;
+    margin: 6mm 0;
+  }
+
+  .future-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 6mm 6mm;
+    position: relative;
+  }
+
+  .future-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 30px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  .future-card .icon {
+    font-family: 'Oswald', sans-serif;
+    color: var(--accent);
+    font-size: 16pt;
+    font-weight: 300;
+    display: block;
+    line-height: 1;
+    margin-bottom: 3mm;
+  }
+
+  .future-card h4 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11.5pt;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2mm;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .future-card p { margin: 0; font-size: 9.5pt; line-height: 1.6; color: var(--text-secondary); }
+
+  /* Usage step cards */
+  .usage-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4mm;
+    margin: 5mm 0;
+  }
+
+  .usage-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 6mm 6mm;
+    position: relative;
+    min-height: 50mm;
+  }
+
+  .usage-card .step {
+    display: inline-block;
+    font-family: 'Oswald', sans-serif;
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.25em;
+    margin-bottom: 3mm;
+  }
+
+  .usage-card h4 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 14pt;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    margin-bottom: 3mm;
+    line-height: 1.15;
+  }
+
+  .usage-card p { margin: 0; font-size: 9.5pt; color: var(--text-secondary); line-height: 1.6; }
+
+  /* Closing block */
+  .closing-block {
+    background: linear-gradient(135deg, rgba(201, 168, 76, 0.12) 0%, rgba(201, 168, 76, 0.03) 100%);
+    border: 1px solid var(--border-accent);
+    padding: 14mm 12mm;
+    margin: 10mm 0 0;
+    text-align: center;
+    position: relative;
+  }
+
+  .closing-block::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+  }
+
+  .closing-block .label {
+    color: var(--accent);
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    margin-bottom: 6mm;
+    display: block;
+    font-family: 'Oswald', sans-serif;
+  }
+
+  .closing-block .title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 24pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    line-height: 1.15;
+    margin-bottom: 6mm;
+  }
+
+  .closing-block .title .accent { color: var(--accent); }
+
+  .closing-block p {
+    max-width: 120mm;
+    margin: 0 auto;
+    color: var(--text-secondary);
+  }
+
+  /* BACK COVER */
+  .back-cover {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background:
+      radial-gradient(ellipse 600px 500px at center, rgba(201, 168, 76, 0.05) 0%, transparent 60%),
+      var(--bg-void);
+  }
+
+  .back-cover::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent) 20%, var(--accent) 80%, transparent);
+  }
+
+  .back-header {
+    padding: 28mm 22mm 0;
+  }
+
+  .back-body {
+    padding: 0 22mm;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .back-big {
+    font-family: 'Oswald', sans-serif;
+    font-size: 38pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: var(--text-primary);
+    margin-bottom: 10mm;
+  }
+
+  .back-big .accent { color: var(--accent); }
+
+  .back-sig {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10mm;
+    padding-top: 10mm;
+    border-top: 1px solid var(--border);
+    margin-top: 10mm;
+  }
+
+  .back-sig-col .label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    color: var(--text-muted);
+    margin-bottom: 3mm;
+    font-weight: 600;
+  }
+
+  .back-sig-col .value {
+    font-family: 'Oswald', sans-serif;
+    font-size: 16pt;
+    font-weight: 500;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 1mm;
+  }
+
+  .back-sig-col .detail {
+    font-family: 'Inter', sans-serif;
+    font-size: 9pt;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+  }
+
+  .back-footer {
+    padding: 0 22mm 22mm;
+    padding-top: 10mm;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Oswald', sans-serif;
+    font-size: 8pt;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .back-footer strong { color: var(--accent); font-weight: 600; }
+
+</style>
+</head>
+
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 1 — COVER
+     ═══════════════════════════════════════════════════ -->
+<div class="page cover">
+
+  <div class="cover-header">
+    <div class="cover-mark">
+      <div class="square">K</div>
+      <span class="text">Kikovargas<strong>.fit</strong></span>
+    </div>
+    <div class="cover-badge">Proyecto Entregado</div>
+  </div>
+
+  <div class="cover-body">
+    <div class="cover-eyebrow">Documento de Entrega</div>
+
+    <h1 class="cover-title">
+      Kiko<span class="dot">.</span>Vargas<br>
+      <span class="fit">.fit</span>
+    </h1>
+
+    <div class="cover-hr"></div>
+
+    <p class="cover-subtitle">
+      Plataforma Digital Profesional<br>
+      Resumen del proyecto y valor estratégico
+    </p>
+
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <div class="label">Cliente</div>
+        <div class="value">Kiko Vargas</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="label">Proyecto</div>
+        <div class="value accent">Kikovargas.fit</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="label">Entrega</div>
+        <div class="value">Abril 2026</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cover-footer">
+    <span>Entregado a <strong>Kiko Vargas</strong><span class="dot">·</span>IFBB Pro</span>
+    <span>Por <strong>Uxea Soluciones</strong></span>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 2 — TABLE OF CONTENTS
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-brand">K<span class="sep">·</span><span class="bold">Kikovargas.fit</span></div>
+  <div class="chapter-marker"><span class="num">00</span>Índice</div>
+
+  <div class="content">
+    <div class="toc-hero">
+      <div class="eyebrow">Navegación</div>
+      <h1 class="toc-title">Índice <span class="accent">del documento</span></h1>
+      <p class="toc-sub">
+        Este documento está organizado en cinco partes. Puedes leerlo de principio
+        a fin — diseñado para eso — o saltar directamente a la sección que necesites.
+      </p>
+    </div>
+
+    <div class="toc-list">
+      <div class="toc-chapter-label">Parte I — Tu Plataforma</div>
+      <div class="toc-item">
+        <div class="toc-num">01</div>
+        <div class="toc-label">Bienvenida<span class="sub">Carta introductoria y contexto</span></div>
+        <div class="toc-page">Pág 04</div>
+      </div>
+      <div class="toc-item">
+        <div class="toc-num">02</div>
+        <div class="toc-label">Resumen ejecutivo<span class="sub">Vista rápida del proyecto en cifras</span></div>
+        <div class="toc-page">Pág 05</div>
+      </div>
+      <div class="toc-item">
+        <div class="toc-num">03</div>
+        <div class="toc-label">Lo que ahora posees<span class="sub">Tres activos clave recibidos</span></div>
+        <div class="toc-page">Pág 07</div>
+      </div>
+      <div class="toc-item">
+        <div class="toc-num">04</div>
+        <div class="toc-label">Impacto en tu negocio<span class="sub">Beneficios concretos que notarás</span></div>
+        <div class="toc-page">Pág 08</div>
+      </div>
+
+      <div class="toc-chapter-label">Parte II — Componentes</div>
+      <div class="toc-item">
+        <div class="toc-num">05</div>
+        <div class="toc-label">Componentes (1/2)<span class="sub">Landing, blog, galería, reservas, panel</span></div>
+        <div class="toc-page">Pág 10</div>
+      </div>
+      <div class="toc-item">
+        <div class="toc-num">06</div>
+        <div class="toc-label">Componentes (2/2)<span class="sub">CRM, email, landing builder, base de conocimiento</span></div>
+        <div class="toc-page">Pág 11</div>
+      </div>
+
+      <div class="toc-chapter-label">Parte III — Valor Estratégico</div>
+      <div class="toc-item">
+        <div class="toc-num">07</div>
+        <div class="toc-label">Tres verdades estratégicas<span class="sub">Por qué esto importa a largo plazo</span></div>
+        <div class="toc-page">Pág 13</div>
+      </div>
+
+      <div class="toc-chapter-label">Parte IV — Uso y Resultados</div>
+      <div class="toc-item">
+        <div class="toc-num">08</div>
+        <div class="toc-label">Cómo usar la plataforma<span class="sub">Cuatro rutinas que lo cambian todo</span></div>
+        <div class="toc-page">Pág 15</div>
+      </div>
+      <div class="toc-item">
+        <div class="toc-num">09</div>
+        <div class="toc-label">Resultados esperados<span class="sub">Timeline realista sin promesas vacías</span></div>
+        <div class="toc-page">Pág 16</div>
+      </div>
+      <div class="toc-item">
+        <div class="toc-num">10</div>
+        <div class="toc-label">Tu parte del contrato<span class="sub">Responsabilidades del cliente</span></div>
+        <div class="toc-page">Pág 17</div>
+      </div>
+
+      <div class="toc-chapter-label">Parte V — Horizonte</div>
+      <div class="toc-item">
+        <div class="toc-num">11</div>
+        <div class="toc-label">Potencial de crecimiento<span class="sub">Cuatro direcciones de expansión</span></div>
+        <div class="toc-page">Pág 19</div>
+      </div>
+      <div class="toc-item">
+        <div class="toc-num">12</div>
+        <div class="toc-label">Mensaje final<span class="sub">El cierre y los próximos pasos</span></div>
+        <div class="toc-page">Pág 20</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span><span class="sep"> · </span>Documento de Entrega</span>
+    <span>02</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 3 — PART I DIVIDER
+     ═══════════════════════════════════════════════════ -->
+<div class="page part-divider">
+  <div class="part-divider-inner">
+    <div class="part-label">Parte I</div>
+    <span class="part-roman">I</span>
+    <h2 class="part-title">Tu <span class="accent">Plataforma</span>.</h2>
+    <p class="part-description">
+      El punto de partida. Qué recibes exactamente, por qué es diferente de una web
+      tradicional, y qué resultados empezarás a notar desde <strong>la primera semana</strong>.
+    </p>
+  </div>
+  <div class="part-footer">
+    <span>Kikovargas<span class="brand">.fit</span></span>
+    <div class="part-footer-index">
+      <span class="active"></span><span></span><span></span><span></span><span></span>
+    </div>
+    <span>Parte I <span style="color: var(--accent)">/ V</span></span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 4 — WELCOME
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-brand">K<span class="sep">·</span><span class="bold">Kikovargas.fit</span></div>
+  <div class="chapter-marker"><span class="num">01</span>Bienvenida</div>
+
+  <div class="content">
+    <div class="eyebrow">Tu nueva etapa empieza aquí</div>
+    <h1 class="section-title">Gracias por<br><span class="accent">confiar</span> en este proyecto.</h1>
+
+    <p class="lede">
+      Kiko, lo que recibes hoy no es un producto terminado que se archiva y olvida.
+      Es <strong>el punto de partida de una nueva etapa profesional</strong> —
+      una infraestructura pensada para acompañar tu carrera durante los próximos años.
+    </p>
+
+    <p>
+      A partir de ahora tienes algo que muy pocos profesionales del fitness poseen:
+      un ecosistema digital completo, 100% tuyo, que trabaja en piloto automático
+      mientras te dedicas a lo que realmente importa — <strong>competir, entrenar
+      y preparar atletas</strong>.
+    </p>
+
+    <div class="pull-quote">
+      Este documento resume qué se ha construido,<br>
+      qué puedes esperar de la plataforma<br>
+      y cómo sacarle el <span class="accent">máximo partido</span>.
+    </div>
+
+    <div class="info-box">
+      <span class="label">Lectura recomendada</span>
+      <p>
+        Reserva 15 minutos para leer este documento de principio a fin. Es la forma
+        más rápida de entender el alcance real de lo que ahora tienes en tus manos —
+        y cómo convertirlo en resultados de negocio consistentes.
+      </p>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span><span class="sep"> · </span>Parte I <span class="brand">/</span> Tu Plataforma</span>
+    <span>04</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 5 — EXECUTIVE SUMMARY
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-brand">K<span class="sep">·</span><span class="bold">Kikovargas.fit</span></div>
+  <div class="chapter-marker"><span class="num">02</span>Resumen ejecutivo</div>
+
+  <div class="content">
+    <div class="eyebrow">Vista rápida</div>
+    <h1 class="section-title">El proyecto<br>en <span class="accent">cifras</span>.</h1>
+    <p class="lede">
+      Antes de entrar en el detalle, una foto panorámica del alcance real de lo que se ha construido.
+    </p>
+
+    <div class="summary-grid">
+      <div class="summary-tile">
+        <div>
+          <div class="summary-tile-label">Módulos</div>
+          <div class="summary-tile-value">10</div>
+        </div>
+        <p class="summary-tile-desc">
+          Herramientas profesionales integradas en un <strong>único producto</strong> — blog con IA, reservas, CRM, email, landing builder y más.
+        </p>
+      </div>
+
+      <div class="summary-tile">
+        <div>
+          <div class="summary-tile-label">Tipos de bloque</div>
+          <div class="summary-tile-value">14</div>
+        </div>
+        <p class="summary-tile-desc">
+          Componentes disponibles para construir <strong>landing pages</strong> de eventos, webinars y servicios sin programador.
+        </p>
+      </div>
+
+      <div class="summary-tile">
+        <div>
+          <div class="summary-tile-label">Propiedad</div>
+          <div class="summary-tile-value">100%</div>
+        </div>
+        <p class="summary-tile-desc">
+          De tu audiencia, tu contenido y tus datos. Sin algoritmos, sin intermediarios, <strong>sin reglas impuestas</strong>.
+        </p>
+      </div>
+
+      <div class="summary-tile">
+        <div>
+          <div class="summary-tile-label">Disponibilidad</div>
+          <div class="summary-tile-value">24/7</div>
+        </div>
+        <p class="summary-tile-desc">
+          La plataforma capta leads, gestiona reservas y envía emails <strong>automáticamente</strong>, incluso mientras duermes.
+        </p>
+      </div>
+    </div>
+
+    <div class="section-rule">
+      <div class="section-rule-num">Resumen</div>
+      <div class="section-rule-line"></div>
+    </div>
+
+    <p>
+      Un sistema vivo, no una web estática. Diez módulos profesionales trabajando en conjunto.
+      Cero dependencia de redes sociales. <strong>Un activo digital que crece año tras año.</strong>
+    </p>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span><span class="sep"> · </span>Parte I <span class="brand">/</span> Tu Plataforma</span>
+    <span>05</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 6 — WHAT YOU OWN
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-brand">K<span class="sep">·</span><span class="bold">Kikovargas.fit</span></div>
+  <div class="chapter-marker"><span class="num">03</span>Lo que posees</div>
+
+  <div class="content">
+    <div class="eyebrow">Tu nuevo activo</div>
+    <h1 class="section-title">Más que una web.<br>Un <span class="accent">activo digital</span> profesional.</h1>
+    <p class="lede">
+      Tres perspectivas para entender exactamente qué acabas de recibir — y por qué es
+      mucho más que una página de presentación.
+    </p>
+
+    <div class="feature-card">
+      <div class="feature-card-num">01</div>
+      <div class="feature-card-body">
+        <div class="title">Una plataforma digital integral</div>
+        <p>No es una página de presentación ni un portfolio estático. Es un sistema vivo — contenido, reservas, captación de clientes, email marketing, analíticas — todo funcionando 24/7 e integrado bajo un único dominio.</p>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-card-num">02</div>
+      <div class="feature-card-body">
+        <div class="title">Un sistema para gestionar tu marca</div>
+        <p>Desde un único panel controlas <strong>todo</strong> tu ecosistema digital — artículos del blog, galería, clientes, reservas, campañas de email, landing pages para eventos. Sin dependencias externas, sin pasarelas intermedias.</p>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-card-num">03</div>
+      <div class="feature-card-body">
+        <div class="title">Una herramienta de negocio escalable</div>
+        <p>La arquitectura está diseñada para crecer contigo. Hoy gestionas tu marca personal y reservas. Mañana puedes añadir coaching online, productos digitales, membresías o comunidad privada — <strong>sin reconstruir nada desde cero</strong>.</p>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <span class="label">La diferencia clave</span>
+      <p>
+        Todo lo que construyas a partir de hoy — cada artículo, cada cliente, cada contacto —
+        se acumula en un activo que es <strong>enteramente tuyo</strong>. No vive en terreno ajeno.
+        No depende de algoritmos. No puede cerrarse por decisión de terceros.
+      </p>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span><span class="sep"> · </span>Parte I <span class="brand">/</span> Tu Plataforma</span>
+    <span>06</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 7 — IMPACT ON BUSINESS
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-brand">K<span class="sep">·</span><span class="bold">Kikovargas.fit</span></div>
+  <div class="chapter-marker"><span class="num">04</span>Impacto</div>
+
+  <div class="content">
+    <div class="eyebrow">Beneficios concretos</div>
+    <h1 class="section-title">Resultados,<br>no <span class="accent">teoría</span>.</h1>
+
+    <div class="benefit-list">
+      <div class="benefit-row">
+        <div class="benefit-index">01</div>
+        <div class="benefit-content">
+          <h4>Aumentar tu visibilidad</h4>
+          <p>Cada artículo del blog es una nueva puerta de entrada desde Google. Con el tiempo, tu web se convertirá en una fuente de tráfico orgánico <em>permanente y gratuito</em>.</p>
+        </div>
+      </div>
+      <div class="benefit-row">
+        <div class="benefit-index">02</div>
+        <div class="benefit-content">
+          <h4>Convertir seguidores en clientes reales</h4>
+          <p>Cuando alguien te descubre en Instagram y acaba reservando una sesión en tu web, has hecho algo que pocos logran — <strong>transformar una audiencia prestada en una audiencia propia</strong>.</p>
+        </div>
+      </div>
+      <div class="benefit-row">
+        <div class="benefit-index">03</div>
+        <div class="benefit-content">
+          <h4>Centralizar toda tu actividad profesional</h4>
+          <p>Se acabaron los mensajes de WhatsApp para cuadrar horarios, los DMs perdidos, las hojas de cálculo con contactos. Todo vive en un mismo lugar, organizado y accesible.</p>
+        </div>
+      </div>
+      <div class="benefit-row">
+        <div class="benefit-index">04</div>
+        <div class="benefit-content">
+          <h4>Proyectar una imagen profesional premium</h4>
+          <p>Un dominio propio con diseño de calidad transmite algo que una cuenta de Instagram jamás transmitirá — <strong>te tomas en serio tu carrera</strong>. Marcas, sponsors y colaboradores lo notan inmediatamente.</p>
+        </div>
+      </div>
+      <div class="benefit-row">
+        <div class="benefit-index">05</div>
+        <div class="benefit-content">
+          <h4>Generar nuevas oportunidades de ingreso</h4>
+          <p>La plataforma no solo ordena lo que ya haces — te abre la puerta a monetizar de formas nuevas — productos digitales, suscripciones, contenido exclusivo, eventos propios.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span><span class="sep"> · </span>Parte I <span class="brand">/</span> Tu Plataforma</span>
+    <span>07</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 8 — PART II DIVIDER
+     ═══════════════════════════════════════════════════ -->
+<div class="page part-divider">
+  <div class="part-divider-inner">
+    <div class="part-label">Parte II</div>
+    <span class="part-roman">II</span>
+    <h2 class="part-title">Los <span class="accent">Componentes</span>.</h2>
+    <p class="part-description">
+      Diez herramientas profesionales integradas en un único producto. Cada una resuelve
+      un problema real que antes requería una aplicación distinta — o <strong>que simplemente no se resolvía</strong>.
+    </p>
+  </div>
+  <div class="part-footer">
+    <span>Kikovargas<span class="brand">.fit</span></span>
+    <div class="part-footer-index">
+      <span></span><span class="active"></span><span></span><span></span><span></span>
+    </div>
+    <span>Parte II <span style="color: var(--accent)">/ V</span></span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 9 — COMPONENTS 1/2
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-brand">K<span class="sep">·</span><span class="bold">Kikovargas.fit</span></div>
+  <div class="chapter-marker"><span class="num">05</span>Componentes 1/2</div>
+
+  <div class="content">
+    <div class="eyebrow">Qué se ha construido</div>
+    <h1 class="section-title">Diez herramientas.<br>Un único <span class="accent">producto</span>.</h1>
+
+    <div class="feature-card">
+      <div class="feature-card-num">01</div>
+      <div class="feature-card-body">
+        <div class="title">Landing page profesional</div>
+        <p>Tu carta de presentación al mundo. Hero cinematográfico, sección sobre ti, estadísticas de carrera, galería destacada, timeline de logros, formulario de contacto y newsletter. Cada sección activable o desactivable.</p>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-card-num">02</div>
+      <div class="feature-card-body">
+        <div class="title">Blog con inteligencia artificial</div>
+        <p>Editor profesional con IA integrada que genera artículos completos, ideas de contenido e imágenes de portada. Lo que antes tomaba horas, ahora toma minutos.</p>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-card-num">03</div>
+      <div class="feature-card-body">
+        <div class="title">Galería de imágenes</div>
+        <p>Sistema profesional para tu portfolio visual — competiciones, transformaciones, sesiones fotográficas y colaboraciones. Subida por arrastre, imágenes destacadas y visor lightbox integrado.</p>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-card-num">04</div>
+      <div class="feature-card-body">
+        <div class="title">Sistema de reservas online</div>
+        <p>Los clientes agendan citas contigo <strong>sin intercambios de mensajes</strong>. Configuras tu disponibilidad una sola vez. Enlaces únicos por servicio. Confirmaciones automáticas por email.</p>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-card-num">05</div>
+      <div class="feature-card-body">
+        <div class="title">Panel de administración</div>
+        <p>Dashboard profesional diseñado para que gestiones todo desde un único lugar. Rápido, responsive, optimizado incluso para uso en móvil entre entrenamientos.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span><span class="sep"> · </span>Parte II <span class="brand">/</span> Componentes</span>
+    <span>08</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 10 — COMPONENTS 2/2
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-brand">K<span class="sep">·</span><span class="bold">Kikovargas.fit</span></div>
+  <div class="chapter-marker"><span class="num">06</span>Componentes 2/2</div>
+
+  <div class="content">
+    <div class="eyebrow">Continuación</div>
+    <h1 class="section-title">Diez herramientas.<br>Un único <span class="accent">producto</span>.</h1>
+
+    <div class="feature-card">
+      <div class="feature-card-num">06</div>
+      <div class="feature-card-body">
+        <div class="title">Sistema de contactos y leads</div>
+        <p>Cada formulario enviado desde cualquier parte de la web alimenta un CRM centralizado. <strong>Nunca más perderás un lead</strong> por tenerlo en un canal equivocado.</p>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-card-num">07</div>
+      <div class="feature-card-body">
+        <div class="title">Automatización de email</div>
+        <p>Envío de newsletters, confirmaciones de reservas, notificaciones de nuevos contactos. Todo automático, todo centralizado desde el panel.</p>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-card-num">08</div>
+      <div class="feature-card-body">
+        <div class="title">Constructor de landing pages para eventos</div>
+        <p>Para cuando lances un webinar, un evento presencial, un programa de coaching. Creas la página en minutos, <strong>sin programador</strong>, con 14 tipos de bloques y plantillas listas para usar.</p>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-card-num">09</div>
+      <div class="feature-card-body">
+        <div class="title">Base de conocimiento interna</div>
+        <p>Guía profesional integrada en el propio panel. Cualquier duda sobre cómo usar una función tiene respuesta a un clic. Editable desde el mismo panel.</p>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-card-num">10</div>
+      <div class="feature-card-body">
+        <div class="title">Inteligencia artificial integrada</div>
+        <p>Generación de artículos, ideas para el blog, imágenes de portada con DALL-E. Personalizable con tu tono y estilo propios. Compatible con OpenAI o IA local.</p>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <span class="label">Resultado</span>
+      <p>
+        Diez herramientas profesionales que normalmente se contratarían por separado,
+        <strong>unificadas en un único producto bajo tu control</strong>.
+      </p>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span><span class="sep"> · </span>Parte II <span class="brand">/</span> Componentes</span>
+    <span>09</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 11 — PART III DIVIDER
+     ═══════════════════════════════════════════════════ -->
+<div class="page part-divider">
+  <div class="part-divider-inner">
+    <div class="part-label">Parte III</div>
+    <span class="part-roman">III</span>
+    <h2 class="part-title">Valor <span class="accent">Estratégico</span>.</h2>
+    <p class="part-description">
+      Más allá de las funcionalidades, tres verdades que <strong>cambian radicalmente</strong>
+      tu posición profesional y convierten esta plataforma en una ventaja competitiva a largo plazo.
+    </p>
+  </div>
+  <div class="part-footer">
+    <span>Kikovargas<span class="brand">.fit</span></span>
+    <div class="part-footer-index">
+      <span></span><span></span><span class="active"></span><span></span><span></span>
+    </div>
+    <span>Parte III <span style="color: var(--accent)">/ V</span></span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 12 — STRATEGIC VALUE
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-brand">K<span class="sep">·</span><span class="bold">Kikovargas.fit</span></div>
+  <div class="chapter-marker"><span class="num">07</span>Valor estratégico</div>
+
+  <div class="content">
+    <div class="eyebrow">Lo que esto significa</div>
+    <h1 class="section-title">En tres años,<br>esto no es una web.<br>Es <span class="accent">tu carrera</span>.</h1>
+
+    <h2>Tu propio ecosistema digital</h2>
+    <p>
+      Cada artículo que publicas, cada cliente que reserva, cada email que captas — todo
+      suma a un activo que es <strong>enteramente tuyo</strong>. Nadie puede quitártelo.
+      Nadie puede cambiar las reglas del juego.
+    </p>
+
+    <h2>Independencia de redes sociales</h2>
+    <p>
+      Instagram, TikTok y YouTube pasan a cumplir su rol correcto — ser <strong>canales de
+      captación</strong> que llevan tráfico hacia tu plataforma. Si mañana cambia el algoritmo,
+      si pierdes una cuenta, si una plataforma cierra — tu negocio sigue funcionando.
+    </p>
+
+    <h2>Activo que se capitaliza con el tiempo</h2>
+    <p>
+      Una cuenta de Instagram se olvida de ti cada 24 horas. Una web propia
+      <strong>acumula valor con el tiempo</strong>. Cada mes que pasa, tu plataforma es
+      más robusta, posiciona mejor en Google, tiene más contenido y más clientes capturados.
+    </p>
+
+    <div class="pull-quote">
+      En cinco años, cuando otros sigan<br>
+      esperando permiso de Instagram,<br>
+      tu negocio seguirá siendo <span class="accent">tuyo</span>.
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span><span class="sep"> · </span>Parte III <span class="brand">/</span> Valor Estratégico</span>
+    <span>10</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 13 — PART IV DIVIDER
+     ═══════════════════════════════════════════════════ -->
+<div class="page part-divider">
+  <div class="part-divider-inner">
+    <div class="part-label">Parte IV</div>
+    <span class="part-roman">IV</span>
+    <h2 class="part-title">Uso y <span class="accent">Resultados</span>.</h2>
+    <p class="part-description">
+      Cómo funciona en tu día a día, qué resultados son realistas esperar en cada fase,
+      y qué <strong>depende de ti</strong> para que la plataforma produzca lo que puede producir.
+    </p>
+  </div>
+  <div class="part-footer">
+    <span>Kikovargas<span class="brand">.fit</span></span>
+    <div class="part-footer-index">
+      <span></span><span></span><span></span><span class="active"></span><span></span>
+    </div>
+    <span>Parte IV <span style="color: var(--accent)">/ V</span></span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 14 — HOW TO USE
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-brand">K<span class="sep">·</span><span class="bold">Kikovargas.fit</span></div>
+  <div class="chapter-marker"><span class="num">08</span>Uso</div>
+
+  <div class="content">
+    <div class="eyebrow">Cómo usar la plataforma</div>
+    <h1 class="section-title">Cuatro rutinas<br><span class="accent">sencillas</span>.</h1>
+    <p class="lede">
+      No necesitas ser experto en tecnología. La plataforma está pensada para que puedas
+      operarla sin conocimientos técnicos previos.
+    </p>
+
+    <div class="usage-grid">
+      <div class="usage-card">
+        <span class="step">Rutina 01</span>
+        <h4>Publicar<br>contenido</h4>
+        <p>Desde el panel, creas artículos con ayuda de la IA, subes fotos a la galería, y activas o desactivas secciones de la landing según tu estrategia.</p>
+      </div>
+
+      <div class="usage-card">
+        <span class="step">Rutina 02</span>
+        <h4>Capturar<br>leads</h4>
+        <p>Cada formulario, cada reserva, cada suscripción al newsletter se transforma <strong>automáticamente</strong> en un contacto en tu CRM.</p>
+      </div>
+
+      <div class="usage-card">
+        <span class="step">Rutina 03</span>
+        <h4>Gestionar<br>contactos</h4>
+        <p>Toda la información de tus clientes y prospectos está centralizada. Filtras por estado (pendiente, leído, respondido, archivado) y actúas.</p>
+      </div>
+
+      <div class="usage-card">
+        <span class="step">Rutina 04</span>
+        <h4>Ofrecer<br>servicios</h4>
+        <p>Creas enlaces de reserva para los servicios que quieras ofrecer. Los compartes donde necesites. <strong>Los clientes reservan solos.</strong></p>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <span class="label">Guía integrada</span>
+      <p>
+        Dentro del panel tienes una base de conocimiento completa con instrucciones paso a paso
+        para cada función. Siempre disponible, siempre a un clic.
+      </p>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span><span class="sep"> · </span>Parte IV <span class="brand">/</span> Uso y Resultados</span>
+    <span>12</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 15 — EXPECTED RESULTS
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-brand">K<span class="sep">·</span><span class="bold">Kikovargas.fit</span></div>
+  <div class="chapter-marker"><span class="num">09</span>Resultados</div>
+
+  <div class="content">
+    <div class="eyebrow">Honestidad total</div>
+    <h1 class="section-title">Resultados <span class="accent">realistas</span>,<br>sin promesas vacías.</h1>
+
+    <p>
+      Los resultados no son inmediatos y no son automáticos. Pero sí son <strong>predecibles</strong>
+      cuando la plataforma se usa consistentemente. Este es el arco real esperado:
+    </p>
+
+    <div class="timeline">
+      <div class="timeline-row">
+        <div class="timeline-phase">
+          <span class="num">01</span>
+          <span class="label">Mes 1—3</span>
+        </div>
+        <div class="timeline-content">
+          <h4>Fase de construcción</h4>
+          <p>Contenido inicial, ajuste del sistema, primeras reservas. Los cimientos se están poniendo. Todavía sin tráfico orgánico relevante.</p>
+        </div>
+      </div>
+
+      <div class="timeline-row">
+        <div class="timeline-phase">
+          <span class="num">02</span>
+          <span class="label">Mes 3—6</span>
+        </div>
+        <div class="timeline-content">
+          <h4>La plataforma empieza a funcionar sola</h4>
+          <p>El blog posiciona en Google, los leads llegan constantes, el newsletter crece. El trabajo previo empieza a generar <em>retorno medible</em>.</p>
+        </div>
+      </div>
+
+      <div class="timeline-row">
+        <div class="timeline-phase">
+          <span class="num">03</span>
+          <span class="label">Año 1+</span>
+        </div>
+        <div class="timeline-content">
+          <h4>Fuente estable de clientes</h4>
+          <p>La plataforma se convierte en una máquina de captación predecible. Cada mes es mejor que el anterior. <strong>El efecto compuesto se vuelve visible.</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <span class="label">Sin promesas vacías</span>
+      <p>
+        No prometemos cifras concretas. Prometemos un <strong>sistema sólido</strong>
+        diseñado para producir resultados sostenidos. Los números concretos los harás tú con el uso.
+      </p>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span><span class="sep"> · </span>Parte IV <span class="brand">/</span> Uso y Resultados</span>
+    <span>13</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 16 — YOUR PART
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-brand">K<span class="sep">·</span><span class="bold">Kikovargas.fit</span></div>
+  <div class="chapter-marker"><span class="num">10</span>Tu parte</div>
+
+  <div class="content">
+    <div class="eyebrow">Lo que depende de ti</div>
+    <h1 class="section-title">La plataforma es el motor.<br>Tú eres el <span class="accent">combustible</span>.</h1>
+
+    <p class="lede">
+      La plataforma es una herramienta muy potente. Pero como cualquier herramienta profesional,
+      <strong>solo produce resultados si se usa</strong>.
+    </p>
+
+    <div class="check-card">
+      <div class="title">Mantener la plataforma activa</div>
+      <p>Publicar con cierta regularidad, actualizar la galería cuando hay material nuevo, responder los leads que llegan. No hace falta dedicarle horas al día — pero sí <strong>constancia</strong>.</p>
+    </div>
+
+    <div class="check-card">
+      <div class="title">Crear contenido con frecuencia</div>
+      <p>La IA reduce drásticamente el tiempo necesario, pero el criterio editorial es tuyo. Tu experiencia y tu voz son lo que hace único al contenido, y eso <strong>ninguna máquina lo puede sustituir</strong>.</p>
+    </div>
+
+    <div class="check-card">
+      <div class="title">Usar el sistema en tu día a día</div>
+      <p>Compartir los enlaces de reserva en tus stories. Enviar newsletters cuando tengas algo que contar. Revisar el panel una vez al día para ver leads nuevos. <strong>Integrar la web en tu flujo habitual.</strong></p>
+    </div>
+
+    <div class="pull-quote-sm">
+      La plataforma te da la velocidad.<br>
+      Tú pones la <span class="accent">visión</span> y la <span class="accent">constancia</span>.
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span><span class="sep"> · </span>Parte IV <span class="brand">/</span> Uso y Resultados</span>
+    <span>14</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 17 — PART V DIVIDER
+     ═══════════════════════════════════════════════════ -->
+<div class="page part-divider">
+  <div class="part-divider-inner">
+    <div class="part-label">Parte V</div>
+    <span class="part-roman">V</span>
+    <h2 class="part-title">El <span class="accent">Horizonte</span>.</h2>
+    <p class="part-description">
+      Lo que tienes hoy es la base. La arquitectura está preparada para <strong>escalar en
+      múltiples direcciones</strong> cuando tú decidas que es el momento — sin reconstruir
+      nada desde cero.
+    </p>
+  </div>
+  <div class="part-footer">
+    <span>Kikovargas<span class="brand">.fit</span></span>
+    <div class="part-footer-index">
+      <span></span><span></span><span></span><span></span><span class="active"></span>
+    </div>
+    <span>Parte V <span style="color: var(--accent)">/ V</span></span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 18 — FUTURE POTENTIAL
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-brand">K<span class="sep">·</span><span class="bold">Kikovargas.fit</span></div>
+  <div class="chapter-marker"><span class="num">11</span>Potencial</div>
+
+  <div class="content">
+    <div class="eyebrow">Hacia dónde puede crecer</div>
+    <h1 class="section-title">La base está puesta.<br>El <span class="accent">techo</span> lo decides tú.</h1>
+
+    <p>
+      Cuatro direcciones naturales de expansión. Todas se integran sin romper nada de lo
+      ya construido — la arquitectura está preparada para ellas <strong>desde el día uno</strong>.
+    </p>
+
+    <div class="future-grid">
+      <div class="future-card">
+        <span class="icon">→</span>
+        <h4>Coaching online</h4>
+        <p>Zona privada de clientes, seguimiento de planes, check-ins semanales, vídeos de ejercicios. <strong>Multiplica tu capacidad sin multiplicar tu tiempo.</strong></p>
+      </div>
+
+      <div class="future-card">
+        <span class="icon">→</span>
+        <h4>Productos digitales</h4>
+        <p>Ebooks, planes de entrenamiento, guías de nutrición, cursos pregrabados. <strong>Ingresos pasivos reales, 24/7.</strong></p>
+      </div>
+
+      <div class="future-card">
+        <span class="icon">→</span>
+        <h4>Membresías</h4>
+        <p>Contenido exclusivo mensual para clientes premium. <strong>Ingresos recurrentes predecibles</strong> — la forma más robusta de ingreso que existe.</p>
+      </div>
+
+      <div class="future-card">
+        <span class="icon">→</span>
+        <h4>Comunidad privada</h4>
+        <p>Un foro o zona exclusiva con directos, Q&A y contenido premium. <strong>Construye pertenencia</strong> alrededor de tu marca.</p>
+      </div>
+    </div>
+
+    <div class="pull-quote-sm">
+      Hoy gestionas tu marca personal.<br>
+      Mañana puedes tener una <span class="accent">escuela digital</span><br>
+      dentro del mismo dominio.
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span><span class="sep"> · </span>Parte V <span class="brand">/</span> El Horizonte</span>
+    <span>16</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 19 — FINAL MESSAGE
+     ═══════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-brand">K<span class="sep">·</span><span class="bold">Kikovargas.fit</span></div>
+  <div class="chapter-marker"><span class="num">12</span>Mensaje final</div>
+
+  <div class="content">
+    <div class="eyebrow">El cierre</div>
+    <h1 class="section-title">Esto no es el final.<br>Es el <span class="accent">comienzo</span>.</h1>
+
+    <p class="lede">
+      Kikovargas.fit es una herramienta profesional. No es una fórmula mágica. No es un
+      anuncio automático de éxito.
+    </p>
+
+    <p>
+      Es algo mucho más valioso — <strong>una infraestructura sólida que te permite
+      construir tu carrera sobre terreno propio</strong>, en lugar de sobre plataformas
+      que pueden cambiar las reglas cuando quieran.
+    </p>
+
+    <p>
+      Los resultados dependen de cómo la uses. La plataforma te da las herramientas, la
+      velocidad y el soporte técnico. <strong>Tú pones la visión, el contenido y la constancia.</strong>
+    </p>
+
+    <div class="pull-quote">
+      En cinco años, cuando otros sigan esperando<br>
+      que Instagram les permita trabajar,<br>
+      tu negocio seguirá siendo <span class="accent">tuyo</span>.
+    </div>
+
+    <p>
+      Tu audiencia seguirá siendo tuya. Y los ingresos que genere seguirán dependiendo
+      <em>solo de ti</em>.
+    </p>
+
+    <div class="closing-block">
+      <span class="label">A construir</span>
+      <div class="title">Esto no es el final del proyecto.<br>Es el <span class="accent">comienzo</span> de una nueva forma de trabajar.</div>
+      <p>
+        Gracias por confiar, Kiko. Aquí empieza lo bueno.
+      </p>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>Kikovargas<span class="brand">.fit</span><span class="sep"> · </span>Parte V <span class="brand">/</span> El Horizonte</span>
+    <span>17</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 20 — BACK COVER
+     ═══════════════════════════════════════════════════ -->
+<div class="page back-cover">
+
+  <div class="back-header">
+    <div class="cover-mark">
+      <div class="square">K</div>
+      <span class="text">Kikovargas<strong>.fit</strong></span>
+    </div>
+  </div>
+
+  <div class="back-body">
+    <div class="eyebrow">Documento de entrega</div>
+    <h1 class="back-big">
+      Un nuevo<br>
+      <span class="accent">punto de partida</span>.
+    </h1>
+
+    <p class="lede" style="margin-bottom: 0;">
+      Este documento resume el proyecto entregado y su valor estratégico para Kiko Vargas.
+      Para cualquier consulta sobre el funcionamiento de la plataforma, actualizaciones o
+      futuras extensiones, consulta la base de conocimiento integrada en el panel o
+      contacta directamente con el equipo de desarrollo.
+    </p>
+
+    <div class="back-sig">
+      <div class="back-sig-col">
+        <div class="label">Cliente</div>
+        <div class="value">Kiko Vargas</div>
+        <div class="detail">IFBB Professional Bodybuilder</div>
+      </div>
+      <div class="back-sig-col">
+        <div class="label">Desarrollo</div>
+        <div class="value">Uxea Soluciones</div>
+        <div class="detail">Diseño &amp; Desarrollo web</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="back-footer">
+    <span>© 2026 Kikovargas<strong>.fit</strong></span>
+    <span>Documento confidencial</span>
+  </div>
+
+</div>
+
+
+</body>
+</html>

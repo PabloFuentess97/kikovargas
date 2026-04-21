@@ -1,8 +1,15 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Oswald, Inter } from "next/font/google";
 import { PageTracker } from "@/components/analytics/page-tracker";
 import { CookieBanner } from "@/components/cookie-banner";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#030303",
+};
 
 const oswald = Oswald({
   variable: "--font-oswald",
