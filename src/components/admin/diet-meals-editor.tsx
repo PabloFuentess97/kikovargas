@@ -629,11 +629,25 @@ function FoodPicker({ onAdd }: { onAdd: (food?: Food) => void }) {
 
 /* ─── Macro displays ─────────────────────────────── */
 
+/**
+ * Format a macro number:
+ * - rounds to max 2 decimals (avoids float-precision noise like 167.70000000003)
+ * - strips trailing zeros ("168" instead of "168.00", "167.7" instead of "167.70")
+ * - locale-friendly thousands separator (Spanish uses dot)
+ */
+export function formatMacro(n: number): string {
+  if (!Number.isFinite(n)) return "0";
+  const rounded = Math.round(n * 100) / 100;
+  // Using toFixed then trimming zeros gives us predictable output
+  const s = rounded.toFixed(2);
+  return s.replace(/\.?0+$/, "");
+}
+
 function Macro({ label, value, unit, accent }: { label: string; value: number; unit?: string; accent?: boolean }) {
   return (
     <div className="text-center rounded-lg bg-background/50 px-2 py-2">
       <p className={`text-base font-bold ${accent ? "text-a-accent" : "text-foreground"}`}>
-        {Math.round(value * 10) / 10}{unit ?? ""}
+        {formatMacro(value)}{unit ?? ""}
       </p>
       <p className="text-[0.55rem] uppercase tracking-widest text-muted">{label}</p>
     </div>
@@ -644,7 +658,7 @@ function MiniMacro({ label, value, unit, accent }: { label: string; value: numbe
   return (
     <div className="text-center">
       <p className={`text-xs font-bold ${accent ? "text-a-accent" : "text-foreground"}`}>
-        {Math.round(value * 10) / 10}{unit ?? ""}
+        {formatMacro(value)}{unit ?? ""}
       </p>
       <p className="text-[0.5rem] uppercase tracking-widest text-muted">{label}</p>
     </div>

@@ -140,7 +140,7 @@ function DietCard({ diet, active }: { diet: { id: string; title: string; descrip
                       {food.grams ? <span className="text-muted"> ({food.grams}g)</span> : null}
                     </span>
                     {food.calories ? (
-                      <span className="text-[0.7rem] text-muted shrink-0">{food.calories} kcal</span>
+                      <span className="text-[0.7rem] text-muted shrink-0">{fmt(food.calories)} kcal</span>
                     ) : null}
                   </div>
                 </li>
@@ -160,11 +160,17 @@ function DietCard({ diet, active }: { diet: { id: string; title: string; descrip
   );
 }
 
+/** Max 2 decimals, strip trailing zeros — avoids float-precision noise */
+function fmt(n: number): string {
+  if (!Number.isFinite(n)) return "0";
+  return (Math.round(n * 100) / 100).toFixed(2).replace(/\.?0+$/, "");
+}
+
 function Macro({ label, value, unit, accent }: { label: string; value: number; unit?: string; accent?: boolean }) {
   return (
     <div className="text-center rounded-lg bg-background/50 px-2 py-2">
       <p className={`text-sm font-bold ${accent ? "text-a-accent" : "text-foreground"}`}>
-        {value}{unit ?? ""}
+        {fmt(value)}{unit ?? ""}
       </p>
       <p className="text-[0.55rem] uppercase tracking-widest text-muted">{label}</p>
     </div>
