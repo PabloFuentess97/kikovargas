@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/admin/ui/toast";
 import { useCopy } from "@/lib/hooks/use-copy";
+import { DietMealsEditor } from "@/components/admin/diet-meals-editor";
 
 /* ═══════════════════════════════════════════════════
    Types
@@ -820,53 +821,37 @@ function DietEditor({ diet, onSave, onCancel }: { diet?: Diet; onSave: (data: Pa
   const [description, setDescription] = useState(diet?.description ?? "");
   const [active, setActive] = useState(diet?.active ?? true);
   const [notes, setNotes] = useState(diet?.notes ?? "");
-  const [mealsJson, setMealsJson] = useState(JSON.stringify(diet?.meals ?? [{ name: "Desayuno", time: "08:00", foods: [] }], null, 2));
+  const [meals, setMeals] = useState<Diet["meals"]>(diet?.meals ?? []);
 
   function save() {
-    let meals;
-    try {
-      meals = JSON.parse(mealsJson);
-    } catch {
-      alert("JSON de comidas inválido");
-      return;
-    }
     onSave({ title, description, active, notes, meals });
   }
 
   return (
-    <div className="rounded-xl border border-a-accent/30 bg-card p-4 mb-3 space-y-3">
+    <div className="rounded-xl border border-a-accent/30 bg-card p-4 mb-3 space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <LabeledInput label="Título" value={title} onChange={setTitle} />
+        <LabeledInput label="Titulo" value={title} onChange={setTitle} placeholder="Ej: Definicion — Abril 2026" />
         <div className="flex items-end">
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} className="h-4 w-4" />
+            <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} className="h-4 w-4 accent-[#c9a84c]" />
             <span className="text-sm">Dieta activa</span>
           </label>
         </div>
       </div>
 
       <div>
-        <label className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">Descripción</label>
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full rounded-lg border border-border bg-a-surface px-4 py-3 text-sm resize-none" />
+        <label className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">Descripcion</label>
+        <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full rounded-lg border border-border bg-a-surface px-4 py-3 text-sm resize-none" placeholder="Objetivo del plan, fase, etc." />
       </div>
 
       <div>
-        <label className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">Comidas (JSON)</label>
-        <textarea
-          value={mealsJson}
-          onChange={(e) => setMealsJson(e.target.value)}
-          rows={12}
-          className="w-full rounded-lg border border-border bg-a-surface px-4 py-3 text-xs font-mono resize-y"
-          spellCheck={false}
-        />
-        <p className="text-[0.65rem] text-muted mt-1">
-          Formato: {`[{ name, time, foods: [{ name, grams, calories, protein, carbs, fat }] }]`}
-        </p>
+        <label className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">Comidas</label>
+        <DietMealsEditor meals={meals} onChange={setMeals} />
       </div>
 
       <div>
         <label className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">Notas</label>
-        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="w-full rounded-lg border border-border bg-a-surface px-4 py-3 text-sm resize-none" />
+        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="w-full rounded-lg border border-border bg-a-surface px-4 py-3 text-sm resize-none" placeholder="Hidratacion, suplementacion, comida trampa..." />
       </div>
 
       <div className="flex gap-2 pt-2 border-t border-border">

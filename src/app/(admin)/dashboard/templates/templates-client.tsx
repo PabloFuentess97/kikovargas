@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useToast } from "@/components/admin/ui/toast";
+import { DietMealsEditor } from "@/components/admin/diet-meals-editor";
 
 /* ═══════════════════════════════════════════════════
    Types
@@ -452,23 +453,14 @@ function DietTplEditor({ template, onSave, onCancel }: { template?: DietTemplate
   const [description, setDescription] = useState(template?.description ?? "");
   const [category, setCategory] = useState(template?.category ?? "general");
   const [notes, setNotes] = useState(template?.notes ?? "");
-  const [mealsJson, setMealsJson] = useState(
-    JSON.stringify(template?.meals ?? [{ name: "Desayuno", time: "08:00", foods: [] }], null, 2)
-  );
+  const [meals, setMeals] = useState<Meal[]>(template?.meals ?? []);
 
   function save() {
-    let meals;
-    try {
-      meals = JSON.parse(mealsJson);
-    } catch {
-      alert("JSON de comidas invalido");
-      return;
-    }
     onSave({ name, description, category, notes, meals });
   }
 
   return (
-    <div className="rounded-xl border border-a-accent/30 bg-card p-4 mb-3 space-y-3">
+    <div className="rounded-xl border border-a-accent/30 bg-card p-4 mb-3 space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">Nombre</label>
@@ -490,20 +482,13 @@ function DietTplEditor({ template, onSave, onCancel }: { template?: DietTemplate
       </div>
 
       <div>
-        <label className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">Comidas (JSON)</label>
-        <textarea
-          value={mealsJson}
-          onChange={(e) => setMealsJson(e.target.value)}
-          rows={14}
-          spellCheck={false}
-          className="w-full rounded-lg border border-border bg-a-surface px-4 py-3 text-xs font-mono resize-y"
-        />
-        <p className="text-[0.65rem] text-muted mt-1">Formato: [{`{ name, time, foods: [{ name, grams, calories, protein, carbs, fat }] }`}]</p>
+        <label className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">Comidas</label>
+        <DietMealsEditor meals={meals} onChange={setMeals} />
       </div>
 
       <div>
         <label className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">Notas</label>
-        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="w-full rounded-lg border border-border bg-a-surface px-4 py-3 text-sm resize-none" />
+        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="w-full rounded-lg border border-border bg-a-surface px-4 py-3 text-sm resize-none" placeholder="Ej: Hidratacion minima 2L al dia. Libre comida trampa los domingos..." />
       </div>
 
       <div className="flex gap-2 pt-2 border-t border-border">
