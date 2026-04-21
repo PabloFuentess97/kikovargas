@@ -152,6 +152,12 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    label: "Clientes",
+    items: [
+      { href: "/dashboard/clients", label: "Clientes", icon: I.contact },
+    ],
+  },
+  {
     label: "Eventos",
     items: [
       { href: "/dashboard/event-pages", label: "Landing Pages", icon: I.events },
@@ -179,9 +185,9 @@ const NAV_SECTIONS: NavSection[] = [
 
 const MOBILE_TABS: { href: string; label: string; icon: ReactNode; matches: string[] }[] = [
   { href: "/dashboard", label: "Inicio", icon: I.dashboard, matches: ["/dashboard"] },
+  { href: "/dashboard/clients", label: "Clientes", icon: I.contact, matches: ["/dashboard/clients"] },
   { href: "/dashboard/posts", label: "Posts", icon: I.posts, matches: ["/dashboard/posts", "/dashboard/ideas"] },
   { href: "/dashboard/bookings", label: "Reservas", icon: I.bookings, matches: ["/dashboard/bookings", "/dashboard/booking-links", "/dashboard/availability"] },
-  { href: "/dashboard/event-pages", label: "Eventos", icon: I.events, matches: ["/dashboard/event-pages"] },
   // 5th tab = "Más" (sheet)
 ];
 
@@ -204,6 +210,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/event-pages": "Landing Pages",
   "/dashboard/knowledge": "Guia de uso",
   "/dashboard/contacts": "Contactos",
+  "/dashboard/clients": "Clientes",
+  "/dashboard/clients/new": "Nuevo cliente",
   "/dashboard/users": "Usuarios",
   "/dashboard/settings": "Configuracion",
 };

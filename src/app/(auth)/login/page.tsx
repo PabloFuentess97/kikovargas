@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "";
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -32,7 +34,17 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/dashboard");
+      // Redirect based on role (callbackUrl wins if present and matches role scope)
+      const role = data?.data?.role ?? data?.role;
+      const defaultTarget = role === "ADMIN" ? "/dashboard" : "/panel";
+      const target =
+        callbackUrl &&
+        ((role === "ADMIN" && callbackUrl.startsWith("/dashboard")) ||
+          (role !== "ADMIN" && callbackUrl.startsWith("/panel")))
+          ? callbackUrl
+          : defaultTarget;
+
+      router.push(target);
       router.refresh();
     } catch {
       setError("Error de conexion");
@@ -55,7 +67,7 @@ export default function LoginPage() {
           <h1 className="text-xl font-semibold tracking-tight text-foreground">
             Iniciar sesion
           </h1>
-          <p className="mt-1 text-sm text-muted">Panel de administracion</p>
+          <p className="mt-1 text-sm text-muted">Accede a tu panel</p>
         </div>
 
         {/* Form card */}

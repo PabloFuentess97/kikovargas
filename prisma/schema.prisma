@@ -39,7 +39,21 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  // Client-specific fields (only used when role = USER)
+  phone      String?
+  birthDate  DateTime? @map("birth_date")
+  startedAt  DateTime? @map("started_at")  // coaching start date
+  monthlyFee Int?      @map("monthly_fee") // cents EUR
+  notes      String?   @default("")        // internal, admin-only
+
   posts Post[] @relation("PostAuthor")
+
+  // Client relations (coach-managed content)
+  workouts  Workout[]
+  tasks     ClientTask[]
+  documents ClientDocument[]
+  diets     Diet[]
+  invoices  Invoice[]
 
   @@map("users")
 }
@@ -329,4 +343,124 @@ model Contact {
   @@index([status])
   @@index([createdAt])
   @@map("contacts")
+}
+
+// ─── Client coaching area ───────────────────────────
+
+enum WorkoutStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+model Workout {
+  id          String        @id @default(cuid())
+  clientId    String        @map("client_id")
+  client      User          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title       String
+  description String        @default("")
+  status      WorkoutStatus @default(ACTIVE)
+  weekDay     Int?          @map("week_day") // 0-6, null = general
+  exercises   Json          // [{ name, sets, reps, weight, restSec, notes, completed }]
+  sortOrder   Int           @default(0) @map("sort_order")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@index([clientId, status])
+  @@map("workouts")
+}
+
+enum TaskCategory {
+  DAILY
+  WEEKLY
+  GENERAL
+}
+
+model ClientTask {
+  id          String       @id @default(cuid())
+  clientId    String       @map("client_id")
+  client      User         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title       String
+  description String       @default("")
+  completed   Boolean      @default(false)
+  completedAt DateTime?    @map("completed_at")
+  category    TaskCategory @default(GENERAL)
+  dueDate     DateTime?    @map("due_date")
+  sortOrder   Int          @default(0) @map("sort_order")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  @@index([clientId, completed])
+  @@map("client_tasks")
+}
+
+enum DocumentUploader {
+  COACH
+  CLIENT
+}
+
+model ClientDocument {
+  id          String           @id @default(cuid())
+  clientId    String           @map("client_id")
+  client      User             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title       String
+  description String           @default("")
+  fileUrl     String           @map("file_url")
+  fileKey     String           @map("file_key")
+  fileSize    Int              @map("file_size")
+  fileMime    String           @map("file_mime")
+  uploadedBy  DocumentUploader @default(COACH) @map("uploaded_by")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  @@index([clientId])
+  @@map("client_documents")
+}
+
+model Diet {
+  id          String    @id @default(cuid())
+  clientId    String    @map("client_id")
+  client      User      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title       String
+  description String    @default("")
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+  active      Boolean   @default(true)
+  meals       Json      // [{ name, time, foods: [{ name, grams, calories, protein, carbs, fat }] }]
+  notes       String    @default("")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([clientId, active])
+  @@map("diets")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  PENDING
+  PAID
+  CANCELLED
+  OVERDUE
+}
+
+model Invoice {
+  id        String        @id @default(cuid())
+  clientId  String        @map("client_id")
+  client    User          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  number    String        @unique // e.g. "2026-001"
+  concept   String
+  amount    Int           // cents EUR
+  currency  String        @default("EUR")
+  status    InvoiceStatus @default(PENDING)
+  issueDate DateTime      @default(now()) @map("issue_date")
+  dueDate   DateTime?     @map("due_date")
+  paidAt    DateTime?     @map("paid_at")
+  pdfUrl    String?       @map("pdf_url")
+  notes     String        @default("")
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  @@index([clientId, status])
+  @@index([status, dueDate])
+  @@map("invoices")
 }
