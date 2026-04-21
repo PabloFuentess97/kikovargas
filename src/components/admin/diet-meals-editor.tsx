@@ -443,10 +443,57 @@ function MacroInput({
 function FoodPicker({ onAdd }: { onAdd: (food?: Food) => void }) {
   const [mode, setMode] = useState<"closed" | "suggest">("closed");
   const [q, setQ] = useState("");
+  const [aiGrams, setAiGrams] = useState<number>(100);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const filtered = q
     ? COMMON_FOODS.filter((f) => f.name.toLowerCase().includes(q.toLowerCase())).slice(0, 8)
     : COMMON_FOODS.slice(0, 8);
+
+  async function askAI() {
+    if (!q.trim() || aiLoading) return;
+    setAiLoading(true);
+    setAiError(null);
+
+    try {
+      const res = await fetch("/api/ai/food-nutrition", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: q.trim(), grams: aiGrams }),
+      });
+      const json = await res.json();
+
+      if (!json.success) {
+        setAiError(json.error || "No se pudo obtener la informacion");
+        return;
+      }
+
+      if (json.data.empty) {
+        setAiError(json.data.notes || "La IA no reconoce ese alimento. Prueba con otro nombre.");
+        return;
+      }
+
+      // Add with macros from AI
+      onAdd({
+        name: json.data.name,
+        grams: json.data.grams,
+        calories: json.data.calories,
+        protein: json.data.protein,
+        carbs: json.data.carbs,
+        fat: json.data.fat,
+      });
+
+      // Reset and close
+      setMode("closed");
+      setQ("");
+      setAiGrams(100);
+    } catch {
+      setAiError("Error de red. Intenta de nuevo.");
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   if (mode === "closed") {
     return (
@@ -479,12 +526,13 @@ function FoodPicker({ onAdd }: { onAdd: (food?: Food) => void }) {
         <input
           autoFocus
           value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Buscar en la base de alimentos..."
+          onChange={(e) => { setQ(e.target.value); setAiError(null); }}
+          onKeyDown={(e) => { if (e.key === "Enter" && q.trim() && filtered.length === 0) askAI(); }}
+          placeholder="Buscar alimento..."
           className="flex-1 bg-transparent border-0 text-sm focus:outline-none placeholder:text-muted"
         />
         <button
-          onClick={() => { setMode("closed"); setQ(""); }}
+          onClick={() => { setMode("closed"); setQ(""); setAiError(null); }}
           className="text-xs text-muted hover:text-foreground"
         >
           Cerrar
@@ -492,40 +540,88 @@ function FoodPicker({ onAdd }: { onAdd: (food?: Food) => void }) {
       </div>
 
       <div className="space-y-1 max-h-56 overflow-y-auto">
-        {filtered.length === 0 ? (
+        {filtered.map((food, i) => (
           <button
-            onClick={() => { onAdd({ name: q, grams: undefined, calories: undefined, protein: undefined, carbs: undefined, fat: undefined }); setMode("closed"); setQ(""); }}
-            className="w-full text-left rounded-md bg-background/50 px-3 py-2 text-sm hover:bg-background active:scale-[0.99] transition-all"
+            key={i}
+            onClick={() => { onAdd(food); setMode("closed"); setQ(""); }}
+            className="w-full text-left rounded-md bg-background/50 px-3 py-2 hover:bg-background active:scale-[0.99] transition-all"
           >
-            <span className="text-muted">+ Añadir</span> <span className="text-foreground font-medium">{q}</span>
-            <span className="text-[0.65rem] text-muted ml-2">(sin macros)</span>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-medium text-foreground">{food.name}</span>
+              <span className="text-[0.65rem] text-muted shrink-0">{food.grams}g · {food.calories} kcal</span>
+            </div>
+            <p className="text-[0.6rem] text-muted/70 mt-0.5">
+              P {food.protein}g · C {food.carbs}g · G {food.fat}g
+            </p>
           </button>
-        ) : (
-          filtered.map((food, i) => (
-            <button
-              key={i}
-              onClick={() => { onAdd(food); setMode("closed"); setQ(""); }}
-              className="w-full text-left rounded-md bg-background/50 px-3 py-2 hover:bg-background active:scale-[0.99] transition-all"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-medium text-foreground">{food.name}</span>
-                <span className="text-[0.65rem] text-muted shrink-0">{food.grams}g · {food.calories} kcal</span>
-              </div>
-              <p className="text-[0.6rem] text-muted/70 mt-0.5">
-                P {food.protein}g · C {food.carbs}g · G {food.fat}g
-              </p>
-            </button>
-          ))
-        )}
+        ))}
       </div>
 
-      {q && filtered.length > 0 && (
-        <button
-          onClick={() => { onAdd({ name: q, grams: undefined, calories: undefined, protein: undefined, carbs: undefined, fat: undefined }); setMode("closed"); setQ(""); }}
-          className="w-full text-left rounded-md px-3 py-2 mt-1 text-xs text-muted hover:text-foreground border-t border-border"
-        >
-          + Crear personalizado: &quot;{q}&quot;
-        </button>
+      {/* AI block — only when user has typed something */}
+      {q.trim().length >= 2 && (
+        <div className="mt-2 pt-2 border-t border-border/50">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-a-accent/15">
+              <svg className="h-3 w-3 text-a-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.091 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+              </svg>
+            </span>
+            <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-a-accent">
+              ¿No lo encuentras?
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex-1 min-w-0 rounded-md bg-background/70 border border-border px-3 py-1.5 text-xs text-muted truncate">
+              <span className="text-foreground font-medium">{q}</span>
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <input
+                type="number"
+                value={aiGrams}
+                onChange={(e) => setAiGrams(Math.max(1, Number(e.target.value) || 100))}
+                min={1}
+                max={5000}
+                className="w-16 rounded-md bg-background border border-border px-2 py-1.5 text-xs font-mono text-right focus:outline-none focus:border-a-accent"
+              />
+              <span className="text-[0.65rem] text-muted">g</span>
+            </div>
+          </div>
+
+          <button
+            onClick={askAI}
+            disabled={aiLoading}
+            className="w-full rounded-md bg-a-accent/10 hover:bg-a-accent/20 border border-a-accent/30 py-2 text-xs font-medium text-a-accent transition-all active:scale-[0.98] disabled:opacity-60 inline-flex items-center justify-center gap-2"
+          >
+            {aiLoading ? (
+              <>
+                <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v3l3-3-3-3v3a9 9 0 100 18 9 9 0 009-9h-3a6 6 0 11-12 0z" />
+                </svg>
+                Consultando IA...
+              </>
+            ) : (
+              <>
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.091 3.09z" />
+                </svg>
+                Calcular macros con IA
+              </>
+            )}
+          </button>
+
+          {aiError && (
+            <p className="mt-2 text-[0.65rem] text-danger text-center">{aiError}</p>
+          )}
+
+          <button
+            onClick={() => { onAdd({ name: q.trim(), grams: aiGrams, calories: undefined, protein: undefined, carbs: undefined, fat: undefined }); setMode("closed"); setQ(""); }}
+            className="w-full text-center rounded-md px-3 py-1.5 mt-1 text-[0.65rem] text-muted hover:text-foreground"
+          >
+            O añadir sin macros (los rellenas tú)
+          </button>
+        </div>
       )}
     </div>
   );
