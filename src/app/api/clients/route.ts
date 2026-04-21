@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/prisma";
 import { requireAdmin } from "@/lib/auth/session";
 import { success, error } from "@/lib/api-response";
+import { sendClientWelcomeEmail } from "@/lib/email/client-welcome";
 
 // GET /api/clients — list all clients (role = USER)
 export async function GET() {
@@ -45,6 +46,7 @@ const createSchema = z.object({
   monthlyFee: z.number().int().min(0).optional(),
   startedAt: z.string().datetime().optional().nullable(),
   notes: z.string().max(2000).optional(),
+  sendWelcomeEmail: z.boolean().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -54,7 +56,7 @@ export async function POST(req: NextRequest) {
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) return error(parsed.error.issues[0].message, 422);
 
-  const { name, email, password, phone, monthlyFee, startedAt, notes } = parsed.data;
+  const { name, email, password, phone, monthlyFee, startedAt, notes, sendWelcomeEmail } = parsed.data;
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return error("Ya existe un usuario con ese email", 409);
@@ -75,5 +77,36 @@ export async function POST(req: NextRequest) {
     select: { id: true, name: true, email: true },
   });
 
-  return success(client, 201);
+  // Build panel URL from env (or fallback to request origin)
+  const publicUrl = process.env.NEXT_PUBLIC_URL || new URL(req.url).origin;
+  const panelUrl = `${publicUrl.replace(/\/$/, "")}/panel`;
+
+  let emailResult: { sent: boolean; error?: string } = { sent: false };
+  if (sendWelcomeEmail) {
+    try {
+      await sendClientWelcomeEmail({
+        clientName: name,
+        clientEmail: email,
+        password,
+        panelUrl,
+      });
+      emailResult = { sent: true };
+    } catch (err) {
+      emailResult = {
+        sent: false,
+        error: err instanceof Error ? err.message : "No se pudo enviar el email",
+      };
+    }
+  }
+
+  return success(
+    {
+      ...client,
+      panelUrl,
+      // Password is returned ONLY on creation (coach needs to see/share it)
+      tempPassword: password,
+      emailResult,
+    },
+    201,
+  );
 }
