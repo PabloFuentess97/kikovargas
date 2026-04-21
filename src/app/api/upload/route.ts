@@ -8,16 +8,25 @@ import { requireAdmin } from "@/lib/auth/session";
 // Force Node.js runtime (needed for fs/path/crypto)
 export const runtime = "nodejs";
 
-/** Allowed MIME types */
+/** Allowed MIME types — images + common documents */
 const ALLOWED_TYPES = new Set([
+  // Images
   "image/jpeg",
   "image/jpg",
   "image/png",
   "image/webp",
+  "image/gif",
+  // Documents
+  "application/pdf",
+  "application/msword",                                                        // .doc
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",   // .docx
+  "application/vnd.ms-excel",                                                  // .xls
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",         // .xlsx
+  "text/plain",                                                                // .txt
 ]);
 
-/** Maximum file size: 5 MB */
-const MAX_SIZE = 5 * 1024 * 1024;
+/** Maximum file size: 15 MB (documents can be heavier than images) */
+const MAX_SIZE = 15 * 1024 * 1024;
 
 /** Maximum files per request */
 const MAX_FILES = 10;
@@ -96,14 +105,14 @@ export async function POST(req: NextRequest) {
     for (const file of files) {
       // Validate type
       if (!ALLOWED_TYPES.has(file.type)) {
-        errors.push(`${file.name}: tipo no permitido (${file.type}). Solo JPG, PNG, WebP.`);
+        errors.push(`${file.name}: tipo no permitido (${file.type}). Formatos aceptados: JPG, PNG, WebP, PDF, Word, Excel, TXT.`);
         continue;
       }
 
       // Validate size
       if (file.size > MAX_SIZE) {
         errors.push(
-          `${file.name}: excede el limite de 5MB (${(file.size / 1024 / 1024).toFixed(1)}MB).`,
+          `${file.name}: excede el limite de 15MB (${(file.size / 1024 / 1024).toFixed(1)}MB).`,
         );
         continue;
       }

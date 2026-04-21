@@ -464,3 +464,35 @@ model Invoice {
   @@index([status, dueDate])
   @@map("invoices")
 }
+
+// ─── Templates (reusable content for the coach) ─────
+
+model WorkoutTemplate {
+  id          String   @id @default(cuid())
+  name        String   // "Perdida de peso — Dia 1"
+  description String   @default("")
+  category    String   @default("general") // "perdida-peso" | "masa-muscular" | "competicion" | "general"
+  weekDay     Int?     @map("week_day")    // 0-6, null = general
+  exercises   Json     // same shape as Workout.exercises
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([category, sortOrder])
+  @@map("workout_templates")
+}
+
+model DietTemplate {
+  id          String   @id @default(cuid())
+  name        String   // "Definicion 2500 kcal"
+  description String   @default("")
+  category    String   @default("general") // "perdida-peso" | "volumen" | "mantenimiento" | "general"
+  meals       Json     // same shape as Diet.meals
+  notes       String   @default("")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([category, sortOrder])
+  @@map("diet_templates")
+}

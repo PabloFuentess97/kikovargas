@@ -155,6 +155,7 @@ const NAV_SECTIONS: NavSection[] = [
     label: "Clientes",
     items: [
       { href: "/dashboard/clients", label: "Clientes", icon: I.contact },
+      { href: "/dashboard/templates", label: "Plantillas", icon: I.posts },
     ],
   },
   {
@@ -212,6 +213,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/contacts": "Contactos",
   "/dashboard/clients": "Clientes",
   "/dashboard/clients/new": "Nuevo cliente",
+  "/dashboard/templates": "Plantillas",
   "/dashboard/users": "Usuarios",
   "/dashboard/settings": "Configuracion",
 };

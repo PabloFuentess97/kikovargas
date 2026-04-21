@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/admin/ui/toast";
 import { useCopy } from "@/lib/hooks/use-copy";
@@ -301,6 +301,35 @@ function WorkoutsTab({ clientId, initial }: { clientId: string; initial: Workout
   const [workouts, setWorkouts] = useState(initial);
   const [editing, setEditing] = useState<Workout | null>(null);
   const [showNew, setShowNew] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [templates, setTemplates] = useState<Array<{ id: string; name: string; description: string; category: string; weekDay: number | null; exercises: Exercise[] }>>([]);
+  const [loadingTpl, setLoadingTpl] = useState(false);
+
+  useEffect(() => {
+    if (showTemplates && templates.length === 0) {
+      setLoadingTpl(true);
+      fetch("/api/workout-templates")
+        .then((r) => r.json())
+        .then((j) => {
+          if (j.success) setTemplates(j.data.templates);
+        })
+        .finally(() => setLoadingTpl(false));
+    }
+  }, [showTemplates, templates.length]);
+
+  async function applyTemplate(tplId: string) {
+    const tpl = templates.find((t) => t.id === tplId);
+    if (!tpl) return;
+
+    await create({
+      title: tpl.name,
+      description: tpl.description,
+      weekDay: tpl.weekDay,
+      status: "ACTIVE",
+      exercises: tpl.exercises,
+    });
+    setShowTemplates(false);
+  }
 
   async function create(data: Partial<Workout>) {
     const res = await fetch(`/api/clients/${clientId}/workouts`, {
@@ -341,12 +370,52 @@ function WorkoutsTab({ clientId, initial }: { clientId: string; initial: Workout
 
   return (
     <div>
-      <button
-        onClick={() => setShowNew(true)}
-        className="mb-4 px-4 h-10 rounded-lg bg-a-accent text-black text-sm font-medium hover:brightness-110 active:scale-[0.97]"
-      >
-        + Nuevo entrenamiento
-      </button>
+      <div className="mb-4 flex gap-2 flex-wrap">
+        <button
+          onClick={() => setShowNew(true)}
+          className="px-4 h-10 rounded-lg bg-a-accent text-black text-sm font-medium hover:brightness-110 active:scale-[0.97]"
+        >
+          + Nuevo entrenamiento
+        </button>
+        <button
+          onClick={() => setShowTemplates(!showTemplates)}
+          className="px-4 h-10 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-card-hover active:scale-[0.97] inline-flex items-center gap-1.5"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+          </svg>
+          Desde plantilla
+        </button>
+      </div>
+
+      {showTemplates && (
+        <div className="mb-4 rounded-xl border border-a-accent/30 bg-card p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-semibold">Elige una plantilla</h4>
+            <button onClick={() => setShowTemplates(false)} className="text-xs text-muted hover:text-foreground">Cerrar</button>
+          </div>
+          {loadingTpl ? (
+            <p className="text-sm text-muted text-center py-4">Cargando...</p>
+          ) : templates.length === 0 ? (
+            <p className="text-sm text-muted text-center py-4">
+              No hay plantillas todavia. <a href="/dashboard/templates" className="text-a-accent hover:underline">Crear una</a>
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto">
+              {templates.map((tpl) => (
+                <button
+                  key={tpl.id}
+                  onClick={() => applyTemplate(tpl.id)}
+                  className="text-left rounded-lg border border-border bg-background px-3 py-2.5 hover:border-a-accent/40 active:scale-[0.98] transition-all"
+                >
+                  <p className="text-sm font-medium text-foreground">{tpl.name}</p>
+                  <p className="text-[0.65rem] text-muted mt-0.5">{tpl.exercises.length} ejercicios · {tpl.category}</p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {showNew && <WorkoutEditor onSave={create} onCancel={() => setShowNew(false)} />}
 
@@ -605,6 +674,35 @@ function DietTab({ clientId, initial }: { clientId: string; initial: Diet[] }) {
   const [diets, setDiets] = useState(initial);
   const [showNew, setShowNew] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [templates, setTemplates] = useState<Array<{ id: string; name: string; description: string; category: string; meals: Diet["meals"]; notes: string }>>([]);
+  const [loadingTpl, setLoadingTpl] = useState(false);
+
+  useEffect(() => {
+    if (showTemplates && templates.length === 0) {
+      setLoadingTpl(true);
+      fetch("/api/diet-templates")
+        .then((r) => r.json())
+        .then((j) => {
+          if (j.success) setTemplates(j.data.templates);
+        })
+        .finally(() => setLoadingTpl(false));
+    }
+  }, [showTemplates, templates.length]);
+
+  async function applyTemplate(tplId: string) {
+    const tpl = templates.find((t) => t.id === tplId);
+    if (!tpl) return;
+
+    await create({
+      title: tpl.name,
+      description: tpl.description,
+      meals: tpl.meals,
+      notes: tpl.notes,
+      active: true,
+    });
+    setShowTemplates(false);
+  }
 
   async function create(data: Partial<Diet>) {
     const res = await fetch(`/api/clients/${clientId}/diets`, {
@@ -643,9 +741,49 @@ function DietTab({ clientId, initial }: { clientId: string; initial: Diet[] }) {
 
   return (
     <div>
-      <button onClick={() => setShowNew(true)} className="mb-4 px-4 h-10 rounded-lg bg-a-accent text-black text-sm font-medium">
-        + Nueva dieta
-      </button>
+      <div className="mb-4 flex gap-2 flex-wrap">
+        <button onClick={() => setShowNew(true)} className="px-4 h-10 rounded-lg bg-a-accent text-black text-sm font-medium">
+          + Nueva dieta
+        </button>
+        <button
+          onClick={() => setShowTemplates(!showTemplates)}
+          className="px-4 h-10 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-card-hover inline-flex items-center gap-1.5"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+          </svg>
+          Desde plantilla
+        </button>
+      </div>
+
+      {showTemplates && (
+        <div className="mb-4 rounded-xl border border-a-accent/30 bg-card p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-semibold">Elige una plantilla</h4>
+            <button onClick={() => setShowTemplates(false)} className="text-xs text-muted hover:text-foreground">Cerrar</button>
+          </div>
+          {loadingTpl ? (
+            <p className="text-sm text-muted text-center py-4">Cargando...</p>
+          ) : templates.length === 0 ? (
+            <p className="text-sm text-muted text-center py-4">
+              No hay plantillas. <a href="/dashboard/templates" className="text-a-accent hover:underline">Crear una</a>
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto">
+              {templates.map((tpl) => (
+                <button
+                  key={tpl.id}
+                  onClick={() => applyTemplate(tpl.id)}
+                  className="text-left rounded-lg border border-border bg-background px-3 py-2.5 hover:border-a-accent/40 active:scale-[0.98] transition-all"
+                >
+                  <p className="text-sm font-medium text-foreground">{tpl.name}</p>
+                  <p className="text-[0.65rem] text-muted mt-0.5">{tpl.meals.length} comidas · {tpl.category}</p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {showNew && <DietEditor onSave={create} onCancel={() => setShowNew(false)} />}
 
@@ -798,12 +936,12 @@ function DocumentsTab({ clientId, initial }: { clientId: string; initial: Docume
   return (
     <div>
       <label className="block cursor-pointer mb-4">
-        <input type="file" onChange={handleFile} disabled={uploading} className="hidden" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" />
+        <input type="file" onChange={handleFile} disabled={uploading} className="hidden" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt" />
         <div className={`rounded-xl border-2 border-dashed ${uploading ? "border-a-accent/50" : "border-border"} bg-card px-4 py-6 text-center active:scale-[0.99] transition-all`}>
           <p className="text-sm text-muted">
             {uploading ? "Subiendo..." : "Toca para subir un documento"}
           </p>
-          <p className="text-[0.65rem] text-muted/60 mt-1">Imágenes, PDF, Word, Excel — max 5 MB</p>
+          <p className="text-[0.65rem] text-muted/60 mt-1">Imagenes, PDF, Word, Excel, TXT — max 15 MB</p>
         </div>
       </label>
 
@@ -937,6 +1075,18 @@ function InvoicesTab({ clientId, initial }: { clientId: string; initial: Invoice
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
+                  <a
+                    href={`/invoice/${inv.id}`}
+                    target="_blank"
+                    rel="noopener"
+                    className="inline-flex items-center gap-1 px-3 h-9 rounded-lg text-xs text-a-accent hover:bg-a-accent/10"
+                    title="Ver y descargar PDF"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                    PDF
+                  </a>
                   {inv.status === "PENDING" && (
                     <button onClick={() => setStatus(inv.id, "PAID")} className="px-3 h-9 rounded-lg text-xs text-success hover:bg-success/10">✓ Pagada</button>
                   )}
