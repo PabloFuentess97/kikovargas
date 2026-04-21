@@ -32,6 +32,7 @@ const updateSchema = z.object({
   birthDate: z.string().datetime().optional().nullable(),
   startedAt: z.string().datetime().optional().nullable(),
   monthlyFee: z.number().int().min(0).optional().nullable(),
+  heightCm: z.number().int().min(50).max(260).optional().nullable(),
   notes: z.string().max(2000).optional(),
   active: z.boolean().optional(),
 });

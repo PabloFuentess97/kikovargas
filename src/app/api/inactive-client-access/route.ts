@@ -24,6 +24,7 @@ const schema = z.object({
   workouts: z.boolean().optional(),
   tasks: z.boolean().optional(),
   diet: z.boolean().optional(),
+  progress: z.boolean().optional(),
   documents: z.boolean().optional(),
   invoices: z.boolean().optional(),
 });

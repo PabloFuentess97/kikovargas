@@ -45,6 +45,7 @@ model User {
   startedAt  DateTime? @map("started_at")  // coaching start date
   monthlyFee Int?      @map("monthly_fee") // cents EUR
   notes      String?   @default("")        // internal, admin-only
+  heightCm   Int?      @map("height_cm")   // client height in cm, used for BMI
 
   posts Post[] @relation("PostAuthor")
 
@@ -54,6 +55,7 @@ model User {
   documents ClientDocument[]
   diets     Diet[]
   invoices  Invoice[]
+  checkIns  ClientCheckIn[]
 
   @@map("users")
 }
@@ -495,4 +497,50 @@ model DietTemplate {
 
   @@index([category, sortOrder])
   @@map("diet_templates")
+}
+
+// ─── Client weekly check-ins (progress tracking) ───
+
+model ClientCheckIn {
+  id        String   @id @default(cuid())
+  clientId  String   @map("client_id")
+  client    User     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  date      DateTime                     // Date of the check-in (client-chosen, usually weekly)
+  weightKg  Float?   @map("weight_kg")   // Weight in kg (supports decimals — 72.3)
+
+  photoFrontUrl String? @map("photo_front_url")
+  photoFrontKey String? @map("photo_front_key")
+  photoSideUrl  String? @map("photo_side_url")
+  photoSideKey  String? @map("photo_side_key")
+  photoBackUrl  String? @map("photo_back_url")
+  photoBackKey  String? @map("photo_back_key")
+
+  notes     String   @default("")        // How the client felt / what they noticed
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([clientId, date])
+  @@map("client_checkins")
+}
+
+// ─── Recipes (AI-generated + manually created, for reuse) ───
+
+model Recipe {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @default("")
+  category    String   @default("general") // "desayuno" | "comida" | "cena" | "snack" | "general"
+  servings    Int      @default(1)
+  prepTimeMin Int?     @map("prep_time_min")
+  cookTimeMin Int?     @map("cook_time_min")
+  allergens   Json     @default("[]")     // string[] — e.g. ["gluten", "lactosa"]
+  ingredients Json                         // [{ name, grams?, unit?, notes? }]
+  steps       Json                         // string[] — preparation steps in order
+  macros      Json     @default("{}")     // { calories, protein, carbs, fat } per serving
+  aiGenerated Boolean  @default(false) @map("ai_generated")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([category, createdAt])
+  @@map("recipes")
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/components/admin/ui/toast";
 import { useCopy } from "@/lib/hooks/use-copy";
 import { DietMealsEditor } from "@/components/admin/diet-meals-editor";
+import { AIWorkoutModal, type GeneratedWorkout } from "@/components/admin/ai-workout-modal";
 
 /* ═══════════════════════════════════════════════════
    Types
@@ -20,6 +21,7 @@ interface Client {
   startedAt: string | null;
   monthlyFee: number | null;
   notes: string;
+  heightCm: number | null;
 }
 
 interface Exercise {
@@ -87,21 +89,34 @@ interface Invoice {
   notes: string;
 }
 
+interface CheckIn {
+  id: string;
+  date: string;
+  weightKg: number | null;
+  photoFrontUrl: string | null;
+  photoSideUrl: string | null;
+  photoBackUrl: string | null;
+  notes: string;
+  createdAt: string;
+}
+
 interface Initial {
   workouts: Workout[];
   tasks: Task[];
   documents: DocumentItem[];
   diets: Diet[];
   invoices: Invoice[];
+  checkIns: CheckIn[];
 }
 
-type TabId = "info" | "workouts" | "tasks" | "diet" | "documents" | "invoices";
+type TabId = "info" | "workouts" | "tasks" | "diet" | "progress" | "documents" | "invoices";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "info",      label: "Ficha" },
   { id: "workouts",  label: "Entrenamientos" },
   { id: "tasks",     label: "Checklist" },
   { id: "diet",      label: "Dieta" },
+  { id: "progress",  label: "Progreso" },
   { id: "documents", label: "Documentos" },
   { id: "invoices",  label: "Facturas" },
 ];
@@ -132,9 +147,114 @@ export function ClientDetailTabs({ client, initial }: { client: Client; initial:
       {tab === "workouts" && <WorkoutsTab clientId={client.id} initial={initial.workouts} />}
       {tab === "tasks" && <TasksTab clientId={client.id} initial={initial.tasks} />}
       {tab === "diet" && <DietTab clientId={client.id} initial={initial.diets} />}
+      {tab === "progress" && <ProgressTab clientId={client.id} initial={initial.checkIns} heightCm={client.heightCm} />}
       {tab === "documents" && <DocumentsTab clientId={client.id} initial={initial.documents} />}
       {tab === "invoices" && <InvoicesTab clientId={client.id} initial={initial.invoices} />}
     </>
+  );
+}
+
+/* ─── Progress tab (admin view of client check-ins) ─ */
+
+function calcBMI(weightKg: number | null, heightCm: number | null): number | null {
+  if (!weightKg || !heightCm) return null;
+  const m = heightCm / 100;
+  return weightKg / (m * m);
+}
+
+function ProgressTab({ clientId, initial, heightCm }: { clientId: string; initial: CheckIn[]; heightCm: number | null }) {
+  const toast = useToast();
+  const [checkIns, setCheckIns] = useState(initial);
+
+  async function remove(id: string) {
+    if (!confirm("¿Eliminar este check-in? La acción es irreversible.")) return;
+    const res = await fetch(`/api/clients/${clientId}/checkins/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setCheckIns(checkIns.filter((c) => c.id !== id));
+      toast.success("Check-in eliminado");
+    }
+  }
+
+  if (checkIns.length === 0) {
+    return (
+      <div className="rounded-2xl border border-border bg-card p-8 text-center">
+        <p className="text-sm text-muted">
+          Aun no hay check-ins del cliente. Los añade el cliente desde su panel en{" "}
+          <span className="text-a-accent">Progreso</span>.
+        </p>
+        {!heightCm && (
+          <p className="text-xs text-warning mt-3">
+            Para ver el IMC calculado, configura la altura del cliente en la pestaña <strong>Ficha</strong>.
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {!heightCm && (
+        <div className="rounded-xl border border-warning/20 bg-warning/5 p-3">
+          <p className="text-xs text-warning">
+            Añade la altura del cliente en la pestaña <strong>Ficha</strong> para ver el IMC calculado automáticamente.
+          </p>
+        </div>
+      )}
+
+      {checkIns.map((c) => {
+        const bmi = calcBMI(c.weightKg, heightCm);
+        const photos = [
+          { slot: "Frontal", url: c.photoFrontUrl },
+          { slot: "Lateral", url: c.photoSideUrl },
+          { slot: "Espalda", url: c.photoBackUrl },
+        ].filter((p) => p.url);
+
+        return (
+          <div key={c.id} className="rounded-2xl border border-border bg-card overflow-hidden">
+            <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border">
+              <div>
+                <p className="text-sm font-semibold">
+                  {new Date(c.date).toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+                </p>
+                <div className="flex items-center gap-3 mt-0.5 text-[0.7rem] text-muted">
+                  {c.weightKg && <span className="text-a-accent font-semibold">{c.weightKg} kg</span>}
+                  {bmi && <span>IMC {bmi.toFixed(1)}</span>}
+                </div>
+              </div>
+              <button
+                onClick={() => remove(c.id)}
+                className="h-9 w-9 rounded-lg text-muted hover:text-danger hover:bg-danger/10 active:scale-90 inline-flex items-center justify-center"
+                title="Eliminar check-in"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79" />
+                </svg>
+              </button>
+            </div>
+
+            {photos.length > 0 && (
+              <div className={`grid gap-0.5 ${photos.length === 1 ? "grid-cols-1" : photos.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+                {photos.map((p, i) => (
+                  <a key={i} href={p.url!} target="_blank" rel="noopener" className="block aspect-[3/4] relative bg-background">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.url!} alt={p.slot} className="w-full h-full object-cover" />
+                    <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/70 text-[0.55rem] text-white font-medium">
+                      {p.slot}
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
+
+            {c.notes && (
+              <div className="px-4 py-3 bg-background/40">
+                <p className="text-xs text-foreground whitespace-pre-wrap">{c.notes}</p>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -151,6 +271,7 @@ function InfoTab({ client }: { client: Client }) {
     phone: client.phone ?? "",
     monthlyFee: client.monthlyFee !== null ? (client.monthlyFee / 100).toString() : "",
     startedAt: client.startedAt ? new Date(client.startedAt).toISOString().slice(0, 10) : "",
+    heightCm: client.heightCm !== null ? String(client.heightCm) : "",
     notes: client.notes,
     active: client.active,
   });
@@ -166,6 +287,7 @@ function InfoTab({ client }: { client: Client }) {
       phone: data.phone || null,
       monthlyFee: data.monthlyFee ? Math.round(parseFloat(data.monthlyFee) * 100) : null,
       startedAt: data.startedAt ? new Date(data.startedAt).toISOString() : null,
+      heightCm: data.heightCm ? parseInt(data.heightCm, 10) : null,
       notes: data.notes,
       active: data.active,
     };
@@ -210,6 +332,7 @@ function InfoTab({ client }: { client: Client }) {
           <LabeledInput label="Teléfono" value={data.phone} onChange={(v) => setData({ ...data, phone: v })} />
           <LabeledInput label="Inicio coaching" type="date" value={data.startedAt} onChange={(v) => setData({ ...data, startedAt: v })} />
           <LabeledInput label="Cuota mensual (€)" type="number" value={data.monthlyFee} onChange={(v) => setData({ ...data, monthlyFee: v })} placeholder="150.00" />
+          <LabeledInput label="Altura (cm)" type="number" value={data.heightCm} onChange={(v) => setData({ ...data, heightCm: v })} placeholder="175" />
           <div>
             <label className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">Estado</label>
             <button
@@ -227,13 +350,21 @@ function InfoTab({ client }: { client: Client }) {
         </div>
 
         <div className="mt-4">
-          <label className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">Notas internas</label>
+          <label className="flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted mb-2">
+            <svg className="h-3 w-3 text-a-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+            Notas privadas
+            <span className="ml-auto text-[0.55rem] font-normal normal-case tracking-normal text-a-accent/80">
+              Solo visibles para ti — el cliente no las ve
+            </span>
+          </label>
           <textarea
             value={data.notes}
             onChange={(e) => setData({ ...data, notes: e.target.value })}
-            rows={3}
+            rows={4}
             className="w-full rounded-lg border border-border bg-a-surface px-4 py-3 text-sm focus:border-a-accent focus:outline-none resize-none"
-            placeholder="Objetivos, lesiones, observaciones..."
+            placeholder="Objetivos, lesiones, historial, observaciones de sesiones, recordatorios..."
           />
         </div>
 
@@ -305,6 +436,8 @@ function WorkoutsTab({ clientId, initial }: { clientId: string; initial: Workout
   const [showTemplates, setShowTemplates] = useState(false);
   const [templates, setTemplates] = useState<Array<{ id: string; name: string; description: string; category: string; weekDay: number | null; exercises: Exercise[] }>>([]);
   const [loadingTpl, setLoadingTpl] = useState(false);
+  const [showAI, setShowAI] = useState(false);
+  const [aiDraft, setAiDraft] = useState<GeneratedWorkout | null>(null);
 
   useEffect(() => {
     if (showTemplates && templates.length === 0) {
@@ -379,6 +512,15 @@ function WorkoutsTab({ clientId, initial }: { clientId: string; initial: Workout
           + Nuevo entrenamiento
         </button>
         <button
+          onClick={() => setShowAI(true)}
+          className="px-4 h-10 rounded-lg border border-a-accent/30 bg-a-accent/5 text-a-accent text-sm font-medium hover:bg-a-accent/10 active:scale-[0.97] inline-flex items-center gap-1.5"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.091 3.09z" />
+          </svg>
+          Generar con IA
+        </button>
+        <button
           onClick={() => setShowTemplates(!showTemplates)}
           className="px-4 h-10 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-card-hover active:scale-[0.97] inline-flex items-center gap-1.5"
         >
@@ -388,6 +530,31 @@ function WorkoutsTab({ clientId, initial }: { clientId: string; initial: Workout
           Desde plantilla
         </button>
       </div>
+
+      <AIWorkoutModal
+        open={showAI}
+        onClose={() => setShowAI(false)}
+        onGenerated={(w) => setAiDraft(w)}
+      />
+
+      {aiDraft && (
+        <WorkoutEditor
+          workout={{
+            id: "__ai_draft__",
+            title: aiDraft.title,
+            description: aiDraft.description,
+            status: "ACTIVE",
+            weekDay: aiDraft.weekDay,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            exercises: aiDraft.exercises as any,
+          }}
+          onSave={async (data) => {
+            await create(data);
+            setAiDraft(null);
+          }}
+          onCancel={() => setAiDraft(null)}
+        />
+      )}
 
       {showTemplates && (
         <div className="mb-4 rounded-xl border border-a-accent/30 bg-card p-4">

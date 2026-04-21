@@ -8,12 +8,15 @@ export const dynamic = "force-dynamic";
 export default async function TemplatesPage() {
   await requireAdmin();
 
-  const [workoutTemplates, dietTemplates] = await Promise.all([
+  const [workoutTemplates, dietTemplates, recipes] = await Promise.all([
     prisma.workoutTemplate.findMany({
       orderBy: [{ category: "asc" }, { sortOrder: "asc" }, { createdAt: "desc" }],
     }),
     prisma.dietTemplate.findMany({
       orderBy: [{ category: "asc" }, { sortOrder: "asc" }, { createdAt: "desc" }],
+    }),
+    prisma.recipe.findMany({
+      orderBy: [{ category: "asc" }, { createdAt: "desc" }],
     }),
   ]);
 
@@ -21,12 +24,13 @@ export default async function TemplatesPage() {
     <div className="admin-fade-in">
       <PageHeader
         title="Plantillas"
-        subtitle="Reutiliza entrenamientos y dietas entre clientes"
+        subtitle="Reutiliza entrenamientos, dietas y recetas entre clientes"
       />
 
       <TemplatesClient
         initialWorkouts={JSON.parse(JSON.stringify(workoutTemplates))}
         initialDiets={JSON.parse(JSON.stringify(dietTemplates))}
+        initialRecipes={JSON.parse(JSON.stringify(recipes))}
       />
     </div>
   );

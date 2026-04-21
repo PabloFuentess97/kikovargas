@@ -9,6 +9,7 @@ const AREAS: { key: string; label: string; description: string; icon: string; lo
   { key: "workouts",   label: "Entrenamientos",   description: "Ver rutinas y marcar ejercicios como completados.", icon: "💪" },
   { key: "tasks",      label: "Checklist",        description: "Lista de tareas diarias/semanales.", icon: "✅" },
   { key: "diet",       label: "Dieta",            description: "Plan nutricional con comidas y macros.", icon: "🥗" },
+  { key: "progress",   label: "Progreso",         description: "Check-ins semanales: peso, IMC, fotos antes/despues.", icon: "📈" },
   { key: "documents",  label: "Documentos",       description: "Archivos compartidos entre Kiko y el cliente.", icon: "📎" },
   { key: "invoices",   label: "Facturas",         description: "Historial de facturacion y pagos.", icon: "💶" },
 ];

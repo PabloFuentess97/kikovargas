@@ -12,10 +12,10 @@ export default async function ClientDashboardPage() {
   const { session, access } = await requireClientArea("home");
 
   // Only query what we'll actually display (respect permissions)
-  const [user, activeWorkouts, openTasks, activeDiet, unpaidInvoices, docsCount] = await Promise.all([
+  const [user, activeWorkouts, openTasks, activeDiet, unpaidInvoices, docsCount, latestCheckIn] = await Promise.all([
     prisma.user.findUnique({
       where: { id: session.sub },
-      select: { name: true, startedAt: true },
+      select: { name: true, startedAt: true, heightCm: true },
     }),
     access.allowedAreas.workouts
       ? prisma.workout.count({ where: { clientId: session.sub, status: "ACTIVE" } })
@@ -38,6 +38,13 @@ export default async function ClientDashboardPage() {
     access.allowedAreas.documents
       ? prisma.clientDocument.count({ where: { clientId: session.sub } })
       : 0,
+    access.allowedAreas.progress
+      ? prisma.clientCheckIn.findFirst({
+          where: { clientId: session.sub },
+          orderBy: { date: "desc" },
+          select: { weightKg: true, date: true },
+        })
+      : null,
   ]);
 
   const unpaidTotal = unpaidInvoices.reduce((s, i) => s + i.amount, 0);
@@ -126,6 +133,23 @@ export default async function ClientDashboardPage() {
               {unpaidTotal > 0 ? formatEuro(unpaidTotal, unpaidCurrency) : "—"}
             </p>
             <p className="mt-0.5 text-[0.7rem] text-muted">{unpaidInvoices.length} facturas</p>
+          </Link>
+        )}
+
+        {access.allowedAreas.progress && (
+          <Link href="/panel/progreso" className="admin-card admin-card-interactive p-4 block group">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted">Peso</p>
+              <svg className="h-4 w-4 text-muted group-hover:text-a-accent transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.306a11.95 11.95 0 015.814-5.518l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+              </svg>
+            </div>
+            <p className="text-2xl font-bold tracking-tight">
+              {latestCheckIn?.weightKg ? `${latestCheckIn.weightKg}` : "—"}<span className="text-sm text-muted ml-1">kg</span>
+            </p>
+            <p className="mt-0.5 text-[0.7rem] text-muted">
+              {latestCheckIn ? new Date(latestCheckIn.date).toLocaleDateString("es-ES", { day: "numeric", month: "short" }) : "sin check-in"}
+            </p>
           </Link>
         )}
       </div>

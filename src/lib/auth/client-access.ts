@@ -8,7 +8,7 @@ import type { JwtPayload } from "./jwt";
  * When active = true, ALL areas are allowed.
  * When active = false, only the ones enabled in SiteConfig.inactiveClientAccess.
  */
-export type ClientArea = "home" | "workouts" | "tasks" | "diet" | "documents" | "invoices";
+export type ClientArea = "home" | "workouts" | "tasks" | "diet" | "progress" | "documents" | "invoices";
 
 export interface ClientAccess {
   active: boolean;
@@ -23,6 +23,7 @@ const FULL_ACCESS: Record<ClientArea, boolean> = {
   workouts: true,
   tasks: true,
   diet: true,
+  progress: true,
   documents: true,
   invoices: true,
 };
@@ -33,6 +34,7 @@ export const DEFAULT_INACTIVE_ACCESS: Record<ClientArea, boolean> = {
   workouts: false,
   tasks: false,
   diet: false,
+  progress: false,
   documents: true,
   invoices: true,
 };
@@ -43,6 +45,7 @@ const ROUTE_TO_AREA: Record<string, ClientArea> = {
   "/panel/entrenamientos": "workouts",
   "/panel/checklist": "tasks",
   "/panel/dieta": "diet",
+  "/panel/progreso": "progress",
   "/panel/documentos": "documents",
   "/panel/facturas": "invoices",
 };
@@ -53,6 +56,7 @@ export const AREA_TO_ROUTE: Record<ClientArea, string> = {
   workouts: "/panel/entrenamientos",
   tasks: "/panel/checklist",
   diet: "/panel/dieta",
+  progress: "/panel/progreso",
   documents: "/panel/documentos",
   invoices: "/panel/facturas",
 };
@@ -70,7 +74,7 @@ export async function getClientAccess(session: JwtPayload): Promise<ClientAccess
       active: false,
       name: session.email,
       email: session.email,
-      allowedAreas: { home: true, workouts: false, tasks: false, diet: false, documents: false, invoices: false },
+      allowedAreas: { home: true, workouts: false, tasks: false, diet: false, progress: false, documents: false, invoices: false },
     };
   }
 
@@ -120,7 +124,7 @@ export async function requireClientArea(
 
 /** First area the client IS allowed to see, in display order */
 export function firstAllowedRoute(access: ClientAccess): string {
-  const order: ClientArea[] = ["home", "invoices", "documents", "workouts", "tasks", "diet"];
+  const order: ClientArea[] = ["home", "invoices", "documents", "progress", "workouts", "tasks", "diet"];
   for (const area of order) {
     if (access.allowedAreas[area]) return AREA_TO_ROUTE[area];
   }

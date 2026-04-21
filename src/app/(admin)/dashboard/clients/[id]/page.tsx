@@ -14,18 +14,20 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
     where: { id, role: "USER" },
     select: {
       id: true, name: true, email: true, phone: true, active: true,
-      birthDate: true, startedAt: true, monthlyFee: true, notes: true, createdAt: true,
+      birthDate: true, startedAt: true, monthlyFee: true, notes: true,
+      heightCm: true, createdAt: true,
     },
   });
 
   if (!client) notFound();
 
-  const [workouts, tasks, documents, diets, invoices] = await Promise.all([
+  const [workouts, tasks, documents, diets, invoices, checkIns] = await Promise.all([
     prisma.workout.findMany({ where: { clientId: id }, orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }] }),
     prisma.clientTask.findMany({ where: { clientId: id }, orderBy: [{ completed: "asc" }, { sortOrder: "asc" }] }),
     prisma.clientDocument.findMany({ where: { clientId: id }, orderBy: { createdAt: "desc" } }),
     prisma.diet.findMany({ where: { clientId: id }, orderBy: [{ active: "desc" }, { createdAt: "desc" }] }),
     prisma.invoice.findMany({ where: { clientId: id }, orderBy: { issueDate: "desc" } }),
+    prisma.clientCheckIn.findMany({ where: { clientId: id }, orderBy: { date: "desc" } }),
   ]);
 
   return (
@@ -44,6 +46,7 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
           documents: JSON.parse(JSON.stringify(documents)),
           diets: JSON.parse(JSON.stringify(diets)),
           invoices: JSON.parse(JSON.stringify(invoices)),
+          checkIns: JSON.parse(JSON.stringify(checkIns)),
         }}
       />
     </div>
