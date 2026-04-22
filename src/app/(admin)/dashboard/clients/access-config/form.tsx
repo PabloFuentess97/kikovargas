@@ -3,17 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/admin/ui/toast";
-
-const AREAS: { key: string; label: string; description: string; icon: string; locked?: boolean }[] = [
-  { key: "home",       label: "Inicio del panel", description: "Dashboard con resumen. Siempre activo.", icon: "🏠", locked: true },
-  { key: "workouts",   label: "Entrenamientos",   description: "Ver rutinas y marcar ejercicios como completados.", icon: "💪" },
-  { key: "tasks",      label: "Checklist",        description: "Lista de tareas diarias/semanales.", icon: "✅" },
-  { key: "diet",       label: "Dieta",            description: "Plan nutricional con comidas y macros.", icon: "🥗" },
-  { key: "recipes",    label: "Recetas",          description: "Librería de recetas asignadas por Kiko.", icon: "📖" },
-  { key: "progress",   label: "Progreso",         description: "Check-ins semanales: peso, IMC, fotos antes/despues.", icon: "📈" },
-  { key: "documents",  label: "Documentos",       description: "Archivos compartidos entre Kiko y el cliente.", icon: "📎" },
-  { key: "invoices",   label: "Facturas",         description: "Historial de facturacion y pagos.", icon: "💶" },
-];
+import { AreaToggleList, DEFAULT_AREAS } from "@/components/admin/area-toggle-list";
 
 export function AccessConfigForm({ initial }: { initial: Record<string, boolean> }) {
   const router = useRouter();
@@ -64,58 +54,14 @@ export function AccessConfigForm({ initial }: { initial: Record<string, boolean>
           pero <strong className="text-foreground">solo a las secciones que marques aqui</strong>.
           Los clientes <strong className="text-foreground">activos</strong> siempre tienen acceso
           completo independientemente de esta configuracion.
+          <br />
+          <span className="text-muted text-xs">
+            Puedes sobrescribir estos accesos por cliente desde su ficha → pestaña <strong>Accesos</strong>.
+          </span>
         </p>
       </div>
 
-      {/* Area toggles */}
-      <div className="rounded-2xl border border-border bg-card overflow-hidden divide-y divide-border">
-        {AREAS.map((area) => (
-          <label
-            key={area.key}
-            className={`flex items-start gap-4 px-5 py-4 transition-colors ${
-              area.locked ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:bg-card-hover"
-            }`}
-          >
-            <span className="shrink-0 text-2xl" aria-hidden>{area.icon}</span>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-foreground">{area.label}</p>
-                {area.locked && (
-                  <span className="text-[0.55rem] font-semibold uppercase tracking-widest text-muted bg-muted/10 px-1.5 py-0.5 rounded">
-                    Fijo
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-muted mt-0.5 leading-relaxed">{area.description}</p>
-            </div>
-
-            {/* Toggle switch */}
-            <div className="shrink-0">
-              <input
-                type="checkbox"
-                checked={access[area.key] ?? false}
-                disabled={area.locked}
-                onChange={(e) => setAccess({ ...access, [area.key]: e.target.checked })}
-                className="peer sr-only"
-              />
-              <span
-                onClick={() => {
-                  if (!area.locked) setAccess({ ...access, [area.key]: !access[area.key] });
-                }}
-                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-                  access[area.key] ? "bg-a-accent" : "bg-background border border-border"
-                } ${area.locked ? "cursor-not-allowed" : "cursor-pointer"}`}
-              >
-                <span
-                  className={`inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform ${
-                    access[area.key] ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </span>
-            </div>
-          </label>
-        ))}
-      </div>
+      <AreaToggleList value={access} onChange={setAccess} />
 
       {/* Preview summary */}
       <div className="rounded-xl border border-border bg-a-surface/50 p-4">
@@ -125,7 +71,7 @@ export function AccessConfigForm({ initial }: { initial: Record<string, boolean>
         <p className="text-sm text-foreground leading-relaxed">
           Un cliente inactivo podra ver:{" "}
           <strong className="text-a-accent">
-            {AREAS.filter((a) => access[a.key]).map((a) => a.label).join(", ") || "nada"}
+            {DEFAULT_AREAS.filter((a) => access[a.key]).map((a) => a.label).join(", ") || "nada"}
           </strong>
           .
         </p>

@@ -7,6 +7,7 @@ import { useCopy } from "@/lib/hooks/use-copy";
 import { DietMealsEditor } from "@/components/admin/diet-meals-editor";
 import { AIWorkoutModal, type GeneratedWorkout } from "@/components/admin/ai-workout-modal";
 import { RecipeCard, type RecipeCardData, categoryMeta as recipeCategoryMeta } from "@/components/recipe-card";
+import { AreaToggleList } from "@/components/admin/area-toggle-list";
 
 /* ═══════════════════════════════════════════════════
    Types
@@ -435,11 +436,105 @@ function RecipeViewerModal({ recipe, onClose }: { recipe: RecipeCardData; onClos
   );
 }
 
-/* ─── Access tab placeholder (wired up in commit 4) ─ */
-function AccessTab({ clientId: _clientId, initial: _initial }: { clientId: string; initial: Record<string, boolean> | null }) {
+/* ─── Access tab (per-user override) ────────────── */
+
+const DEFAULT_OVERRIDE: Record<string, boolean> = {
+  home: true,
+  workouts: true,
+  tasks: true,
+  diet: true,
+  recipes: true,
+  progress: true,
+  documents: true,
+  invoices: true,
+};
+
+function AccessTab({ clientId, initial }: { clientId: string; initial: Record<string, boolean> | null }) {
+  const router = useRouter();
+  const toast = useToast();
+
+  const hasOverride = initial !== null;
+  const [useDefault, setUseDefault] = useState(!hasOverride);
+  const [value, setValue] = useState<Record<string, boolean>>(
+    initial ?? DEFAULT_OVERRIDE,
+  );
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    const payload = useDefault
+      ? { allowedAreas: null }
+      : { allowedAreas: { ...value, home: true } };
+
+    const res = await fetch(`/api/clients/${clientId}/access`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+    setSaving(false);
+
+    if (json.success) {
+      toast.success("Accesos guardados");
+      router.refresh();
+    } else {
+      toast.error(json.error || "Error al guardar");
+    }
+  }
+
   return (
-    <div className="rounded-2xl border border-border bg-card p-6">
-      <p className="text-sm text-muted">Configuración de accesos próximamente.</p>
+    <div className="space-y-5">
+      <div className="rounded-xl border border-a-accent/20 bg-a-accent/5 p-5">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-a-accent mb-2">
+          Accesos individuales
+        </p>
+        <p className="text-sm text-foreground leading-relaxed">
+          Esta configuración <strong>sobrescribe</strong> la global y el estado activo/inactivo
+          del cliente. Úsala para casos puntuales: cliente en pausa, acceso a una sola área,
+          etc. El cliente <strong>no necesita volver a iniciar sesión</strong> — el cambio es inmediato.
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card px-5 py-4">
+        <label className="flex items-start gap-4 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={useDefault}
+            onChange={(e) => setUseDefault(e.target.checked)}
+            className="peer sr-only"
+          />
+          <span
+            onClick={() => setUseDefault(!useDefault)}
+            className={`shrink-0 relative inline-flex h-7 w-12 items-center rounded-full transition-colors cursor-pointer ${
+              useDefault ? "bg-a-accent" : "bg-background border border-border"
+            }`}
+          >
+            <span
+              className={`inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform ${
+                useDefault ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold">Usar configuración por defecto</p>
+            <p className="text-xs text-muted mt-0.5 leading-relaxed">
+              Activo → acceso total. Inactivo → lo que marque la configuración global.
+            </p>
+          </div>
+        </label>
+      </div>
+
+      {!useDefault && <AreaToggleList value={value} onChange={setValue} />}
+
+      <div className="flex items-center gap-3 pt-2">
+        <button
+          onClick={save}
+          disabled={saving}
+          className="px-5 h-11 rounded-lg bg-a-accent text-black text-sm font-medium hover:brightness-110 active:scale-[0.97] disabled:opacity-50"
+        >
+          {saving ? "Guardando..." : "Guardar cambios"}
+        </button>
+      </div>
     </div>
   );
 }
