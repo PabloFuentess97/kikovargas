@@ -6,6 +6,7 @@ import { useToast } from "@/components/admin/ui/toast";
 import { useCopy } from "@/lib/hooks/use-copy";
 import { DietMealsEditor } from "@/components/admin/diet-meals-editor";
 import { AIWorkoutModal, type GeneratedWorkout } from "@/components/admin/ai-workout-modal";
+import { RecipeCard, type RecipeCardData, categoryMeta as recipeCategoryMeta } from "@/components/recipe-card";
 
 /* ═══════════════════════════════════════════════════
    Types
@@ -100,6 +101,13 @@ interface CheckIn {
   createdAt: string;
 }
 
+interface AssignedRecipe {
+  id: string;
+  recipeId: string;
+  assignedAt: string;
+  recipe: RecipeCardData;
+}
+
 interface Initial {
   workouts: Workout[];
   tasks: Task[];
@@ -107,18 +115,23 @@ interface Initial {
   diets: Diet[];
   invoices: Invoice[];
   checkIns: CheckIn[];
+  assignedRecipes: AssignedRecipe[];
+  allRecipes: RecipeCardData[];
+  userAllowedAreas: Record<string, boolean> | null;
 }
 
-type TabId = "info" | "workouts" | "tasks" | "diet" | "progress" | "documents" | "invoices";
+type TabId = "info" | "workouts" | "tasks" | "diet" | "recipes" | "progress" | "documents" | "invoices" | "access";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "info",      label: "Ficha" },
   { id: "workouts",  label: "Entrenamientos" },
   { id: "tasks",     label: "Checklist" },
   { id: "diet",      label: "Dieta" },
+  { id: "recipes",   label: "Recetas" },
   { id: "progress",  label: "Progreso" },
   { id: "documents", label: "Documentos" },
   { id: "invoices",  label: "Facturas" },
+  { id: "access",    label: "Accesos" },
 ];
 
 export function ClientDetailTabs({ client, initial }: { client: Client; initial: Initial }) {
@@ -147,10 +160,287 @@ export function ClientDetailTabs({ client, initial }: { client: Client; initial:
       {tab === "workouts" && <WorkoutsTab clientId={client.id} initial={initial.workouts} />}
       {tab === "tasks" && <TasksTab clientId={client.id} initial={initial.tasks} />}
       {tab === "diet" && <DietTab clientId={client.id} initial={initial.diets} />}
+      {tab === "recipes" && <RecipesTab clientId={client.id} initialAssigned={initial.assignedRecipes} allRecipes={initial.allRecipes} />}
       {tab === "progress" && <ProgressTab clientId={client.id} initial={initial.checkIns} heightCm={client.heightCm} />}
       {tab === "documents" && <DocumentsTab clientId={client.id} initial={initial.documents} />}
       {tab === "invoices" && <InvoicesTab clientId={client.id} initial={initial.invoices} />}
+      {tab === "access" && <AccessTab clientId={client.id} initial={initial.userAllowedAreas} />}
     </>
+  );
+}
+
+/* ─── Recipes tab (assign recipes to client) ─────── */
+
+function RecipesTab({
+  clientId,
+  initialAssigned,
+  allRecipes,
+}: {
+  clientId: string;
+  initialAssigned: AssignedRecipe[];
+  allRecipes: RecipeCardData[];
+}) {
+  const toast = useToast();
+  const [assigned, setAssigned] = useState(initialAssigned);
+  const [showPicker, setShowPicker] = useState(false);
+  const [viewing, setViewing] = useState<RecipeCardData | null>(null);
+
+  async function remove(recipeId: string) {
+    if (!confirm("¿Quitar esta receta del cliente?")) return;
+    const res = await fetch(`/api/clients/${clientId}/recipes/${recipeId}`, { method: "DELETE" });
+    if (res.ok) {
+      setAssigned(assigned.filter((a) => a.recipeId !== recipeId));
+      toast.success("Receta quitada");
+    }
+  }
+
+  async function assign(recipeIds: string[]) {
+    if (recipeIds.length === 0) return;
+    const res = await fetch(`/api/clients/${clientId}/recipes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ recipeIds }),
+    });
+    const json = await res.json();
+    if (json.success) {
+      setAssigned(json.data.assignments);
+      setShowPicker(false);
+      toast.success(`${recipeIds.length} receta(s) asignada(s)`);
+    } else {
+      toast.error(json.error || "Error al asignar");
+    }
+  }
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
+        <p className="text-sm text-muted">
+          {assigned.length === 0
+            ? "Este cliente no tiene recetas asignadas."
+            : `${assigned.length} receta${assigned.length === 1 ? "" : "s"} asignada${assigned.length === 1 ? "" : "s"}.`}
+        </p>
+        <button
+          onClick={() => setShowPicker(true)}
+          className="px-4 h-10 rounded-lg bg-a-accent text-black text-sm font-medium hover:brightness-110 active:scale-[0.97]"
+        >
+          + Asignar recetas
+        </button>
+      </div>
+
+      {showPicker && (
+        <RecipePickerModal
+          allRecipes={allRecipes}
+          alreadyAssignedIds={new Set(assigned.map((a) => a.recipeId))}
+          onCancel={() => setShowPicker(false)}
+          onAssign={assign}
+        />
+      )}
+
+      {viewing && (
+        <RecipeViewerModal recipe={viewing} onClose={() => setViewing(null)} />
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {assigned.map((a) => {
+          const cat = recipeCategoryMeta(a.recipe.category);
+          return (
+            <div key={a.id} className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span>{cat.icon}</span>
+                    <h3 className="text-sm font-semibold">{a.recipe.title}</h3>
+                  </div>
+                  {a.recipe.description && (
+                    <p className="text-xs text-muted mb-2 line-clamp-2">{a.recipe.description}</p>
+                  )}
+                  <div className="flex items-center gap-2 flex-wrap text-[0.65rem] text-muted">
+                    {a.recipe.macros?.calories ? <span>{a.recipe.macros.calories} kcal</span> : null}
+                    {a.recipe.servings > 0 && <span>· {a.recipe.servings} raciones</span>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => setViewing(a.recipe)}
+                    className="px-3 h-9 rounded-lg text-xs text-muted hover:text-foreground hover:bg-card-hover active:scale-95"
+                  >
+                    Ver
+                  </button>
+                  <button
+                    onClick={() => remove(a.recipeId)}
+                    className="h-9 w-9 rounded-lg text-muted hover:text-danger hover:bg-danger/10 inline-flex items-center justify-center"
+                    title="Quitar del cliente"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9M5 6h14m-2 0V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v1M5 6l1 14a2 2 0 002 2h8a2 2 0 002-2l1-14" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const RECIPE_PICK_CATEGORIES = [
+  { id: "all",      label: "Todas",    icon: "📚" },
+  { id: "desayuno", label: "Desayuno", icon: "🥣" },
+  { id: "comida",   label: "Comida",   icon: "🍽️" },
+  { id: "cena",     label: "Cena",     icon: "🌙" },
+  { id: "snack",    label: "Snack",    icon: "🍎" },
+  { id: "general",  label: "General",  icon: "📋" },
+];
+
+function RecipePickerModal({
+  allRecipes,
+  alreadyAssignedIds,
+  onCancel,
+  onAssign,
+}: {
+  allRecipes: RecipeCardData[];
+  alreadyAssignedIds: Set<string>;
+  onCancel: () => void;
+  onAssign: (recipeIds: string[]) => void;
+}) {
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [category, setCategory] = useState("all");
+  const [query, setQuery] = useState("");
+
+  const filtered = allRecipes.filter((r) => {
+    if (category !== "all" && r.category !== category) return false;
+    if (query.trim() && !r.title.toLowerCase().includes(query.trim().toLowerCase())) return false;
+    return true;
+  });
+
+  function toggle(id: string) {
+    if (alreadyAssignedIds.has(id)) return;
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelected(next);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="bg-card border border-border rounded-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col">
+        <div className="p-5 border-b border-border flex items-center justify-between">
+          <h3 className="text-base font-semibold">Asignar recetas</h3>
+          <button onClick={onCancel} className="text-muted hover:text-foreground text-xl leading-none">×</button>
+        </div>
+
+        <div className="p-4 border-b border-border space-y-3">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar por nombre..."
+            className="w-full rounded-lg border border-border bg-a-surface px-4 py-2.5 text-sm focus:border-a-accent focus:outline-none"
+          />
+          <div className="flex gap-1 overflow-x-auto">
+            {RECIPE_PICK_CATEGORIES.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => setCategory(c.id)}
+                className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 ${
+                  category === c.id ? "bg-a-accent/15 text-a-accent" : "bg-background text-muted border border-border"
+                }`}
+              >
+                <span>{c.icon}</span>{c.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+          {filtered.length === 0 && (
+            <p className="text-sm text-muted text-center py-8">
+              No hay recetas que coincidan. <a href="/dashboard/templates" className="text-a-accent hover:underline">Crear en plantillas</a>.
+            </p>
+          )}
+          {filtered.map((r) => {
+            const isAssigned = alreadyAssignedIds.has(r.id);
+            const isSelected = selected.has(r.id);
+            const cat = recipeCategoryMeta(r.category);
+            return (
+              <label
+                key={r.id}
+                className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 transition-colors ${
+                  isAssigned
+                    ? "border-success/20 bg-success/5 cursor-not-allowed"
+                    : isSelected
+                    ? "border-a-accent/40 bg-a-accent/5 cursor-pointer"
+                    : "border-border bg-background hover:border-a-accent/30 cursor-pointer"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={isAssigned || isSelected}
+                  disabled={isAssigned}
+                  onChange={() => toggle(r.id)}
+                  className="mt-1 h-4 w-4 accent-[#c9a84c]"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span>{cat.icon}</span>
+                    <span className="text-sm font-medium">{r.title}</span>
+                    {isAssigned && (
+                      <span className="text-[0.55rem] font-semibold uppercase tracking-widest text-success bg-success/10 px-1.5 py-0.5 rounded">
+                        Asignada
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap text-[0.65rem] text-muted mt-0.5">
+                    {r.macros?.calories ? <span>{r.macros.calories} kcal</span> : null}
+                    {r.servings > 0 && <span>· {r.servings} raciones</span>}
+                    {r.description && <span className="truncate">· {r.description}</span>}
+                  </div>
+                </div>
+              </label>
+            );
+          })}
+        </div>
+
+        <div className="p-4 border-t border-border flex items-center gap-2 justify-end">
+          <button onClick={onCancel} className="px-4 h-10 rounded-lg text-sm text-muted hover:text-foreground">
+            Cancelar
+          </button>
+          <button
+            onClick={() => onAssign(Array.from(selected))}
+            disabled={selected.size === 0}
+            className="px-4 h-10 rounded-lg bg-a-accent text-black text-sm font-medium disabled:opacity-50"
+          >
+            Asignar {selected.size > 0 ? `(${selected.size})` : ""}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RecipeViewerModal({ recipe, onClose }: { recipe: RecipeCardData; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="bg-background border border-border rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col">
+        <div className="p-4 border-b border-border flex items-center justify-between">
+          <h3 className="text-base font-semibold">Vista previa</h3>
+          <button onClick={onClose} className="text-muted hover:text-foreground text-xl leading-none">×</button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4">
+          <RecipeCard recipe={recipe} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Access tab placeholder (wired up in commit 4) ─ */
+function AccessTab({ clientId: _clientId, initial: _initial }: { clientId: string; initial: Record<string, boolean> | null }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-6">
+      <p className="text-sm text-muted">Configuración de accesos próximamente.</p>
+    </div>
   );
 }
 

@@ -21,13 +21,20 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
 
   if (!client) notFound();
 
-  const [workouts, tasks, documents, diets, invoices, checkIns] = await Promise.all([
+  const [workouts, tasks, documents, diets, invoices, checkIns, assignedRecipes, allRecipes, userAccess] = await Promise.all([
     prisma.workout.findMany({ where: { clientId: id }, orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }] }),
     prisma.clientTask.findMany({ where: { clientId: id }, orderBy: [{ completed: "asc" }, { sortOrder: "asc" }] }),
     prisma.clientDocument.findMany({ where: { clientId: id }, orderBy: { createdAt: "desc" } }),
     prisma.diet.findMany({ where: { clientId: id }, orderBy: [{ active: "desc" }, { createdAt: "desc" }] }),
     prisma.invoice.findMany({ where: { clientId: id }, orderBy: { issueDate: "desc" } }),
     prisma.clientCheckIn.findMany({ where: { clientId: id }, orderBy: { date: "desc" } }),
+    prisma.clientRecipe.findMany({
+      where: { clientId: id },
+      include: { recipe: true },
+      orderBy: { assignedAt: "desc" },
+    }),
+    prisma.recipe.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.user.findUnique({ where: { id }, select: { allowedAreas: true } }),
   ]);
 
   return (
@@ -47,6 +54,9 @@ export default async function AdminClientDetailPage({ params }: { params: Promis
           diets: JSON.parse(JSON.stringify(diets)),
           invoices: JSON.parse(JSON.stringify(invoices)),
           checkIns: JSON.parse(JSON.stringify(checkIns)),
+          assignedRecipes: JSON.parse(JSON.stringify(assignedRecipes)),
+          allRecipes: JSON.parse(JSON.stringify(allRecipes)),
+          userAllowedAreas: (userAccess?.allowedAreas ?? null) as Record<string, boolean> | null,
         }}
       />
     </div>
