@@ -34,6 +34,38 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
   });
 
   const featuredCount = images.filter((img) => img.gallery).length;
+  // First 8 with gallery=true actually render on the home hero grid
+  const HOME_LIMIT = 8;
+  const homeIds = new Set(
+    images.filter((img) => img.gallery).slice(0, HOME_LIMIT).map((img) => img.id),
+  );
+
+  async function moveImage(id: string, direction: -1 | 1) {
+    const idx = images.findIndex((img) => img.id === id);
+    if (idx === -1) return;
+    const targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= images.length) return;
+
+    // Swap locally for instant feedback
+    const next = [...images];
+    [next[idx], next[targetIdx]] = [next[targetIdx], next[idx]];
+    setImages(next);
+
+    // Persist full order
+    const res = await fetch("/api/images/reorder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: next.map((img) => img.id) }),
+    });
+
+    if (!res.ok) {
+      setError("Error al reordenar");
+      // Revert
+      setImages(images);
+    } else {
+      router.refresh();
+    }
+  }
 
   /** Upload selected files to local API, then save metadata */
   const handleUpload = useCallback(
@@ -246,6 +278,10 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
         <p className="text-sm text-muted">
           {images.length} {images.length === 1 ? "imagen" : "imagenes"} &middot;{" "}
           <span className="text-a-accent">{featuredCount} en landing</span>
+          {" "}&middot;{" "}
+          <span className="text-foreground">
+            {Math.min(featuredCount, HOME_LIMIT)} visibles en la home
+          </span>
         </p>
         <div className="flex gap-1 p-0.5 rounded-lg bg-a-surface border border-border">
           {([
@@ -268,9 +304,21 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
         </div>
       </div>
 
+      {/* Home limit hint */}
+      {featuredCount > HOME_LIMIT && (
+        <div className="rounded-lg border border-a-accent/20 bg-a-accent/5 px-4 py-3 text-xs text-foreground leading-relaxed">
+          <strong className="text-a-accent">Nota:</strong> tienes {featuredCount} imágenes marcadas como landing, pero la home solo muestra las primeras {HOME_LIMIT}. Usa las flechas <span className="font-mono">↑ ↓</span> en cada tarjeta para reordenar y decidir cuáles salen.
+        </div>
+      )}
+
       {/* Grid */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {filtered.map((img) => (
+        {filtered.map((img) => {
+          const globalIdx = images.findIndex((i) => i.id === img.id);
+          const canMoveUp = globalIdx > 0;
+          const canMoveDown = globalIdx < images.length - 1;
+          const isOnHome = homeIds.has(img.id);
+          return (
           <div
             key={img.id}
             className={`group relative overflow-hidden rounded-xl border bg-card transition-all ${
@@ -299,12 +347,45 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
               />
             </div>
 
-            {/* Featured badge */}
+            {/* Featured badges */}
             {img.gallery && (
-              <div className="absolute top-2 left-2 bg-a-accent/90 text-black px-2 py-0.5 rounded-md text-[0.55rem] font-semibold uppercase tracking-wider">
-                Landing
+              <div className="absolute top-2 left-2 flex flex-col gap-1 items-start">
+                <div className="bg-a-accent/90 text-black px-2 py-0.5 rounded-md text-[0.55rem] font-semibold uppercase tracking-wider">
+                  Landing
+                </div>
+                {isOnHome && (
+                  <div className="bg-success/90 text-white px-2 py-0.5 rounded-md text-[0.55rem] font-semibold uppercase tracking-wider">
+                    En home
+                  </div>
+                )}
               </div>
             )}
+
+            {/* Reorder buttons — always visible (mobile-friendly) */}
+            <div className="absolute bottom-2 left-2 flex gap-1">
+              <button
+                onClick={() => moveImage(img.id, -1)}
+                disabled={!canMoveUp}
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-black/70 text-white backdrop-blur-sm hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed active:scale-90 transition-all"
+                title="Subir (aparece antes en la landing)"
+                aria-label="Subir"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                </svg>
+              </button>
+              <button
+                onClick={() => moveImage(img.id, 1)}
+                disabled={!canMoveDown}
+                className="w-8 h-8 flex items-center justify-center rounded-lg bg-black/70 text-white backdrop-blur-sm hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed active:scale-90 transition-all"
+                title="Bajar (aparece despues en la landing)"
+                aria-label="Bajar"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+            </div>
 
             {/* Featured toggle button */}
             <button
@@ -363,7 +444,8 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Empty states */}
