@@ -5,10 +5,20 @@ import type { JwtPayload } from "./jwt";
 
 /**
  * Areas of the /panel a client can access.
- * When active = true, ALL areas are allowed.
- * When active = false, only the ones enabled in SiteConfig.inactiveClientAccess.
+ * Precedence:
+ *   1) User.allowedAreas override (per-user) — if set, wins.
+ *   2) Active client → FULL_ACCESS.
+ *   3) Inactive client → SiteConfig.inactiveClientAccess (global fallback).
  */
-export type ClientArea = "home" | "workouts" | "tasks" | "diet" | "progress" | "documents" | "invoices";
+export type ClientArea =
+  | "home"
+  | "workouts"
+  | "tasks"
+  | "diet"
+  | "recipes"
+  | "progress"
+  | "documents"
+  | "invoices";
 
 export interface ClientAccess {
   active: boolean;
@@ -18,11 +28,12 @@ export interface ClientAccess {
 }
 
 /** Full access (active clients) */
-const FULL_ACCESS: Record<ClientArea, boolean> = {
+export const FULL_ACCESS: Record<ClientArea, boolean> = {
   home: true,
   workouts: true,
   tasks: true,
   diet: true,
+  recipes: true,
   progress: true,
   documents: true,
   invoices: true,
@@ -34,10 +45,23 @@ export const DEFAULT_INACTIVE_ACCESS: Record<ClientArea, boolean> = {
   workouts: false,
   tasks: false,
   diet: false,
+  recipes: false,
   progress: false,
   documents: true,
   invoices: true,
 };
+
+/** All known areas — single source of truth for validation & UIs */
+export const ALL_AREAS: ClientArea[] = [
+  "home",
+  "workouts",
+  "tasks",
+  "diet",
+  "recipes",
+  "progress",
+  "documents",
+  "invoices",
+];
 
 /** Routes → area mapping */
 const ROUTE_TO_AREA: Record<string, ClientArea> = {
@@ -45,6 +69,7 @@ const ROUTE_TO_AREA: Record<string, ClientArea> = {
   "/panel/entrenamientos": "workouts",
   "/panel/checklist": "tasks",
   "/panel/dieta": "diet",
+  "/panel/recetas": "recipes",
   "/panel/progreso": "progress",
   "/panel/documentos": "documents",
   "/panel/facturas": "invoices",
@@ -56,6 +81,7 @@ export const AREA_TO_ROUTE: Record<ClientArea, string> = {
   workouts: "/panel/entrenamientos",
   tasks: "/panel/checklist",
   diet: "/panel/dieta",
+  recipes: "/panel/recetas",
   progress: "/panel/progreso",
   documents: "/panel/documentos",
   invoices: "/panel/facturas",
@@ -65,7 +91,7 @@ export const AREA_TO_ROUTE: Record<ClientArea, string> = {
 export async function getClientAccess(session: JwtPayload): Promise<ClientAccess> {
   const user = await prisma.user.findUnique({
     where: { id: session.sub },
-    select: { name: true, email: true, active: true, role: true },
+    select: { name: true, email: true, active: true, role: true, allowedAreas: true },
   });
 
   if (!user || user.role !== "USER") {
@@ -74,10 +100,31 @@ export async function getClientAccess(session: JwtPayload): Promise<ClientAccess
       active: false,
       name: session.email,
       email: session.email,
-      allowedAreas: { home: true, workouts: false, tasks: false, diet: false, progress: false, documents: false, invoices: false },
+      allowedAreas: {
+        home: true,
+        workouts: false,
+        tasks: false,
+        diet: false,
+        recipes: false,
+        progress: false,
+        documents: false,
+        invoices: false,
+      },
     };
   }
 
+  // 1) Per-user override has absolute priority
+  if (user.allowedAreas && typeof user.allowedAreas === "object" && !Array.isArray(user.allowedAreas)) {
+    const override = user.allowedAreas as Partial<Record<ClientArea, boolean>>;
+    return {
+      active: user.active,
+      name: user.name,
+      email: user.email,
+      allowedAreas: { ...FULL_ACCESS, ...override, home: true },
+    };
+  }
+
+  // 2) No override: active → full access
   if (user.active) {
     return {
       active: true,
@@ -87,7 +134,7 @@ export async function getClientAccess(session: JwtPayload): Promise<ClientAccess
     };
   }
 
-  // Inactive → read global config
+  // 3) Inactive → read global config
   const config = await prisma.siteConfig.findUnique({ where: { key: "inactiveClientAccess" } });
   const configured = (config?.value as Partial<Record<ClientArea, boolean>> | null) ?? null;
 
@@ -124,7 +171,16 @@ export async function requireClientArea(
 
 /** First area the client IS allowed to see, in display order */
 export function firstAllowedRoute(access: ClientAccess): string {
-  const order: ClientArea[] = ["home", "invoices", "documents", "progress", "workouts", "tasks", "diet"];
+  const order: ClientArea[] = [
+    "home",
+    "invoices",
+    "documents",
+    "progress",
+    "recipes",
+    "workouts",
+    "tasks",
+    "diet",
+  ];
   for (const area of order) {
     if (access.allowedAreas[area]) return AREA_TO_ROUTE[area];
   }

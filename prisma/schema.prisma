@@ -46,16 +46,18 @@ model User {
   monthlyFee Int?      @map("monthly_fee") // cents EUR
   notes      String?   @default("")        // internal, admin-only
   heightCm   Int?      @map("height_cm")   // client height in cm, used for BMI
+  allowedAreas Json?   @map("allowed_areas") // per-user access override; null = use default behavior
 
   posts Post[] @relation("PostAuthor")
 
   // Client relations (coach-managed content)
-  workouts  Workout[]
-  tasks     ClientTask[]
-  documents ClientDocument[]
-  diets     Diet[]
-  invoices  Invoice[]
-  checkIns  ClientCheckIn[]
+  workouts         Workout[]
+  tasks            ClientTask[]
+  documents        ClientDocument[]
+  diets            Diet[]
+  invoices         Invoice[]
+  checkIns         ClientCheckIn[]
+  assignedRecipes  ClientRecipe[]
 
   @@map("users")
 }
@@ -541,6 +543,24 @@ model Recipe {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  assignedClients ClientRecipe[]
+
   @@index([category, createdAt])
   @@map("recipes")
+}
+
+// ─── Recipe assignments (link recipes to clients) ───
+
+model ClientRecipe {
+  id         String   @id @default(cuid())
+  clientId   String   @map("client_id")
+  recipeId   String   @map("recipe_id")
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  client User   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, recipeId])
+  @@index([clientId])
+  @@map("client_recipes")
 }
