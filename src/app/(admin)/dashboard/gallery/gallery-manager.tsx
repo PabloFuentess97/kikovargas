@@ -67,6 +67,64 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
     }
   }
 
+  /** Bring an image to the top of the home slots (and mark as landing if needed) */
+  async function bringToHome(id: string) {
+    const target = images.find((img) => img.id === id);
+    if (!target) return;
+
+    // 1. Ensure gallery=true
+    if (!target.gallery) {
+      const patch = await fetch(`/api/images/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gallery: true }),
+      });
+      if (!patch.ok) {
+        setError("Error al marcar como landing");
+        return;
+      }
+    }
+
+    // 2. Move to the top of the full ordered list
+    const rest = images.filter((img) => img.id !== id);
+    const final = [{ ...target, gallery: true }, ...rest];
+    setImages(final);
+
+    const res = await fetch("/api/images/reorder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: final.map((img) => img.id) }),
+    });
+    if (!res.ok) {
+      setError("Error al mover a la home");
+      setImages(images);
+    } else {
+      router.refresh();
+    }
+  }
+
+  /** Push an image to the end of the list (keeps gallery=true — stays in /gallery, leaves home) */
+  async function removeFromHome(id: string) {
+    const target = images.find((img) => img.id === id);
+    if (!target) return;
+
+    const rest = images.filter((img) => img.id !== id);
+    const final = [...rest, target];
+    setImages(final);
+
+    const res = await fetch("/api/images/reorder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: final.map((img) => img.id) }),
+    });
+    if (!res.ok) {
+      setError("Error al quitar de la home");
+      setImages(images);
+    } else {
+      router.refresh();
+    }
+  }
+
   /** Upload selected files to local API, then save metadata */
   const handleUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -307,7 +365,7 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
       {/* Home limit hint */}
       {featuredCount > HOME_LIMIT && (
         <div className="rounded-lg border border-a-accent/20 bg-a-accent/5 px-4 py-3 text-xs text-foreground leading-relaxed">
-          <strong className="text-a-accent">Nota:</strong> tienes {featuredCount} imágenes marcadas como landing, pero la home solo muestra las primeras {HOME_LIMIT}. Usa las flechas <span className="font-mono">↑ ↓</span> en cada tarjeta para reordenar y decidir cuáles salen.
+          <strong className="text-a-accent">Nota:</strong> tienes {featuredCount} imágenes marcadas como landing, pero la home solo muestra las primeras {HOME_LIMIT}. Usa <span className="text-danger font-semibold">&quot;Quitar home&quot;</span> en las que ya no quieres y <span className="text-success font-semibold">&quot;A la home&quot;</span> en las que quieres que salgan.
         </div>
       )}
 
@@ -361,13 +419,13 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
               </div>
             )}
 
-            {/* Reorder buttons — always visible (mobile-friendly) */}
+            {/* Reorder buttons (fine-tune) — always visible, mobile-friendly */}
             <div className="absolute bottom-2 left-2 flex gap-1">
               <button
                 onClick={() => moveImage(img.id, -1)}
                 disabled={!canMoveUp}
                 className="w-8 h-8 flex items-center justify-center rounded-lg bg-black/70 text-white backdrop-blur-sm hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed active:scale-90 transition-all"
-                title="Subir (aparece antes en la landing)"
+                title="Subir una posicion"
                 aria-label="Subir"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
@@ -378,7 +436,7 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
                 onClick={() => moveImage(img.id, 1)}
                 disabled={!canMoveDown}
                 className="w-8 h-8 flex items-center justify-center rounded-lg bg-black/70 text-white backdrop-blur-sm hover:bg-black/90 disabled:opacity-30 disabled:cursor-not-allowed active:scale-90 transition-all"
-                title="Bajar (aparece despues en la landing)"
+                title="Bajar una posicion"
                 aria-label="Bajar"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
@@ -386,6 +444,33 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
                 </svg>
               </button>
             </div>
+
+            {/* Home toggle — direct "put in / remove from home" action */}
+            <button
+              onClick={() => (isOnHome ? removeFromHome(img.id) : bringToHome(img.id))}
+              className={`absolute bottom-2 right-2 inline-flex items-center gap-1 h-8 px-2.5 rounded-lg text-[0.6rem] font-semibold uppercase tracking-wider backdrop-blur-sm transition-all active:scale-95 ${
+                isOnHome
+                  ? "bg-danger/80 text-white hover:bg-danger"
+                  : "bg-success/80 text-white hover:bg-success"
+              }`}
+              title={isOnHome ? "Quitar de la home (sigue en galeria)" : "Poner en la home (marca landing y sube al top)"}
+            >
+              {isOnHome ? (
+                <>
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Quitar home
+                </>
+              ) : (
+                <>
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75" />
+                  </svg>
+                  A la home
+                </>
+              )}
+            </button>
 
             {/* Featured toggle button */}
             <button
