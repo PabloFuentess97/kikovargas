@@ -165,7 +165,7 @@ export function ClientDetailTabs({ client, initial }: { client: Client; initial:
       {tab === "progress" && <ProgressTab clientId={client.id} initial={initial.checkIns} heightCm={client.heightCm} />}
       {tab === "documents" && <DocumentsTab clientId={client.id} initial={initial.documents} />}
       {tab === "invoices" && <InvoicesTab clientId={client.id} initial={initial.invoices} />}
-      {tab === "access" && <AccessTab clientId={client.id} initial={initial.userAllowedAreas} />}
+      {tab === "access" && <AccessTab clientId={client.id} clientActive={client.active} initial={initial.userAllowedAreas} />}
     </>
   );
 }
@@ -449,7 +449,7 @@ const DEFAULT_OVERRIDE: Record<string, boolean> = {
   invoices: true,
 };
 
-function AccessTab({ clientId, initial }: { clientId: string; initial: Record<string, boolean> | null }) {
+function AccessTab({ clientId, clientActive, initial }: { clientId: string; clientActive: boolean; initial: Record<string, boolean> | null }) {
   const router = useRouter();
   const toast = useToast();
 
@@ -482,16 +482,31 @@ function AccessTab({ clientId, initial }: { clientId: string; initial: Record<st
     }
   }
 
+  const defaultDescription = clientActive
+    ? "Cliente activo → acceso total a todas las áreas."
+    : "Cliente inactivo → lo que marque la configuración global de inactivos.";
+
   return (
     <div className="space-y-5">
       <div className="rounded-xl border border-a-accent/20 bg-a-accent/5 p-5">
-        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-a-accent mb-2">
-          Accesos individuales
-        </p>
+        <div className="flex items-center gap-2 flex-wrap mb-2">
+          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-a-accent">
+            Accesos individuales
+          </p>
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.55rem] font-semibold uppercase tracking-widest ${
+              clientActive ? "bg-success/10 text-success" : "bg-muted/15 text-muted"
+            }`}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${clientActive ? "bg-success" : "bg-muted"}`} />
+            {clientActive ? "Activo" : "Inactivo"}
+          </span>
+        </div>
         <p className="text-sm text-foreground leading-relaxed">
-          Esta configuración <strong>sobrescribe</strong> la global y el estado activo/inactivo
-          del cliente. Úsala para casos puntuales: cliente en pausa, acceso a una sola área,
-          etc. El cliente <strong>no necesita volver a iniciar sesión</strong> — el cambio es inmediato.
+          Esta configuración <strong>sobrescribe</strong> la global y el estado activo/inactivo del cliente.
+          Funciona <strong>igual para clientes activos que inactivos</strong>: si un cliente activo no necesita
+          un módulo concreto (ej. no usa dieta), puedes desactivárselo individualmente aquí.
+          El cliente <strong>no necesita volver a iniciar sesión</strong> — el cambio es inmediato.
         </p>
       </div>
 
@@ -518,13 +533,23 @@ function AccessTab({ clientId, initial }: { clientId: string; initial: Record<st
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold">Usar configuración por defecto</p>
             <p className="text-xs text-muted mt-0.5 leading-relaxed">
-              Activo → acceso total. Inactivo → lo que marque la configuración global.
+              {defaultDescription}
             </p>
           </div>
         </label>
       </div>
 
-      {!useDefault && <AreaToggleList value={value} onChange={setValue} />}
+      {!useDefault && (
+        <>
+          <div className="rounded-xl border border-border bg-a-surface/40 px-4 py-3">
+            <p className="text-xs text-muted leading-relaxed">
+              Marca solo las áreas que este cliente debe ver.
+              {clientActive && " Por defecto todas están activadas — desactiva las que no use."}
+            </p>
+          </div>
+          <AreaToggleList value={value} onChange={setValue} />
+        </>
+      )}
 
       <div className="flex items-center gap-3 pt-2">
         <button
