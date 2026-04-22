@@ -60,9 +60,14 @@ const I = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.306a11.95 11.95 0 015.814-5.518l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
     </svg>
   ),
+  book: (
+    <svg className="h-[22px] w-[22px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+    </svg>
+  ),
 };
 
-type ClientArea = "home" | "workouts" | "tasks" | "diet" | "progress" | "documents" | "invoices";
+type ClientArea = "home" | "workouts" | "tasks" | "diet" | "recipes" | "progress" | "documents" | "invoices";
 
 interface NavItem {
   area: ClientArea;
@@ -77,6 +82,7 @@ const ALL_NAV: NavItem[] = [
   { area: "workouts",   href: "/panel/entrenamientos",  label: "Entrenamientos", shortLabel: "Entreno",  icon: I.dumbbell },
   { area: "progress",   href: "/panel/progreso",        label: "Progreso",       shortLabel: "Progreso", icon: I.progress },
   { area: "diet",       href: "/panel/dieta",           label: "Dieta",          shortLabel: "Dieta",    icon: I.diet },
+  { area: "recipes",    href: "/panel/recetas",         label: "Recetas",        shortLabel: "Recetas",  icon: I.book },
   { area: "tasks",      href: "/panel/checklist",       label: "Checklist",      shortLabel: "Check",    icon: I.check },
   { area: "documents",  href: "/panel/documentos",      label: "Documentos",     shortLabel: "Docs",     icon: I.docs },
   { area: "invoices",   href: "/panel/facturas",        label: "Facturas",       shortLabel: "Facturas", icon: I.receipt },
