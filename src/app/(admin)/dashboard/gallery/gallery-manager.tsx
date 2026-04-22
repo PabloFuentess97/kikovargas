@@ -407,7 +407,7 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
 
             {/* Featured badges */}
             {img.gallery && (
-              <div className="absolute top-2 left-2 flex flex-col gap-1 items-start">
+              <div className="absolute top-2 left-2 z-20 flex flex-col gap-1 items-start pointer-events-none">
                 <div className="bg-a-accent/90 text-black px-2 py-0.5 rounded-md text-[0.55rem] font-semibold uppercase tracking-wider">
                   Landing
                 </div>
@@ -420,7 +420,7 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
             )}
 
             {/* Reorder buttons (fine-tune) — always visible, mobile-friendly */}
-            <div className="absolute bottom-2 left-2 flex gap-1">
+            <div className="absolute bottom-2 left-2 z-20 flex gap-1">
               <button
                 onClick={() => moveImage(img.id, -1)}
                 disabled={!canMoveUp}
@@ -448,7 +448,7 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
             {/* Home toggle — direct "put in / remove from home" action */}
             <button
               onClick={() => (isOnHome ? removeFromHome(img.id) : bringToHome(img.id))}
-              className={`absolute bottom-2 right-2 inline-flex items-center gap-1 h-8 px-2.5 rounded-lg text-[0.6rem] font-semibold uppercase tracking-wider backdrop-blur-sm transition-all active:scale-95 ${
+              className={`absolute bottom-2 right-2 z-20 inline-flex items-center gap-1 h-8 px-2.5 rounded-lg text-[0.6rem] font-semibold uppercase tracking-wider backdrop-blur-sm transition-all active:scale-95 ${
                 isOnHome
                   ? "bg-danger/80 text-white hover:bg-danger"
                   : "bg-success/80 text-white hover:bg-success"
@@ -475,7 +475,7 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
             {/* Featured toggle button */}
             <button
               onClick={() => toggleGallery(img.id, img.gallery)}
-              className={`absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
+              className={`absolute top-2 right-2 z-20 w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
                 img.gallery
                   ? "bg-a-accent text-black"
                   : "bg-black/60 text-white/50 hover:text-a-accent hover:bg-black/80"
@@ -487,20 +487,24 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
               </svg>
             </button>
 
-            {/* Overlay with actions */}
-            <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-              <div className="p-3">
+            {/* Overlay with actions — centered, does not block corner controls */}
+            <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center px-3 py-14 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+              {/* Dim background */}
+              <div className="absolute inset-0 bg-black/45" />
+
+              {/* Content — only this captures clicks */}
+              <div className="pointer-events-auto relative w-full max-w-[92%] flex flex-col items-center gap-2">
                 {editingId === img.id ? (
-                  <div className="flex gap-1.5">
+                  <div className="flex gap-1.5 w-full">
                     <input
                       value={editAlt}
                       onChange={(e) => setEditAlt(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && saveAlt(img.id)}
-                      className="flex-1 rounded-md border border-white/20 bg-black/60 px-2.5 py-1.5 text-xs text-white outline-none placeholder:text-white/40 focus:border-a-accent/50"
+                      className="flex-1 min-w-0 rounded-md border border-white/20 bg-black/70 px-2.5 py-1.5 text-xs text-white outline-none placeholder:text-white/40 focus:border-a-accent/50"
                       placeholder="Texto alternativo..."
                       autoFocus
                     />
-                    <button onClick={() => saveAlt(img.id)} className="rounded-md bg-a-accent/80 px-2.5 py-1.5 text-xs font-medium text-black hover:bg-a-accent">
+                    <button onClick={() => saveAlt(img.id)} className="rounded-md bg-a-accent/90 px-2.5 py-1.5 text-xs font-medium text-black hover:bg-a-accent">
                       OK
                     </button>
                     <button onClick={() => setEditingId(null)} className="rounded-md bg-white/15 px-2.5 py-1.5 text-xs text-white hover:bg-white/25">
@@ -509,17 +513,17 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
                   </div>
                 ) : (
                   <>
-                    <p className="truncate text-xs text-white/70 mb-2">{img.alt || "Sin descripcion"}</p>
+                    <p className="truncate text-xs text-white/90 text-center max-w-full">{img.alt || "Sin descripcion"}</p>
                     <div className="flex gap-1.5">
                       <button
                         onClick={() => startEdit(img)}
-                        className="rounded-md bg-white/15 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/25"
+                        className="rounded-md bg-white/20 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/30"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => handleDelete(img.id)}
-                        className="rounded-md bg-danger/50 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:bg-danger/70"
+                        className="rounded-md bg-danger/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-colors hover:bg-danger/80"
                       >
                         Eliminar
                       </button>
